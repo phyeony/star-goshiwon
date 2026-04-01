@@ -1,0 +1,93 @@
+Goshiwon Website Spec for Foreigners in Korea
+
+Summary
+Build an English-first marketing and lead-conversion website for a single goshiwon property, aimed at foreigners looking for short-term or long-term stay in Korea. The site should feel trustworthy, practical, and easy to act on, with clear room information, transparent pricing, and an Airbnb-style Request to Book flow that does not instantly confirm reservations.
+
+The product goal is to turn site visitors into qualified booking inquiries through a simple request form and direct contact options. The v1 should include a lightweight admin dashboard so you can manage room inventory, pricing, and incoming requests without needing a full CMS.
+
+Key Product Requirements
+- Home page focused on trust and conversion:
+  hero section, property highlights, key amenities, neighborhood access, pricing summary, testimonials or trust signals, and repeated Request to Book CTAs.
+- Room browsing for one property:
+  show room types, photos, size/features, occupancy, stay rules, included amenities, and availability status such as Available, Limited, or Waitlist.
+- Transparent pricing:
+  fixed public prices for both short stay and long stay, with clear units such as per night, per week, and per month; show any major inclusions or exclusions.
+- Foreigner-friendly content:
+  explain how goshiwon works, check-in process, minimum documents if needed, house rules, nearby transit/universities/work hubs, and common questions foreigners will have.
+- Contact and trust features:
+  persistent buttons for Email, WhatsApp, and KakaoTalk; map/location section; photo-heavy presentation; FAQs; simple policy pages.
+- Airbnb-style Request to Book feature:
+  user selects room type, check-in date, check-out date or intended stay length, number of guests, and message.
+  the form shows an estimated stay cost automatically based on the selected room type and dates.
+  the request is submitted to Supabase for manual review and is not confirmed instantly.
+  after submit, user sees a confirmation state explaining that the stay is pending host review.
+  user can also continue the same inquiry via Email, WhatsApp, or KakaoTalk with prefilled summary text.
+- Admin dashboard:
+  manage room types, prices, photo sets, and availability labels.
+  review inbound booking requests, update status (new, contacted, approved, declined, expired), and view request details in one place.
+
+Implementation Changes
+- Recommended stack:
+  Next.js app router, TypeScript, Tailwind CSS, Supabase for database/auth/storage.
+  Use server actions or API routes for booking requests and admin updates.
+- Main public pages:
+  /
+  /rooms
+  /rooms/[slug]
+  /request-to-book
+  /faq
+  /location
+  /contact
+  /policies
+- Core data models:
+  Property: name, tagline, address, neighborhood, map link, intro, policies, contact links.
+  RoomType: name, slug, description, capacity, stay types supported, amenities, price fields, status, photos.
+  BookingRequest: guest name, email, requested room, room slug, check-in date, check-out date, stay length in nights, guest count, estimated total, pricing basis, notes, status, created_at.
+  InquiryChannelConfig: email address, WhatsApp deep link, KakaoTalk link.
+- Request to Book behavior:
+  CTA appears on homepage, room cards, and room detail pages.
+  Submitting the form recalculates pricing on the server, stores the request in Supabase, and creates a visible record in admin.
+  Success page shows Request sent and offers Continue in WhatsApp, Continue in KakaoTalk, and Send by Email buttons using a prefilled inquiry summary.
+- Admin requirements:
+  password-protected admin area.
+  simple CRUD for room types and pricing.
+  request list with filters by status and date.
+  manual availability labels only in v1; no real-time calendar sync.
+- Content and SEO requirements:
+  each page should target foreigner-intent keywords like goshiwon in Seoul, cheap room in Korea, short term stay Korea, student housing Seoul.
+  metadata, Open Graph, structured FAQ content, and location-based headings should be included.
+- Design direction:
+  clean, high-trust hospitality layout with strong photography, location convenience, pricing clarity, and simple high-contrast CTAs.
+  prioritize mobile usability because many leads will come from phones.
+
+Test Plan
+- Public site:
+  homepage loads fast on mobile and desktop.
+  all key CTAs reach the request flow.
+  room list and room detail pages show correct pricing and amenities.
+  contact links open Email, WhatsApp, and KakaoTalk correctly.
+- Booking request flow:
+  valid request submits successfully and creates a stored record.
+  required validation blocks incomplete or invalid submissions.
+  estimated total updates correctly when room type or dates change.
+  server-side pricing validation rejects tampered totals or invalid date combinations.
+  success state clearly says the booking is pending approval, not confirmed.
+  prefilled messaging text includes room, dates, and guest details.
+- Admin:
+  admin login protects dashboard routes.
+  room updates appear correctly on public pages.
+  request statuses can be updated without breaking stored data.
+- Content/SEO:
+  metadata renders correctly per route.
+  FAQ and location pages are crawlable and readable in English.
+  basic accessibility checks pass for forms, buttons, labels, and image alt text.
+
+Assumptions and Defaults
+- Launch scope is one goshiwon property, not a marketplace.
+- Primary audience is foreigners, so English is the launch language.
+- Booking is request only; no instant confirmation or online payment in v1.
+- Stay model supports both short-term and long-term pricing.
+- Public pricing is fixed and visible on the website.
+- Contact channels at launch are Email, WhatsApp, and KakaoTalk.
+- Availability is manually managed in admin rather than synced from Airbnb or a PMS.
+- Request to Book from Airbnb is interpreted as an Airbnb-like inquiry flow and UX pattern, not an Airbnb API integration.
