@@ -1,45 +1,119 @@
 import Link from "next/link";
-import { requestStatuses, rooms } from "@/lib/site-data";
+import { getAdminStats, getBookingRequests } from "@/lib/queries";
+import { BookingStatusBadge } from "@/components/status-badge";
 
-export default function AdminPage() {
+export const dynamic = "force-dynamic";
+
+export default async function AdminDashboard() {
+  const stats = await getAdminStats();
+  const recentRequests = await getBookingRequests();
+
+  const statCards = [
+    {
+      label: "Total Rooms",
+      value: stats.totalRooms,
+      sub: `${stats.availableRooms} available`,
+    },
+    {
+      label: "Total Requests",
+      value: stats.totalRequests,
+      sub: `${stats.newRequests} new`,
+    },
+  ];
+
   return (
-    <section className="mx-auto max-w-6xl px-6 py-16">
-      <div className="flex items-end justify-between gap-6">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-coral">Admin</p>
-          <h1 className="mt-3 font-display text-5xl text-ink">Dashboard mock</h1>
-        </div>
-        <div className="flex gap-3">
-          <Link href="/admin/rooms" className="rounded-full border border-ink px-4 py-2 text-sm font-semibold text-ink">
-            Manage rooms
-          </Link>
-          <Link href="/admin/requests" className="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white">
-            View requests
-          </Link>
-        </div>
-      </div>
-      <div className="mt-10 grid gap-4 md:grid-cols-4">
-        {requestStatuses.map((status) => (
-          <div key={status.name} className="rounded-[28px] bg-white p-6 shadow-card">
-            <p className="text-sm text-ink/60">{status.name}</p>
-            <p className="mt-2 font-display text-4xl text-ink">{status.count}</p>
+    <div>
+      <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-8">
+        Dashboard
+      </h1>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {statCards.map((stat) => (
+          <div
+            key={stat.label}
+            className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6"
+          >
+            <p className="text-sm text-gray-500">{stat.label}</p>
+            <p className="text-3xl font-extrabold text-gray-900 mt-1">
+              {stat.value}
+            </p>
+            <p className="text-sm text-gray-500 mt-1">{stat.sub}</p>
           </div>
         ))}
       </div>
-      <div className="mt-10 rounded-[32px] bg-white p-8 shadow-card">
-        <h2 className="font-display text-3xl text-ink">Current room setup</h2>
-        <div className="mt-6 grid gap-4">
-          {rooms.map((room) => (
-            <div key={room.slug} className="flex flex-wrap items-center justify-between gap-3 rounded-[24px] bg-sand p-4">
-              <div>
-                <p className="font-semibold text-ink">{room.name}</p>
-                <p className="text-sm text-ink/60">${room.priceNight}/night · ${room.priceMonth}/month</p>
-              </div>
-              <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-pine">{room.status}</span>
-            </div>
-          ))}
+
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+          <h2 className="text-lg font-semibold text-gray-900">
+            Recent Booking Requests
+          </h2>
+          <Link
+            href="/admin/requests"
+            className="text-sm text-indigo-600 hover:text-indigo-700 font-medium transition"
+          >
+            View All
+          </Link>
         </div>
+        {recentRequests.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">
+            No booking requests yet.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200 bg-gray-50">
+                  <th className="text-left px-6 py-3 text-xs font-bold text-gray-700 uppercase">
+                    Guest
+                  </th>
+                  <th className="text-left px-6 py-3 text-xs font-bold text-gray-700 uppercase">
+                    Room
+                  </th>
+                  <th className="text-left px-6 py-3 text-xs font-bold text-gray-700 uppercase">
+                    Dates
+                  </th>
+                  <th className="text-left px-6 py-3 text-xs font-bold text-gray-700 uppercase">
+                    Status
+                  </th>
+                  <th className="text-left px-6 py-3 text-xs font-bold text-gray-700 uppercase">
+                    Submitted
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentRequests.slice(0, 10).map((req) => (
+                  <tr
+                    key={req.id}
+                    className="border-b border-gray-100 hover:bg-gray-50 transition"
+                  >
+                    <td className="px-6 py-4">
+                      <Link
+                        href={`/admin/requests/${req.id}`}
+                        className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
+                      >
+                        {req.guest_name}
+                      </Link>
+                      <p className="text-xs text-gray-500">{req.guest_email}</p>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {req.rooms?.name || req.room_slug}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {req.check_in_date} → {req.check_out_date}
+                    </td>
+                    <td className="px-6 py-4">
+                      <BookingStatusBadge status={req.status} />
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {new Date(req.created_at).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
-    </section>
+    </div>
   );
 }

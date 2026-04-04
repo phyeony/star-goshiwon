@@ -1,20 +1,40 @@
+import type { Metadata } from "next";
 import { RoomCard } from "@/components/room-card";
 import { SectionTitle } from "@/components/section-title";
-import { rooms } from "@/lib/site-data";
+import { getPublicRooms } from "@/lib/queries";
 
-export default function RoomsPage() {
+export const metadata: Metadata = {
+  title: "Rooms",
+  description:
+    "Browse available goshiwon rooms in Seoul. Private rooms with flexible lease terms, fully furnished, utilities included.",
+};
+
+export const dynamic = "force-dynamic";
+
+export default async function RoomsPage() {
+  const rooms = await getPublicRooms();
+
   return (
-    <section className="mx-auto max-w-6xl px-6 py-16">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <SectionTitle
-        eyebrow="Rooms"
-        title="Compare room types before you request a stay"
-        body="Each room page should help a guest decide quickly: price, size, occupancy, what is included, and whether availability is open, limited, or waitlisted."
+        title="Available Rooms"
+        subtitle="Browse our room types and find the right fit for your stay. All rooms are fully furnished with utilities included."
       />
-      <div className="mt-10 grid gap-6 lg:grid-cols-3">
-        {rooms.map((room) => (
-          <RoomCard key={room.slug} room={room} />
-        ))}
-      </div>
-    </section>
+
+      {rooms.length === 0 ? (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
+          <p className="text-gray-500 text-lg">
+            No rooms available at the moment. Please check back soon or contact
+            us for availability.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {rooms.map((room) => (
+            <RoomCard key={room.id} room={room} />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

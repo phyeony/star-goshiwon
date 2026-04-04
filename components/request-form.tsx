@@ -1,241 +1,340 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
-import { property, rooms } from "@/lib/site-data";
-import { formatEstimate, getStayEstimate } from "@/lib/pricing";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import type { Room } from "@/lib/types";
+import { formatKRW } from "@/lib/pricing";
 
-type SubmitState = {
-  submitted: boolean;
-  summary: string;
-};
+type RoomOption = Pick<Room, "name" | "slug" | "price_monthly" | "price_weekly" | "price_daily">;
 
-export function RequestForm() {
-  const [selectedRoomSlug, setSelectedRoomSlug] = useState(rooms[0]?.slug ?? "");
-  const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
-  const [error, setError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitState, setSubmitState] = useState<SubmitState>({ submitted: false, summary: "" });
-  const selectedRoom = useMemo(
-    () => rooms.find((room) => room.slug === selectedRoomSlug) ?? rooms[0],
-    [selectedRoomSlug]
+interface RequestFormProps {
+  rooms: RoomOption[];
+  preselectedSlug?: string;
+  /** When true, hides the room selector (use preselectedSlug to lock the room) */
+  singleRoom?: boolean;
+}
+
+interface PricingBreakdown {
+  months: number;
+  weeks: number;
+  days: number;
+  monthlySubtotal: number;
+  weeklySubtotal: number;
+  dailySubtotal: number;
+  total: number;
+  label: string;
+}
+
+function calculateClientEstimate(
+  room: Pick<Room, "price_monthly" | "price_weekly" | "price_daily">,
+  checkIn: string,
+  checkOut: string
+): PricingBreakdown | null {
+  if (!checkIn || !checkOut) return null;
+  const start = new Date(checkIn);
+  const end = new Date(checkOut);
+  const totalDays = Math.ceil(
+    (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
   );
-  const estimate = useMemo(
-    () =>
-      selectedRoom
-        ? getStayEstimate({
-            room: selectedRoom,
-            checkIn,
-            checkOut
-          })
-        : null,
-    [checkIn, checkOut, selectedRoom]
-  );
+  if (totalDays <= 0) return null;
 
-  const contactLinks = useMemo(() => {
-    const encoded = encodeURIComponent(submitState.summary || "I would like to request a booking.");
-    return {
-      whatsapp: `${property.whatsappHref}?text=${encoded}`,
-      email: `mailto:${property.email}?subject=Request%20to%20Book&body=${encoded}`,
-      kakao: property.kakaotalkHref
-    };
-  }, [submitState.summary]);
+  const months = Math.floor(totalDays / 30);
+  const remainingAfterMonths = totalDays % 30;
+  const weeks = Math.floor(remainingAfterMonths / 7);
+  const days = remainingAfterMonths % 7;
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError("");
+  const monthlySubtotal = months * room.price_monthly;
+  const weeklySubtotal = weeks * room.price_weekly;
+  const dailySubtotal = days * room.price_daily;
 
-    if (!selectedRoom || !estimate?.isValid || estimate.total === null) {
-      setError("Please choose a room and valid stay dates to calculate the estimated total.");
-      return;
+  const parts: string[] = [];
+  if (months > 0) parts.push(`${months} month${months > 1 ? "s" : ""}`);
+  if (weeks > 0) parts.push(`${weeks} week${weeks > 1 ? "s" : ""}`);
+  if (days > 0) parts.push(`${days} day${days > 1 ? "s" : ""}`);
+
+  return {
+    months,
+    weeks,
+    days,
+    monthlySubtotal,
+    weeklySubtotal,
+    dailySubtotal,
+    total: monthlySubtotal + weeklySubtotal + dailySubtotal,
+    label: parts.join(", "),
+  };
+}
+
+export function RequestForm({ rooms, preselectedSlug, singleRoom }: RequestFormProps) {
+  const router = useRouter();
+  const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [form, setForm] = useState({
+    guest_name: "",
+    guest_email: "",
+    guest_count: 1,
+    room_slug: preselectedSlug || rooms[0]?.slug || "",
+    check_in_date: "",
+    check_out_date: "",
+    notes: "",
+  });
+
+  const selectedRoom = rooms.find((r) => r.slug === form.room_slug);
+  const [estimate, setEstimate] = useState<PricingBreakdown | null>(null);
+
+  useEffect(() => {
+    if (selectedRoom && form.check_in_date && form.check_out_date) {
+      setEstimate(
+        calculateClientEstimate(
+          selectedRoom,
+          form.check_in_date,
+          form.check_out_date
+        )
+      );
+    } else {
+      setEstimate(null);
     }
+  }, [selectedRoom, form.check_in_date, form.check_out_date]);
 
-    const formData = new FormData(event.currentTarget);
-    const summary = [
-      `Hello, I want to request a stay at ${property.name}.`,
-      `Guest: ${formData.get("name")}`,
-      `Email: ${formData.get("email")}`,
-      `Room: ${formData.get("room")}`,
-      `Check-in: ${formData.get("checkIn")}`,
-      `Check-out: ${formData.get("checkOut")}`,
-      `Guests: ${formData.get("guests")}`,
-      `Estimated total: ${formatEstimate(estimate.total)}`,
-      `Pricing basis: ${estimate.label}`,
-      `Message: ${formData.get("message")}`
-    ].join("\n");
-
-    setIsSubmitting(true);
-
-    const response = await fetch("/api/booking-requests", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        name: formData.get("name"),
-        email: formData.get("email"),
-        roomSlug: selectedRoom.slug,
-        roomName: selectedRoom.name,
-        checkIn: formData.get("checkIn"),
-        checkOut: formData.get("checkOut"),
-        guests: Number(formData.get("guests")),
-        message: formData.get("message"),
-        estimatedTotal: estimate.total,
-        pricingBasis: estimate.label,
-        nights: estimate.nights
-      })
+  function updateField(field: string, value: string | number) {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
     });
-
-    setIsSubmitting(false);
-
-    if (!response.ok) {
-      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-      setError(payload?.error ?? "Could not send your booking request. Please try again.");
-      return;
-    }
-
-    setSubmitState({ submitted: true, summary });
-    event.currentTarget.reset();
-    setSelectedRoomSlug(rooms[0]?.slug ?? "");
-    setCheckIn("");
-    setCheckOut("");
   }
 
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitting(true);
+    setErrors({});
+
+    try {
+      const res = await fetch("/api/booking-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (data.errors) {
+          const fieldErrors: Record<string, string> = {};
+          for (const err of data.errors) {
+            if (err.path?.[0]) {
+              fieldErrors[err.path[0]] = err.message;
+            }
+          }
+          setErrors(fieldErrors);
+        } else {
+          setErrors({ _form: data.error || "Something went wrong" });
+        }
+        return;
+      }
+
+      router.push(`/request-to-book/success?id=${data.id}`);
+    } catch {
+      setErrors({ _form: "Network error. Please try again." });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const today = new Date().toISOString().split("T")[0];
+
   return (
-    <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-      <form onSubmit={handleSubmit} className="rounded-[32px] bg-white p-8 shadow-card">
-        <div className="grid gap-5 md:grid-cols-2">
-          <label className="grid gap-2 text-sm font-medium text-ink">
-            Full name
-            <input required name="name" className="rounded-2xl border border-black/10 bg-sand px-4 py-3" />
-          </label>
-          <label className="grid gap-2 text-sm font-medium text-ink">
-            Email
-            <input
-              required
-              type="email"
-              name="email"
-              className="rounded-2xl border border-black/10 bg-sand px-4 py-3"
-            />
-          </label>
-          <label className="grid gap-2 text-sm font-medium text-ink">
-            Room type
-            <select
-              required
-              name="room"
-              value={selectedRoom?.name ?? ""}
-              onChange={(event) => {
-                const room = rooms.find((entry) => entry.name === event.target.value);
-                if (room) {
-                  setSelectedRoomSlug(room.slug);
-                }
-              }}
-              className="rounded-2xl border border-black/10 bg-sand px-4 py-3"
-            >
-              {rooms.map((room) => (
-                <option key={room.slug}>{room.name}</option>
-              ))}
-            </select>
-          </label>
-          <label className="grid gap-2 text-sm font-medium text-ink">
-            Guests
-            <select name="guests" className="rounded-2xl border border-black/10 bg-sand px-4 py-3">
-              <option>1</option>
-              <option>2</option>
-            </select>
-          </label>
-          <label className="grid gap-2 text-sm font-medium text-ink">
+    <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+      <div className="flex border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500">
+        <div className="w-1/2 border-r border-gray-300 p-3 bg-white">
+          <label
+            htmlFor="check_in_date"
+            className="block text-xs font-bold text-gray-700 uppercase"
+          >
             Check-in
-            <input
-              required
-              type="date"
-              name="checkIn"
-              value={checkIn}
-              onChange={(event) => setCheckIn(event.target.value)}
-              className="rounded-2xl border border-black/10 bg-sand px-4 py-3"
-            />
           </label>
-          <label className="grid gap-2 text-sm font-medium text-ink">
+          <input
+            type="date"
+            id="check_in_date"
+            min={today}
+            value={form.check_in_date}
+            onChange={(e) => updateField("check_in_date", e.target.value)}
+            className="w-full mt-1 border-none bg-transparent text-sm focus:ring-0 p-0 text-gray-900 outline-none"
+            required
+          />
+          {errors.check_in_date && (
+            <p className="text-xs text-red-600 mt-1">{errors.check_in_date}</p>
+          )}
+        </div>
+        <div className="w-1/2 p-3 bg-white">
+          <label
+            htmlFor="check_out_date"
+            className="block text-xs font-bold text-gray-700 uppercase"
+          >
             Check-out
-            <input
-              required
-              type="date"
-              name="checkOut"
-              value={checkOut}
-              onChange={(event) => setCheckOut(event.target.value)}
-              className="rounded-2xl border border-black/10 bg-sand px-4 py-3"
-            />
           </label>
-          <label className="grid gap-2 text-sm font-medium text-ink md:col-span-2">
-            Message
-            <textarea
-              name="message"
-              rows={5}
-              placeholder="Tell us about your stay, nationality, visa status, or arrival time."
-              className="rounded-2xl border border-black/10 bg-sand px-4 py-3"
-            />
-          </label>
-        </div>
-        <div className="mt-6 rounded-[28px] bg-mist p-5 text-sm text-ink">
-          <p className="font-semibold text-ink">Estimated stay cost</p>
-          {selectedRoom ? (
-            <div className="mt-3 space-y-2 leading-6 text-ink/75">
-              <p>
-                Room: <span className="font-semibold text-ink">{selectedRoom.name}</span>
-              </p>
-              <p>
-                Rate: ${selectedRoom.priceNight}/night or ${selectedRoom.priceMonth}/month
-              </p>
-              <p>
-                {estimate?.isValid && estimate.total !== null
-                  ? `${formatEstimate(estimate.total)} for ${estimate.nights} night${estimate.nights === 1 ? "" : "s"}`
-                  : "Choose valid dates to see the estimated total."}
-              </p>
-              <p>{estimate?.description ?? "Monthly rates are used for longer stays."}</p>
-            </div>
-          ) : null}
-        </div>
-        {error ? <p className="mt-4 text-sm font-medium text-coral">{error}</p> : null}
-        <button
-          disabled={isSubmitting}
-          className="mt-6 rounded-full bg-coral px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isSubmitting ? "Sending..." : "Send request"}
-        </button>
-      </form>
-
-      <aside className="rounded-[32px] bg-pine p-8 text-white">
-        <h3 className="font-display text-3xl">How booking works</h3>
-        <ol className="mt-5 space-y-4 text-sm leading-6 text-white/80">
-          <li>1. Choose a room and send your request with dates.</li>
-          <li>2. The host reviews availability and stay details manually.</li>
-          <li>3. You receive a follow-up by email or messaging app before anything is confirmed.</li>
-        </ol>
-
-        {submitState.submitted ? (
-          <div className="mt-8 rounded-[28px] bg-white/10 p-5">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-clay">Request sent</p>
-            <p className="mt-3 text-sm leading-6 text-white/85">
-              Your stay is pending host review. Continue the conversation in your preferred channel.
+          <input
+            type="date"
+            id="check_out_date"
+            min={form.check_in_date || today}
+            value={form.check_out_date}
+            onChange={(e) => updateField("check_out_date", e.target.value)}
+            className="w-full mt-1 border-none bg-transparent text-sm focus:ring-0 p-0 text-gray-900 outline-none"
+            required
+          />
+          {errors.check_out_date && (
+            <p className="text-xs text-red-600 mt-1">
+              {errors.check_out_date}
             </p>
-            <div className="mt-5 flex flex-col gap-3 text-sm font-semibold">
-              <a className="rounded-full bg-white px-4 py-3 text-center text-ink" href={contactLinks.email}>
-                Send by Email
-              </a>
-              <a className="rounded-full bg-white px-4 py-3 text-center text-ink" href={contactLinks.whatsapp}>
-                Continue in WhatsApp
-              </a>
-              <a className="rounded-full border border-white/40 px-4 py-3 text-center text-white" href={contactLinks.kakao}>
-                Continue in KakaoTalk
-              </a>
+          )}
+        </div>
+      </div>
+
+      {!singleRoom && (
+        <div className="block w-full border border-gray-300 rounded-lg p-3 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 bg-white">
+          <label
+            htmlFor="room_slug"
+            className="block text-xs font-bold text-gray-700 uppercase"
+          >
+            Room Type
+          </label>
+          <select
+            id="room_slug"
+            value={form.room_slug}
+            onChange={(e) => updateField("room_slug", e.target.value)}
+            className="mt-1 block w-full border-none bg-transparent text-sm focus:ring-0 p-0 text-gray-900 outline-none"
+            required
+          >
+            {rooms.map((room) => (
+              <option key={room.slug} value={room.slug}>
+                {room.name} ({formatKRW(room.price_monthly)}/mo)
+              </option>
+            ))}
+          </select>
+          {errors.room_slug && (
+            <p className="text-xs text-red-600 mt-1">{errors.room_slug}</p>
+          )}
+        </div>
+      )}
+
+      <div className="block w-full border border-gray-300 rounded-lg p-3 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 bg-white">
+        <label
+          htmlFor="guest_count"
+          className="block text-xs font-bold text-gray-700 uppercase"
+        >
+          Guests
+        </label>
+        <select
+          id="guest_count"
+          value={form.guest_count}
+          onChange={(e) => updateField("guest_count", Number(e.target.value))}
+          className="mt-1 block w-full border-none bg-transparent text-sm focus:ring-0 p-0 text-gray-900 outline-none"
+        >
+          {[1, 2, 3, 4].map((n) => (
+            <option key={n} value={n}>
+              {n} guest{n > 1 ? "s" : ""}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="space-y-3 pt-4 border-t border-gray-100 mt-4">
+        <div>
+          <input
+            type="text"
+            id="guest_name"
+            placeholder="Full Name (as on passport)"
+            value={form.guest_name}
+            onChange={(e) => updateField("guest_name", e.target.value)}
+            className="block w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            required
+          />
+          {errors.guest_name && (
+            <p className="text-xs text-red-600 mt-1">{errors.guest_name}</p>
+          )}
+        </div>
+        <div>
+          <input
+            type="email"
+            id="guest_email"
+            placeholder="Email Address"
+            value={form.guest_email}
+            onChange={(e) => updateField("guest_email", e.target.value)}
+            className="block w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            required
+          />
+          {errors.guest_email && (
+            <p className="text-xs text-red-600 mt-1">{errors.guest_email}</p>
+          )}
+        </div>
+        <div>
+          <textarea
+            id="notes"
+            placeholder="Special requests or questions?"
+            rows={2}
+            value={form.notes}
+            onChange={(e) => updateField("notes", e.target.value)}
+            className="block w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          />
+          {errors.notes && (
+            <p className="text-xs text-red-600 mt-1">{errors.notes}</p>
+          )}
+        </div>
+      </div>
+
+      {estimate && estimate.total > 0 && (
+        <div className="bg-gray-50 rounded-lg p-4 mt-4 border border-gray-200">
+          {estimate.months > 0 && (
+            <div className="flex justify-between text-base text-gray-600 mb-2">
+              <span>
+                {formatKRW(selectedRoom!.price_monthly)} x {estimate.months}{" "}
+                month{estimate.months > 1 ? "s" : ""}
+              </span>
+              <span>{formatKRW(estimate.monthlySubtotal)}</span>
             </div>
+          )}
+          {estimate.weeks > 0 && (
+            <div className="flex justify-between text-base text-gray-600 mb-2">
+              <span>
+                {formatKRW(selectedRoom!.price_weekly)} x {estimate.weeks} week
+                {estimate.weeks > 1 ? "s" : ""}
+              </span>
+              <span>{formatKRW(estimate.weeklySubtotal)}</span>
+            </div>
+          )}
+          {estimate.days > 0 && (
+            <div className="flex justify-between text-base text-gray-600 mb-2">
+              <span>
+                {formatKRW(selectedRoom!.price_daily)} x {estimate.days} day
+                {estimate.days > 1 ? "s" : ""}
+              </span>
+              <span>{formatKRW(estimate.dailySubtotal)}</span>
+            </div>
+          )}
+          <div className="flex justify-between font-bold text-gray-900 text-lg border-t border-gray-200 pt-2 mt-2">
+            <span>Estimated Total</span>
+            <span>{formatKRW(estimate.total)}</span>
           </div>
-        ) : (
-          <div className="mt-8 rounded-[28px] bg-white/10 p-5 text-sm leading-6 text-white/80">
-            This form now stores booking requests in Supabase. Add your project URL, service role key, and table setup to activate it.
-          </div>
-        )}
-      </aside>
-    </div>
+        </div>
+      )}
+
+      {errors._form && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+          {errors._form}
+        </div>
+      )}
+
+      <button
+        type="submit"
+        disabled={submitting}
+        className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm md:py-4 md:text-lg transition duration-150 ease-in-out mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {submitting ? "Sending Request..." : "Send Booking Request"}
+      </button>
+      <p className="text-xs text-center text-gray-500 mt-2">
+        This sends a request to the host. Your booking is{" "}
+        <strong>not confirmed</strong> until we review and respond via email.
+      </p>
+    </form>
   );
 }

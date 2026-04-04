@@ -1,76 +1,81 @@
-import { NextResponse } from "next/server";
-import { insertBookingRequest } from "@/lib/supabase";
-import { formatEstimate, getStayEstimate } from "@/lib/pricing";
-import { rooms } from "@/lib/site-data";
+import { NextRequest, NextResponse } from "next/server";
+import { bookingRequestSchema } from "@/lib/validation";
+import { getRoomBySlug, createBookingRequest } from "@/lib/queries";
+import { calculateEstimate } from "@/lib/pricing";
+import { sendGuestConfirmation, sendAdminNotification } from "@/lib/email";
 
-type BookingRequestBody = {
-  checkIn?: string;
-  checkOut?: string;
-  email?: string;
-  estimatedTotal?: number;
-  guests?: number;
-  message?: string;
-  name?: string;
-  nights?: number;
-  pricingBasis?: string;
-  roomName?: string;
-  roomSlug?: string;
-};
-
-export async function POST(request: Request) {
-  const body = (await request.json()) as BookingRequestBody;
-  const room = rooms.find((entry) => entry.slug === body.roomSlug);
-
-  if (!room) {
-    return NextResponse.json({ error: "Selected room was not found." }, { status: 400 });
-  }
-
-  if (!body.name || !body.email || !body.checkIn || !body.checkOut || !body.guests) {
-    return NextResponse.json({ error: "Missing required booking request fields." }, { status: 400 });
-  }
-
-  const estimate = getStayEstimate({
-    room,
-    checkIn: body.checkIn,
-    checkOut: body.checkOut
-  });
-
-  if (!estimate.isValid || estimate.total === null) {
-    return NextResponse.json({ error: "Invalid stay dates for pricing." }, { status: 400 });
-  }
-
-  if (
-    body.estimatedTotal !== estimate.total ||
-    body.pricingBasis !== estimate.label ||
-    body.nights !== estimate.nights
-  ) {
-    return NextResponse.json(
-      {
-        error: `Pricing changed during validation. Expected ${formatEstimate(estimate.total)} using ${estimate.label} pricing.`
-      },
-      { status: 400 }
-    );
-  }
-
+export async function POST(req: NextRequest) {
   try {
-    await insertBookingRequest({
-      check_in: body.checkIn,
-      check_out: body.checkOut,
-      email: body.email,
-      estimated_total: estimate.total,
-      guests: body.guests,
-      message: body.message ?? "",
-      name: body.name,
-      nights: estimate.nights,
-      pricing_basis: estimate.label,
-      room_name: room.name,
+    const body = await req.json();
+
+    // Validate input
+    const result = bookingRequestSchema.safeParse(body);
+    if (!result.success) {
+      return NextResponse.json(
+        { error: "Validation failed", errors: result.error.issues },
+        { status: 400 }
+      );
+    }
+
+    const data = result.data;
+
+    // Verify room exists
+    const room = await getRoomBySlug(data.room_slug);
+    if (!room) {
+      return NextResponse.json(
+        { error: "Selected room not found" },
+        { status: 400 }
+      );
+    }
+
+    // Server-side price calculation
+    const estimate = calculateEstimate(
+      room,
+      data.check_in_date,
+      data.check_out_date
+    );
+
+    // Store booking request
+    const bookingRequest = await createBookingRequest({
+      guest_name: data.guest_name,
+      guest_email: data.guest_email,
+      guest_count: data.guest_count,
+      room_id: room.id,
       room_slug: room.slug,
-      status: "new"
+      check_in_date: data.check_in_date,
+      check_out_date: data.check_out_date,
+      estimated_total: estimate.total,
+      notes: data.notes,
+      status: "new",
+      admin_notes: "",
     });
 
-    return NextResponse.json({ ok: true });
+    // Send emails (non-blocking — don't fail the request on email errors)
+    const emailData = {
+      guest_name: data.guest_name,
+      guest_email: data.guest_email,
+      room_name: room.name,
+      check_in_date: data.check_in_date,
+      check_out_date: data.check_out_date,
+      guest_count: data.guest_count,
+      estimated_total: estimate.total,
+      notes: data.notes,
+    };
+
+    Promise.allSettled([
+      sendGuestConfirmation(emailData),
+      sendAdminNotification(emailData),
+    ]).catch(console.error);
+
+    return NextResponse.json(
+      { id: bookingRequest.id, status: "success" },
+      { status: 201 }
+    );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown booking request error.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("Booking request error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

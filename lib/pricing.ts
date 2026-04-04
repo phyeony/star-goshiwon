@@ -1,71 +1,72 @@
-import type { Room } from "@/lib/site-data";
+import type { Room } from "./types";
 
-type StayEstimateArgs = {
-  room: Room;
-  checkIn: string;
-  checkOut: string;
-};
+export interface PricingBreakdown {
+  months: number;
+  weeks: number;
+  days: number;
+  monthlySubtotal: number;
+  weeklySubtotal: number;
+  dailySubtotal: number;
+  total: number;
+  label: string;
+}
 
-type StayEstimate = {
-  description: string;
-  isValid: boolean;
-  label: "nightly" | "monthly-prorated";
-  nights: number;
-  total: number | null;
-};
-
-const MS_PER_DAY = 1000 * 60 * 60 * 24;
-
-export function getStayEstimate({ room, checkIn, checkOut }: StayEstimateArgs): StayEstimate {
-  if (!checkIn || !checkOut) {
-    return {
-      description: "Pick a check-in and check-out date to preview the estimated total.",
-      isValid: false,
-      label: "nightly",
-      nights: 0,
-      total: null
-    };
-  }
-
+export function calculateEstimate(
+  room: Pick<Room, "price_monthly" | "price_weekly" | "price_daily">,
+  checkIn: string,
+  checkOut: string
+): PricingBreakdown {
   const start = new Date(checkIn);
   const end = new Date(checkOut);
-  const nights = Math.round((end.getTime() - start.getTime()) / MS_PER_DAY);
+  const totalDays = Math.ceil(
+    (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+  );
 
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || nights <= 0) {
+  if (totalDays <= 0) {
     return {
-      description: "Check-out must be after check-in.",
-      isValid: false,
-      label: "nightly",
-      nights: 0,
-      total: null
+      months: 0,
+      weeks: 0,
+      days: 0,
+      monthlySubtotal: 0,
+      weeklySubtotal: 0,
+      dailySubtotal: 0,
+      total: 0,
+      label: "",
     };
   }
 
-  if (nights >= 28) {
-    const nightlyFromMonthly = room.priceMonth / 30;
-    const total = Math.round(nightlyFromMonthly * nights);
-    return {
-      description: "Longer stays use a monthly rate converted into a prorated estimate.",
-      isValid: true,
-      label: "monthly-prorated",
-      nights,
-      total
-    };
-  }
+  // Break down into months (30 days), weeks (7 days), days
+  const months = Math.floor(totalDays / 30);
+  const remainingAfterMonths = totalDays % 30;
+  const weeks = Math.floor(remainingAfterMonths / 7);
+  const days = remainingAfterMonths % 7;
+
+  const monthlySubtotal = months * room.price_monthly;
+  const weeklySubtotal = weeks * room.price_weekly;
+  const dailySubtotal = days * room.price_daily;
+  const total = monthlySubtotal + weeklySubtotal + dailySubtotal;
+
+  const parts: string[] = [];
+  if (months > 0) parts.push(`${months} month${months > 1 ? "s" : ""}`);
+  if (weeks > 0) parts.push(`${weeks} week${weeks > 1 ? "s" : ""}`);
+  if (days > 0) parts.push(`${days} day${days > 1 ? "s" : ""}`);
 
   return {
-    description: "Short stays use the room's nightly rate.",
-    isValid: true,
-    label: "nightly",
-    nights,
-    total: room.priceNight * nights
+    months,
+    weeks,
+    days,
+    monthlySubtotal,
+    weeklySubtotal,
+    dailySubtotal,
+    total,
+    label: parts.join(", ") || "0 days",
   };
 }
 
-export function formatEstimate(total: number) {
-  return new Intl.NumberFormat("en-US", {
+export function formatKRW(amount: number): string {
+  return new Intl.NumberFormat("ko-KR", {
     style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0
-  }).format(total);
+    currency: "KRW",
+    maximumFractionDigits: 0,
+  }).format(amount);
 }

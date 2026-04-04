@@ -1,93 +1,147 @@
-export type Room = {
-  slug: string;
-  name: string;
-  priceNight: number;
-  priceMonth: number;
-  occupancy: string;
-  size: string;
-  status: "Available" | "Limited" | "Waitlist";
-  summary: string;
-  amenities: string[];
-  photo: string;
-};
-
-export const property = {
+export const siteConfig = {
   name: "Seoul Stay Goshiwon",
-  tagline: "Simple, central, and foreigner-friendly living in Seoul",
-  address: "24-1, Heukseok-ro, Dongjak-gu, Seoul",
-  neighborhood:
-    "Near subway access, late-night food spots, laundromats, and easy bus connections to universities and office districts.",
-  mapHref: "https://maps.google.com",
-  email: "stay@example.com",
-  whatsappHref: "https://wa.me/821012345678",
-  kakaotalkHref: "https://open.kakao.com/o/example",
-  heroImage:
-    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1400&q=80"
+  tagline: "Your Comfortable Basecamp in Seoul",
+  description:
+    "Foreigner-friendly goshiwon in Seoul. No massive deposits, no 1-year contracts. Clean, secure, fully-furnished private rooms for students, digital nomads, and travelers.",
+  email: "hello@seoulstay.kr",
+  phone: "+82-10-1234-5678",
+  whatsapp: "https://wa.me/821012345678",
+  kakao: "https://pf.kakao.com/seoulstay",
+  address: "64, Manyang-ro 12ga-gil, Dongjak-gu, Seoul, Republic of Korea",
+  mapUrl: "https://www.google.com/maps/place/Stargositel/data=!4m10!1m2!2m1!1z64W465-J7KeEIOyKpO2DgOqzoOyLnO2FlA!3m6!1s0x357c9f6736793a2b:0x7f3263912b31aa4c!8m2!3d37.5112885!4d126.948383!15sChnrhbjrn4nsp4Qg7Iqk7YOA6rOg7Iuc7YWUkgERYmVkX2FuZF9icmVha2Zhc3TgAQA!16s%2Fg%2F11k3n5dk8k",
+  naverMapUrl: "https://map.naver.com/p/entry/place/20857528?c=15.00,0,0,0,dh&placePath=/home",
+  kakaoMapUrl: "https://map.kakao.com/?urlX=488593.9999999978&urlY=1114406.000000001&urlLevel=3&itemId=27473089&q=%EC%8A%A4%ED%83%80%EA%B3%A0%EC%8B%9C%ED%85%94&srcid=27473089&map_type=TYPE_MAP",
+  coordinates: { lat: 37.5112885, lng: 126.948383 },
+  responseTime: "24 hours",
+  url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
 };
 
-export const rooms: Room[] = [
-  {
-    slug: "compact-single",
-    name: "Compact Single",
-    priceNight: 38,
-    priceMonth: 590,
-    occupancy: "1 guest",
-    size: "6m²",
-    status: "Available",
-    summary: "Budget-friendly private room with desk, storage, and shared shower access.",
-    amenities: ["Wi-Fi", "Desk", "Storage", "Shared kitchen", "Laundry"],
-    photo:
-      "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    slug: "standard-single",
-    name: "Standard Single",
-    priceNight: 49,
-    priceMonth: 720,
-    occupancy: "1 guest",
-    size: "8m²",
-    status: "Limited",
-    summary: "Popular room with private bathroom, larger bed, and brighter natural light.",
-    amenities: ["Private bathroom", "Wi-Fi", "Desk", "Mini fridge", "Laundry"],
-    photo:
-      "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    slug: "premium-twin",
-    name: "Premium Twin",
-    priceNight: 78,
-    priceMonth: 1090,
-    occupancy: "2 guests",
-    size: "12m²",
-    status: "Waitlist",
-    summary: "Best for friends or couples needing more room and a quieter corner location.",
-    amenities: ["Private bathroom", "Wi-Fi", "Desk", "Closet", "Microwave access"],
-    photo:
-      "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1000&q=80"
-  }
+export const highlights = [
+  { value: "0₩", label: "Key Money Deposit" },
+  { value: "1 Month", label: "Minimum Stay" },
+  { value: "Included", label: "Rice, Kimchi & Ramen" },
+  { value: "English", label: "Speaking Management" },
+];
+
+export const amenities = [
+  { icon: "wifi", label: "High-Speed WiFi" },
+  { icon: "snowflake", label: "AC / Heating" },
+  { icon: "utensils", label: "Shared Kitchen" },
+  { icon: "shirt", label: "Laundry Room" },
+  { icon: "shield", label: "24/7 Security" },
+  { icon: "package", label: "Package Reception" },
+  { icon: "droplets", label: "Hot Water" },
+  { icon: "zap", label: "Utilities Included" },
 ];
 
 export const faqs = [
   {
-    question: "Can foreigners stay in this goshiwon?",
+    question: "What is a goshiwon?",
     answer:
-      "Yes. The website and booking process are designed for foreign guests, including students, travelers, and remote workers."
+      "A goshiwon (고시원) is a type of affordable housing in Korea, originally designed for students preparing for exams. Today, they are popular among foreigners, digital nomads, and anyone looking for budget-friendly private rooms with flexible lease terms. Rooms are small but fully furnished, and common areas are shared.",
   },
   {
-    question: "Do you support short stays?",
+    question: "What documents do I need to check in?",
     answer:
-      "Yes. You can request both short-term and monthly stays. Final approval depends on room availability and your requested dates."
+      "You will need your passport and a valid visa. We accept most visa types including tourist (B-1/B-2), student (D-2/D-4), working holiday (H-1), and work visas. We will verify your documents at check-in.",
   },
   {
-    question: "Is a booking confirmed immediately?",
+    question: "Is a deposit required?",
     answer:
-      "No. This site uses a request-to-book flow. You send your stay request first, then the host reviews and confirms manually."
-  }
+      "We require a small refundable deposit equivalent to one month's rent, payable at check-in. There is no key money (보증금) or real estate agent fee required. The deposit is returned in full upon checkout if the room is in good condition.",
+  },
+  {
+    question: "What is included in the monthly rent?",
+    answer:
+      "Rent includes utilities (electricity, water, gas, internet), basic food supplies (rice, kimchi, ramen, eggs), access to shared kitchen and laundry facilities, and room cleaning supplies. There are no hidden fees.",
+  },
+  {
+    question: "What is the minimum stay?",
+    answer:
+      "The minimum stay is 1 month. We also offer weekly and daily rates for shorter stays, though monthly stays offer the best value.",
+  },
+  {
+    question: "Can I see the room before booking?",
+    answer:
+      "Yes! We encourage room visits. Send us a booking request or contact us via WhatsApp/KakaoTalk to schedule a viewing. Walk-ins are also welcome during business hours (9 AM - 9 PM).",
+  },
+  {
+    question: "Is there a curfew or house rules?",
+    answer:
+      "There is no curfew. You have 24/7 access with your personal door code. We do ask that residents keep noise to a minimum between 10 PM and 8 AM, and maintain cleanliness in shared areas.",
+  },
+  {
+    question: "How do I pay rent?",
+    answer:
+      "Monthly rent is paid via bank transfer to our Korean bank account at the beginning of each month. We can help you set up a Korean bank account if needed. Cash payment is also accepted.",
+  },
+  {
+    question: "Can I extend my stay?",
+    answer:
+      "Yes, you can extend your stay as long as the room is available. Just let us know at least one week before your current checkout date, and we will update your booking.",
+  },
+  {
+    question: "What is the cancellation policy?",
+    answer:
+      "Cancellations made 7 or more days before check-in receive a full deposit refund. Cancellations within 7 days of check-in forfeit 50% of the deposit. No-shows forfeit the full deposit.",
+  },
 ];
 
-export const requestStatuses = [
-  { name: "New", count: 8 },
-  { name: "Contacted", count: 5 },
-  { name: "Approved", count: 3 },
-  { name: "Declined", count: 1 }
+export const policies = {
+  cancellation: {
+    title: "Cancellation Policy",
+    content: `
+- Cancellations made 7+ days before check-in: full deposit refund
+- Cancellations within 7 days of check-in: 50% deposit forfeited
+- No-shows: full deposit forfeited
+- Early checkout after check-in: remaining prepaid rent refunded minus 1 week penalty
+    `.trim(),
+  },
+  houseRules: {
+    title: "House Rules",
+    content: `
+- Quiet hours: 10 PM – 8 AM
+- No smoking inside the building
+- No pets allowed
+- No overnight guests without prior approval
+- Keep shared areas clean after use
+- Dispose of trash in designated bins with proper separation
+- Do not tamper with locks, fire alarms, or safety equipment
+- Report any maintenance issues promptly
+    `.trim(),
+  },
+  checkInOut: {
+    title: "Check-in / Check-out",
+    content: `
+- Check-in: 2 PM – 9 PM (other times by arrangement)
+- Check-out: by 11 AM on departure date
+- Bring your passport and visa for identity verification
+- Deposit is due at check-in (cash or bank transfer)
+- Room key code will be provided at check-in
+    `.trim(),
+  },
+};
+
+export const nearbyLocations = [
+  { name: "Sangdo Station (Line 7)", distance: "5 min walk", type: "transit" },
+  { name: "Noryangjin Station (Line 1 & 9)", distance: "10 min walk", type: "transit" },
+  { name: "Sindaebang Station (Line 2)", distance: "12 min walk", type: "transit" },
+  { name: "Seoul Express Bus Terminal", distance: "15 min by subway", type: "transit" },
+  { name: "CU / GS25 Convenience Stores", distance: "1–2 min walk", type: "shop" },
+  { name: "Noryangjin Fish Market", distance: "12 min walk", type: "shop" },
+  { name: "Yongsan Electronics Market", distance: "20 min by subway", type: "shop" },
+  { name: "Itaewon (shopping & dining)", distance: "20 min by subway", type: "shop" },
+  { name: "Hongdae (nightlife & culture)", distance: "25 min by subway", type: "shop" },
+  { name: "Gyeongbokgung Palace", distance: "30 min by subway", type: "explore" },
+  { name: "Namsan Tower / N Seoul Tower", distance: "20 min by bus", type: "explore" },
+  { name: "Han River Park (Dongjak)", distance: "15 min walk", type: "explore" },
+  { name: "War Memorial of Korea", distance: "15 min by subway", type: "explore" },
+  { name: "Bukchon Hanok Village", distance: "35 min by subway", type: "explore" },
+  { name: "Myeongdong (shopping district)", distance: "25 min by subway", type: "explore" },
+  { name: "Lotte World & Lotte Tower", distance: "30 min by subway", type: "explore" },
+  { name: "Chung-Ang University (중앙대)", distance: "10 min by bus", type: "university" },
+  { name: "Soongsil University (숭실대)", distance: "15 min walk", type: "university" },
+  { name: "Seoul National University (서울대)", distance: "20 min by subway", type: "university" },
+  { name: "Sogang University (서강대)", distance: "25 min by subway", type: "university" },
+  { name: "Yonsei University (연세대)", distance: "30 min by subway", type: "university" },
 ];

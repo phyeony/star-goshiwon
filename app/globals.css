@@ -2,31 +2,4 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: light;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  min-height: 100vh;
-}
-
-a {
-  text-decoration: none;
-}
-
-input,
-select,
-textarea {
-  outline: none;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-  border-color: #d66b4d;
-  box-shadow: 0 0 0 3px rgba(214, 107, 77, 0.18);
-}
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
