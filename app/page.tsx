@@ -7,6 +7,60 @@ import { siteConfig, highlights, amenities, faqs } from "@/lib/site-data";
 
 export const dynamic = "force-dynamic";
 
+const amenityIcons: Record<string, React.ReactNode> = {
+  wifi: (
+    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.14 0M1.394 9.393c5.857-5.858 15.355-5.858 21.213 0" />
+    </svg>
+  ),
+  snowflake: (
+    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="2" y="4" width="20" height="12" rx="3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 12h12" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 20c0-1.5.5-4 1-4M12 20c0-1.5 0-4 0-4M16 20c0-1.5-.5-4-1-4" />
+    </svg>
+  ),
+  utensils: (
+    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2 2l0 7c0 1.66 1.34 3 3 3h2c1.66 0 3-1.34 3-3l0-7" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 2v20" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 2c-2 0-4 3-4 7s2 5 4 5m0-12v20" />
+    </svg>
+  ),
+  shirt: (
+    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.38 3.46L16 2 12 5 8 2 3.62 3.46a1 1 0 00-.76.95V6l3.14 1V21h12V7L21.14 6V4.41a1 1 0 00-.76-.95z" />
+    </svg>
+  ),
+  shield: (
+    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4" />
+    </svg>
+  ),
+  package: (
+    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12" />
+    </svg>
+  ),
+  fridge: (
+    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="4" y="2" width="16" height="20" rx="2" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 10h16M8 6v2M8 14v2" />
+    </svg>
+  ),
+  zap: (
+    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+    </svg>
+  ),
+};
+
+function AmenityIcon({ name }: { name: string }) {
+  return <>{amenityIcons[name] ?? null}</>;
+}
+
 export default async function HomePage() {
   const rooms = await getPublicRooms();
 
@@ -18,15 +72,16 @@ export default async function HomePage() {
           <div className="relative z-10 pb-8 bg-white sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32 pt-10 sm:pt-16 lg:pt-20">
             <div className="mx-auto max-w-7xl sm:text-center lg:text-left">
               <span className="inline-block py-1 px-3 rounded-full bg-indigo-50 text-indigo-700 text-sm font-semibold border border-indigo-100 mb-4">
-                Foreigner-Friendly Housing in Seoul
+                Foreigner-Friendly Men&rsquo;s Goshiwon in Central Seoul
               </span>
               <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-gray-900 leading-tight">
                 <span className="block">Your Comfortable</span>
                 <span className="block text-indigo-600">Basecamp in Seoul</span>
               </h1>
               <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-                No massive deposits. No 1-year contracts. Just clean, secure,
-                and fully-furnished private rooms in the heart of the city.
+                No massive deposits. No long-term contracts. Clean, secure,
+                and fully-furnished private rooms for men in the centre of Seoul.
+                Gangnam, Hongdae, Myeongdong in less than 50 mins by public transit.
                 Perfect for students, digital nomads, and travelers.
               </p>
               <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start gap-4">
@@ -49,10 +104,10 @@ export default async function HomePage() {
         <div className="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
           <Image
             className="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full"
-            src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
-            alt="Clean modern room interior"
-            width={1000}
-            height={667}
+            src="/images/room-601-wide2.jpg"
+            alt="Furnished private room at Stargositel with bed, desk, and chair"
+            width={1613}
+            height={726}
             priority
           />
         </div>
@@ -109,20 +164,7 @@ export default async function HomePage() {
                 className="bg-gray-50 rounded-2xl p-6 text-center border border-gray-200"
               >
                 <div className="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <svg
-                    className="w-6 h-6 text-indigo-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
+                  <AmenityIcon name={item.icon} />
                 </div>
                 <p className="text-sm font-medium text-gray-900">
                   {item.label}
@@ -183,8 +225,8 @@ export default async function HomePage() {
             Ready to find your room in Seoul?
           </h2>
           <p className="mt-4 text-lg text-indigo-200">
-            Submit a booking request and we&rsquo;ll get back to you within{" "}
-            {siteConfig.responseTime}. No payment required.
+            Submit a booking request to Stargositel and we&rsquo;ll get back to
+            you within {siteConfig.responseTime}. No payment required.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
             <Link

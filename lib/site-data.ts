@@ -2,7 +2,7 @@ export const siteConfig = {
   name: "Seoul Stay Goshiwon",
   tagline: "Your Comfortable Basecamp in Seoul",
   description:
-    "Foreigner-friendly goshiwon in Seoul. No massive deposits, no 1-year contracts. Clean, secure, fully-furnished private rooms for students, digital nomads, and travelers.",
+    "Foreigner-friendly men's goshiwon in central Seoul. No massive deposits, no long-term contracts. Clean, secure, fully-furnished private rooms — Gangnam 15 min, Hongdae 25 min by subway.",
   email: "hello@seoulstay.kr",
   phone: "+82-10-1234-5678",
   whatsapp: "https://wa.me/821012345678",
@@ -18,7 +18,7 @@ export const siteConfig = {
 
 export const highlights = [
   { value: "0₩", label: "Key Money Deposit" },
-  { value: "1 Month", label: "Minimum Stay" },
+  { value: "7 Days", label: "Minimum Stay" },
   { value: "Included", label: "Rice, Kimchi & Ramen" },
   { value: "English", label: "Speaking Management" },
 ];
@@ -30,7 +30,7 @@ export const amenities = [
   { icon: "shirt", label: "Laundry Room" },
   { icon: "shield", label: "24/7 Security" },
   { icon: "package", label: "Package Reception" },
-  { icon: "droplets", label: "Hot Water" },
+  { icon: "fridge", label: "In-Room Mini Fridge" },
   { icon: "zap", label: "Utilities Included" },
 ];
 
@@ -58,7 +58,7 @@ export const faqs = [
   {
     question: "What is the minimum stay?",
     answer:
-      "The minimum stay is 1 month. We also offer weekly and daily rates for shorter stays, though monthly stays offer the best value.",
+      "The minimum stay is 7 days. We offer weekly and monthly rates. Monthly stays offer the best value.",
   },
   {
     question: "Can I see the room before booking?",

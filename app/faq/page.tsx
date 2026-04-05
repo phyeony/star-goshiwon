@@ -67,6 +67,14 @@ export default function FAQPage() {
           >
             WhatsApp
           </a>
+          <a
+            href={siteConfig.kakao}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center px-6 py-3 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition duration-150 ease-in-out"
+          >
+            KakaoTalk
+          </a>
         </div>
       </div>
     </div>

@@ -140,8 +140,8 @@ export function Footer() {
 
         <div className="mt-8 pt-8 border-t border-gray-200 text-center">
           <p className="text-sm text-gray-400">
-            &copy; {new Date().getFullYear()} {siteConfig.name}. All rights
-            reserved.
+            &copy; {new Date().getFullYear()} {siteConfig.name} (Stargositel).
+            All rights reserved.
           </p>
         </div>
       </div>

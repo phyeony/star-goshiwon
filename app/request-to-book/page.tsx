@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
-import { RequestForm } from "@/components/request-form";
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import { RoomCard } from "@/components/room-card";
 import { getPublicRooms } from "@/lib/queries";
+import { siteConfig } from "@/lib/site-data";
 
 export const metadata: Metadata = {
   title: "Request to Book",
@@ -16,36 +19,44 @@ export default async function RequestToBookPage({
   searchParams: Promise<{ room?: string }>;
 }) {
   const { room: preselectedSlug } = await searchParams;
-  const rooms = await getPublicRooms();
 
-  const roomOptions = rooms.map((r) => ({
-    name: r.name,
-    slug: r.slug,
-    price_monthly: r.price_monthly,
-    price_weekly: r.price_weekly,
-    price_daily: r.price_daily,
-  }));
+  // If a room is already selected, send the user straight to its detail page
+  if (preselectedSlug) {
+    redirect(`/rooms/${preselectedSlug}`);
+  }
+
+  const rooms = await getPublicRooms();
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-      <div className="max-w-2xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
-            Request to Book
-          </h1>
-          <p className="mt-2 text-base text-gray-500">
-            Fill in your details below and we&rsquo;ll get back to you within 24
-            hours. No payment is required at this stage.
+      <div className="text-center mb-12">
+        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+          Request to Book
+        </h1>
+        <p className="mt-2 text-base text-gray-500 max-w-2xl mx-auto">
+          Choose a room to see full details, pricing, and submit your booking
+          request. No payment is required &mdash; we&rsquo;ll get back to you
+          within {siteConfig.responseTime}.
+        </p>
+      </div>
+
+      {rooms.length === 0 ? (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
+          <p className="text-gray-500 text-lg">
+            No rooms available at the moment. Please check back soon or{" "}
+            <Link href="/contact" className="text-indigo-600 hover:text-indigo-700 font-medium">
+              contact us
+            </Link>{" "}
+            for availability.
           </p>
         </div>
-
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 sm:p-8">
-          <RequestForm
-            rooms={roomOptions}
-            preselectedSlug={preselectedSlug}
-          />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {rooms.map((room) => (
+            <RoomCard key={room.id} room={room} />
+          ))}
         </div>
-      </div>
+      )}
     </div>
   );
 }
