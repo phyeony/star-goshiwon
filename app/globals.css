@@ -1,5 +1,14 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Caveat:wght@400;500;600;700&family=Shadows+Into+Light&family=Patrick+Hand&display=swap");
+
+@layer utilities {
+  .hero-text-shadow {
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 0, 0, 0.3);
+  }
+  .hero-text-shadow-heavy {
+    text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.7), 0 0 30px rgba(0, 0, 0, 0.4), 1px 1px 0px rgba(0, 0, 0, 0.5);
+  }
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");

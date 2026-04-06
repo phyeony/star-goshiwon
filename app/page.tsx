@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { RoomCard } from "@/components/room-card";
 import { SectionTitle } from "@/components/section-title";
+import { HeroSlideshow } from "@/components/hero-slideshow";
 import { getPublicRooms } from "@/lib/queries";
 import { siteConfig, highlights, amenities, faqs } from "@/lib/site-data";
 
@@ -67,51 +68,7 @@ export default async function HomePage() {
   return (
     <>
       {/* Hero */}
-      <div className="relative bg-white overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative z-10 pb-8 bg-white sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32 pt-10 sm:pt-16 lg:pt-20">
-            <div className="mx-auto max-w-7xl sm:text-center lg:text-left">
-              <span className="inline-block py-1 px-3 rounded-full bg-indigo-50 text-indigo-700 text-sm font-semibold border border-indigo-100 mb-4">
-                Foreigner-Friendly Men&rsquo;s Goshiwon in Central Seoul
-              </span>
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-gray-900 leading-tight">
-                <span className="block">Your Comfortable</span>
-                <span className="block text-indigo-600">Basecamp in Seoul</span>
-              </h1>
-              <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-                No massive deposits. No long-term contracts. Clean, secure,
-                and fully-furnished private rooms for men in the centre of Seoul.
-                Gangnam, Hongdae, Myeongdong in less than 50 mins by public transit.
-                Perfect for students, digital nomads, and travelers.
-              </p>
-              <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start gap-4">
-                <Link
-                  href="/rooms"
-                  className="w-full sm:w-auto flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm md:py-4 md:text-lg transition duration-150 ease-in-out"
-                >
-                  View Available Rooms
-                </Link>
-                <Link
-                  href="/request-to-book"
-                  className="mt-3 sm:mt-0 w-full sm:w-auto flex items-center justify-center px-8 py-3 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 md:py-4 md:text-lg transition duration-150 ease-in-out"
-                >
-                  Request to Book
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
-          <Image
-            className="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full"
-            src="/images/room-601-wide2.jpg"
-            alt="Furnished private room at Stargositel with bed, desk, and chair"
-            width={1613}
-            height={726}
-            priority
-          />
-        </div>
-      </div>
+      <HeroSlideshow />
 
       {/* Highlights Bar */}
       <div className="bg-indigo-700 text-white py-6">
