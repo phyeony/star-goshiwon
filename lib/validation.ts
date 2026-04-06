@@ -11,7 +11,7 @@ export const bookingRequestSchema = z
       .number()
       .int()
       .min(1, "At least 1 guest required")
-      .max(4, "Maximum 4 guests"),
+      .max(1, "Single occupancy rooms only"),
     room_slug: z.string().min(1, "Please select a room"),
     check_in_date: z.string().refine((d) => !isNaN(Date.parse(d)), {
       message: "Invalid check-in date",
@@ -38,6 +38,20 @@ export const bookingRequestSchema = z
     },
     {
       message: "Check-out date must be after check-in date",
+      path: ["check_out_date"],
+    }
+  )
+  .refine(
+    (data) => {
+      const checkIn = new Date(data.check_in_date);
+      const checkOut = new Date(data.check_out_date);
+      const days = Math.ceil(
+        (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      return days >= 7;
+    },
+    {
+      message: "Minimum stay is 7 days",
       path: ["check_out_date"],
     }
   );

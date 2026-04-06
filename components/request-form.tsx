@@ -15,12 +15,13 @@ interface RequestFormProps {
 }
 
 interface PricingBreakdown {
-  months: number;
   weeks: number;
   days: number;
-  monthlySubtotal: number;
   weeklySubtotal: number;
   dailySubtotal: number;
+  subtotal: number;
+  discountApplied: boolean;
+  discount: number;
   total: number;
   label: string;
 }
@@ -38,28 +39,29 @@ function calculateClientEstimate(
   );
   if (totalDays <= 0) return null;
 
-  const months = Math.floor(totalDays / 30);
-  const remainingAfterMonths = totalDays % 30;
-  const weeks = Math.floor(remainingAfterMonths / 7);
-  const days = remainingAfterMonths % 7;
+  const weeks = Math.floor(totalDays / 7);
+  const days = totalDays % 7;
 
-  const monthlySubtotal = months * room.price_monthly;
   const weeklySubtotal = weeks * room.price_weekly;
   const dailySubtotal = days * room.price_daily;
+  const subtotal = weeklySubtotal + dailySubtotal;
+
+  const discountApplied = weeks >= 4;
+  const discount = discountApplied ? Math.round(subtotal * 0.15) : 0;
 
   const parts: string[] = [];
-  if (months > 0) parts.push(`${months} month${months > 1 ? "s" : ""}`);
   if (weeks > 0) parts.push(`${weeks} week${weeks > 1 ? "s" : ""}`);
   if (days > 0) parts.push(`${days} day${days > 1 ? "s" : ""}`);
 
   return {
-    months,
     weeks,
     days,
-    monthlySubtotal,
     weeklySubtotal,
     dailySubtotal,
-    total: monthlySubtotal + weeklySubtotal + dailySubtotal,
+    subtotal,
+    discountApplied,
+    discount,
+    total: subtotal - discount,
     label: parts.join(", "),
   };
 }
@@ -207,7 +209,7 @@ export function RequestForm({ rooms, preselectedSlug, singleRoom }: RequestFormP
           >
             {rooms.map((room) => (
               <option key={room.slug} value={room.slug}>
-                {room.name} ({formatKRW(room.price_monthly)}/mo)
+                {room.name} ({formatKRW(room.price_weekly)}/week)
               </option>
             ))}
           </select>
@@ -217,25 +219,11 @@ export function RequestForm({ rooms, preselectedSlug, singleRoom }: RequestFormP
         </div>
       )}
 
-      <div className="block w-full border border-gray-300 rounded-lg p-3 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 bg-white">
-        <label
-          htmlFor="guest_count"
-          className="block text-xs font-bold text-gray-700 uppercase"
-        >
+      <div className="block w-full border border-gray-300 rounded-lg p-3 bg-gray-50">
+        <label className="block text-xs font-bold text-gray-700 uppercase">
           Guests
         </label>
-        <select
-          id="guest_count"
-          value={form.guest_count}
-          onChange={(e) => updateField("guest_count", Number(e.target.value))}
-          className="mt-1 block w-full border-none bg-transparent text-sm focus:ring-0 p-0 text-gray-900 outline-none"
-        >
-          {[1, 2, 3, 4].map((n) => (
-            <option key={n} value={n}>
-              {n} guest{n > 1 ? "s" : ""}
-            </option>
-          ))}
-        </select>
+        <p className="mt-1 text-sm text-gray-900">1 guest (single occupancy)</p>
       </div>
 
       <div className="space-y-3 pt-4 border-t border-gray-100 mt-4">
@@ -284,15 +272,6 @@ export function RequestForm({ rooms, preselectedSlug, singleRoom }: RequestFormP
 
       {estimate && estimate.total > 0 && (
         <div className="bg-gray-50 rounded-lg p-4 mt-4 border border-gray-200">
-          {estimate.months > 0 && (
-            <div className="flex justify-between text-base text-gray-600 mb-2">
-              <span>
-                {formatKRW(selectedRoom!.price_monthly)} x {estimate.months}{" "}
-                month{estimate.months > 1 ? "s" : ""}
-              </span>
-              <span>{formatKRW(estimate.monthlySubtotal)}</span>
-            </div>
-          )}
           {estimate.weeks > 0 && (
             <div className="flex justify-between text-base text-gray-600 mb-2">
               <span>
@@ -311,10 +290,19 @@ export function RequestForm({ rooms, preselectedSlug, singleRoom }: RequestFormP
               <span>{formatKRW(estimate.dailySubtotal)}</span>
             </div>
           )}
+          {estimate.discountApplied && (
+            <div className="flex justify-between text-base text-green-600 mb-2">
+              <span>Monthly discount (15%)</span>
+              <span>-{formatKRW(estimate.discount)}</span>
+            </div>
+          )}
           <div className="flex justify-between font-bold text-gray-900 text-lg border-t border-gray-200 pt-2 mt-2">
             <span>Estimated Total</span>
             <span>{formatKRW(estimate.total)}</span>
           </div>
+          <p className="text-xs text-gray-500 mt-2">
+            + ₩20,000 one-time bedding fee at check-in
+          </p>
         </div>
       )}
 

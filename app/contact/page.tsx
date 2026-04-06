@@ -5,7 +5,7 @@ import { siteConfig } from "@/lib/site-data";
 export const metadata: Metadata = {
   title: "Contact",
   description:
-    "Get in touch with Seoul Stay Goshiwon. Reach us by email, WhatsApp, or KakaoTalk.",
+    "Get in touch with Seoul Stay Goshiwon. Reach us by email or WhatsApp.",
 };
 
 const contactMethods = [
@@ -22,20 +22,6 @@ const contactMethods = [
     value: "Chat with us",
     href: siteConfig.whatsapp,
     badge: "Inquiry Only",
-  },
-  {
-    title: "KakaoTalk",
-    description: "Reach us on Korea's most popular messenger.",
-    value: "Add us on KakaoTalk",
-    href: siteConfig.kakao,
-    badge: "Inquiry Only",
-  },
-  {
-    title: "Phone",
-    description: "Call us during business hours (9 AM – 9 PM KST).",
-    value: siteConfig.phone,
-    href: `tel:${siteConfig.phone}`,
-    badge: null,
   },
 ];
 
@@ -84,32 +70,46 @@ export default function ContactPage() {
 
       <div className="mt-12 bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
         <h3 className="text-xl font-bold text-gray-900 mb-2">Visit Us</h3>
-        <p className="text-base text-gray-600">{siteConfig.address}</p>
+        <p className="text-lg font-semibold text-gray-800">Star Gositel</p>
+        <p className="text-base text-gray-600 mt-1">{siteConfig.address}</p>
         <p className="text-sm text-gray-500 mt-2">
           Walk-ins welcome during business hours: 9 AM – 9 PM KST
         </p>
-        <a
-          href={siteConfig.mapUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center text-indigo-600 hover:text-indigo-700 text-sm font-medium mt-3 transition"
-        >
-          Get Directions
-          <svg
-            className="w-4 h-4 ml-1"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
+        <div className="flex flex-wrap gap-x-5 gap-y-2 mt-4">
+          <a
+            href={siteConfig.mapUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center text-indigo-600 hover:text-indigo-700 text-sm font-medium transition"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-            />
-          </svg>
-        </a>
+            Google Maps
+            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+          <a
+            href={siteConfig.naverMapUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center text-green-600 hover:text-green-700 text-sm font-medium transition"
+          >
+            Naver Map
+            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+          <a
+            href={siteConfig.kakaoMapUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center text-yellow-600 hover:text-yellow-700 text-sm font-medium transition"
+          >
+            Kakao Map
+            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+        </div>
       </div>
     </div>
   );

@@ -3,7 +3,7 @@ export const siteConfig = {
   tagline: "Your Comfortable Basecamp in Seoul",
   description:
     "Foreigner-friendly men's goshiwon in central Seoul. No massive deposits, no long-term contracts. Clean, secure, fully-furnished private rooms — Gangnam 15 min, Hongdae 25 min by subway.",
-  email: "hello@seoulstay.kr",
+  email: "stargoshiwon.seoul@gmail.com",
   phone: "+82-10-1234-5678",
   whatsapp: "https://wa.me/821012345678",
   kakao: "https://pf.kakao.com/seoulstay",
@@ -18,8 +18,8 @@ export const siteConfig = {
 
 export const highlights = [
   { value: "0₩", label: "Key Money Deposit" },
-  { value: "7 Days", label: "Minimum Stay" },
-  { value: "Included", label: "Rice, Kimchi & Ramen" },
+  { value: "₩100,000", label: "From / Week" },
+  { value: "15% Off", label: "Monthly Stay Discount" },
   { value: "English", label: "Speaking Management" },
 ];
 
@@ -48,17 +48,17 @@ export const faqs = [
   {
     question: "Is a deposit required?",
     answer:
-      "We require a small refundable deposit equivalent to one month's rent, payable at check-in. There is no key money (보증금) or real estate agent fee required. The deposit is returned in full upon checkout if the room is in good condition.",
+      "We require a small refundable deposit equivalent to one week's rent, payable at check-in. There is no key money (보증금) or real estate agent fee required. The deposit is returned in full upon checkout if the room is in good condition.",
   },
   {
-    question: "What is included in the monthly rent?",
+    question: "What is included in the rent?",
     answer:
-      "Rent includes utilities (electricity, water, gas, internet), basic food supplies (rice, kimchi, ramen, eggs), access to shared kitchen and laundry facilities, and room cleaning supplies. There are no hidden fees.",
+      "Rent includes utilities (electricity, water, gas, internet), basic food supplies (rice, kimchi, ramen, eggs), access to shared kitchen and laundry facilities, and room cleaning supplies. Every room comes with a bed, desk, WiFi, mini fridge, and air conditioning. A bedding set is provided for a one-time fee of ₩20,000.",
   },
   {
     question: "What is the minimum stay?",
     answer:
-      "The minimum stay is 7 days. We offer weekly and monthly rates. Monthly stays offer the best value.",
+      "The minimum stay is 7 days (1 week). We charge on a weekly basis. If you stay 4 weeks or longer, you get a 15% discount automatically applied to your rate. Towels are provided for monthly stays only.",
   },
   {
     question: "Can I see the room before booking?",

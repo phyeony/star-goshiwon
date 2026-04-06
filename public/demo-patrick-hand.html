@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Font Demo: Patrick Hand</title>
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; color: #1f2937; background: #f9fafb; }
+  .handwritten { font-family: 'Patrick Hand', cursive; }
+
+  header { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 16px 0; position: sticky; top: 0; z-index: 10; }
+  header .inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; display: flex; justify-content: space-between; align-items: center; }
+  header .logo { font-size: 24px; font-weight: 700; color: #4f46e5; text-decoration: none; }
+  header nav a { margin-left: 24px; text-decoration: none; color: #6b7280; font-size: 14px; font-weight: 500; }
+  header nav a:hover { color: #4f46e5; }
+
+  .font-label { position: fixed; top: 80px; right: 24px; background: #4f46e5; color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; z-index: 20; }
+
+  .hero { max-width: 1200px; margin: 0 auto; padding: 80px 24px; display: flex; gap: 48px; align-items: center; }
+  .hero-text { flex: 1; }
+  .hero-badge { display: inline-block; background: #eef2ff; color: #4f46e5; padding: 6px 14px; border-radius: 999px; font-size: 14px; font-weight: 600; margin-bottom: 16px; }
+  .hero h1 { font-size: 56px; font-weight: 800; line-height: 1.1; margin-bottom: 16px; }
+  .hero h1 .accent { color: #4f46e5; }
+  .hero p { font-size: 18px; color: #6b7280; line-height: 1.6; margin-bottom: 32px; }
+  .hero-img { flex: 1; height: 400px; background: linear-gradient(135deg, #c7d2fe 0%, #a5b4fc 100%); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: #4f46e5; font-size: 18px; }
+  .btn { display: inline-block; padding: 14px 28px; border-radius: 10px; font-size: 16px; font-weight: 600; text-decoration: none; }
+  .btn-primary { background: #4f46e5; color: #fff; }
+  .btn-outline { background: #fff; color: #374151; border: 1px solid #d1d5db; margin-left: 12px; }
+
+  .highlights { background: #4338ca; padding: 32px 0; }
+  .highlights .inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; text-align: center; }
+  .highlights .value { font-size: 28px; font-weight: 800; color: #fff; }
+  .highlights .label { font-size: 14px; color: #c7d2fe; margin-top: 4px; }
+
+  section { max-width: 1200px; margin: 0 auto; padding: 64px 24px; }
+  .section-title { text-align: center; margin-bottom: 48px; }
+  .section-title h2 { font-size: 36px; font-weight: 800; margin-bottom: 8px; }
+  .section-title p { font-size: 16px; color: #6b7280; }
+
+  .rooms-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .room-card { background: #fff; border-radius: 16px; border: 1px solid #e5e7eb; overflow: hidden; }
+  .room-card .img { height: 200px; background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); display: flex; align-items: center; justify-content: center; color: #6366f1; font-size: 14px; }
+  .room-card .body { padding: 24px; }
+  .room-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  .room-card .desc { font-size: 14px; color: #6b7280; margin-bottom: 16px; }
+  .room-card .price { font-size: 28px; font-weight: 800; }
+  .room-card .price span { font-size: 14px; font-weight: 400; color: #6b7280; }
+
+  .amenities-bg { background: #fff; }
+  .amenities-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .amenity { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 16px; padding: 24px; text-align: center; }
+  .amenity .icon { width: 48px; height: 48px; background: #eef2ff; border-radius: 50%; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .amenity .name { font-size: 14px; font-weight: 500; }
+
+  .cta { background: #4338ca; padding: 64px 24px; text-align: center; }
+  .cta h2 { font-size: 32px; font-weight: 800; color: #fff; margin-bottom: 12px; }
+  .cta p { font-size: 18px; color: #c7d2fe; margin-bottom: 32px; }
+  .cta .btn-white { background: #fff; color: #4338ca; padding: 14px 28px; border-radius: 10px; font-size: 16px; font-weight: 600; text-decoration: none; }
+
+  @media (max-width: 768px) {
+    .hero { flex-direction: column; padding: 40px 24px; }
+    .hero-img { width: 100%; height: 240px; }
+    .highlights .inner { grid-template-columns: repeat(2, 1fr); }
+    .rooms-grid { grid-template-columns: 1fr; }
+    .amenities-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="font-label">Font: Patrick Hand</div>
+
+<header>
+  <div class="inner">
+    <a href="#" class="logo handwritten" style="font-size:28px;">Stargoshiwon</a>
+    <nav>
+      <a href="#">Rooms</a>
+      <a href="#">Location</a>
+      <a href="#">Blog</a>
+      <a href="#">FAQ</a>
+      <a href="#">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="hero-text">
+    <div class="hero-badge">Foreigner-Friendly Men's Goshiwon in Central Seoul</div>
+    <h1>
+      <span class="handwritten">Your Comfortable</span><br>
+      <span class="accent handwritten">Basecamp in Seoul</span>
+    </h1>
+    <p>No massive deposits. No long-term contracts. Clean, secure, and fully-furnished private rooms for men in the centre of Seoul.</p>
+    <a href="#" class="btn btn-primary">View Available Rooms</a>
+    <a href="#" class="btn btn-outline">Request to Book</a>
+  </div>
+  <div class="hero-img">Room Photo</div>
+</div>
+
+<div class="highlights">
+  <div class="inner">
+    <div><div class="value handwritten">0 Won</div><div class="label">Key Money Deposit</div></div>
+    <div><div class="value handwritten">100,000 Won</div><div class="label">From / Week</div></div>
+    <div><div class="value handwritten">15% Off</div><div class="label">Monthly Stay Discount</div></div>
+    <div><div class="value handwritten">English</div><div class="label">Speaking Management</div></div>
+  </div>
+</div>
+
+<section>
+  <div class="section-title">
+    <h2 class="handwritten">Our Rooms</h2>
+    <p>3 room types to fit your budget. All rooms include a bed, desk, WiFi, mini fridge, and AC.</p>
+  </div>
+  <div class="rooms-grid">
+    <div class="room-card">
+      <div class="img">Room Photo</div>
+      <div class="body">
+        <h3 class="handwritten">Economy Room</h3>
+        <p class="desc">Shared shower & toilet. Great for budget-conscious stays.</p>
+        <div class="price">&#8361;100,000 <span>/ week</span></div>
+      </div>
+    </div>
+    <div class="room-card">
+      <div class="img">Room Photo</div>
+      <div class="body">
+        <h3 class="handwritten">Private Shower Room</h3>
+        <p class="desc">Your own shower, shared toilet.</p>
+        <div class="price">&#8361;120,000 <span>/ week</span></div>
+      </div>
+    </div>
+    <div class="room-card">
+      <div class="img">Room Photo</div>
+      <div class="body">
+        <h3 class="handwritten">Full Private Room</h3>
+        <p class="desc">Private shower and toilet in your room.</p>
+        <div class="price">&#8361;120,000 <span>/ week</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="amenities-bg">
+  <section>
+    <div class="section-title">
+      <h2 class="handwritten">What's Included</h2>
+      <p>Everything you need for a comfortable stay, included in your rent.</p>
+    </div>
+    <div class="amenities-grid">
+      <div class="amenity"><div class="icon">&#128246;</div><div class="name">High-Speed WiFi</div></div>
+      <div class="amenity"><div class="icon">&#10052;</div><div class="name">AC / Heating</div></div>
+      <div class="amenity"><div class="icon">&#127860;</div><div class="name">Shared Kitchen</div></div>
+      <div class="amenity"><div class="icon">&#128085;</div><div class="name">Laundry Room</div></div>
+      <div class="amenity"><div class="icon">&#128737;</div><div class="name">24/7 Security</div></div>
+      <div class="amenity"><div class="icon">&#128230;</div><div class="name">Package Reception</div></div>
+      <div class="amenity"><div class="icon">&#129482;</div><div class="name">In-Room Mini Fridge</div></div>
+      <div class="amenity"><div class="icon">&#9889;</div><div class="name">Utilities Included</div></div>
+    </div>
+  </section>
+</div>
+
+<div class="cta">
+  <h2 class="handwritten">Ready to find your room in Seoul?</h2>
+  <p>Submit a booking request to Stargoshiwon and we'll get back to you within 24 hours.</p>
+  <a href="#" class="btn-white">Request to Book</a>
+</div>
+
+</body>
+</html>

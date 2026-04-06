@@ -130,24 +130,14 @@ export default async function HomePage() {
       {/* Room Previews */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <SectionTitle
-          title="Available Rooms"
-          subtitle="Browse our room types and find the right fit for your stay."
+          title="Our Rooms"
+          subtitle="3 room types to fit your budget. All rooms include a bed, desk, WiFi, mini fridge, and AC. Minimum stay 7 days — stay 4+ weeks and save 15%."
         />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {rooms.slice(0, 4).map((room) => (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {rooms.slice(0, 3).map((room) => (
             <RoomCard key={room.id} room={room} />
           ))}
         </div>
-        {rooms.length > 4 && (
-          <div className="text-center mt-8">
-            <Link
-              href="/rooms"
-              className="inline-flex items-center justify-center px-6 py-3 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition duration-150 ease-in-out"
-            >
-              View All Rooms
-            </Link>
-          </div>
-        )}
       </section>
 
       {/* Amenities */}

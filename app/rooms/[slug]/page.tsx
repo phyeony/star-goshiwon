@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: room.name,
-    description: `${room.name} — ${formatKRW(room.price_monthly)}/month. ${room.description}`,
+    description: `${room.name} — from ${formatKRW(room.price_weekly)}/week. ${room.description}`,
   };
 }
 
@@ -66,8 +66,7 @@ export default async function RoomDetailPage({ params }: Props) {
               </h1>
               {room.size_sqm && (
                 <p className="text-base text-gray-500 mt-1">
-                  {room.size_sqm} m² · Up to {room.capacity} guest
-                  {room.capacity > 1 ? "s" : ""}
+                  {room.size_sqm} m² · Single occupancy
                 </p>
               )}
             </div>
@@ -120,34 +119,34 @@ export default async function RoomDetailPage({ params }: Props) {
                 </thead>
                 <tbody>
                   <tr className="border-b border-gray-100">
-                    <td className="px-6 py-4 text-base text-gray-900">
-                      Monthly
+                    <td className="px-6 py-4 text-base text-gray-900 font-medium">
+                      Weekly (min. 7 days)
                     </td>
                     <td className="px-6 py-4 text-right text-base font-semibold text-gray-900">
-                      {formatKRW(room.price_monthly)}
+                      {formatKRW(room.price_weekly)} / week
                     </td>
                   </tr>
-                  <tr className="border-b border-gray-100">
-                    <td className="px-6 py-4 text-base text-gray-900">
-                      Weekly
+                  <tr className="border-b border-gray-100 bg-green-50">
+                    <td className="px-6 py-4 text-base text-green-800 font-medium">
+                      4+ weeks (15% off)
                     </td>
-                    <td className="px-6 py-4 text-right text-base font-semibold text-gray-900">
-                      {formatKRW(room.price_weekly)}
+                    <td className="px-6 py-4 text-right text-base font-semibold text-green-800">
+                      {formatKRW(Math.round(room.price_weekly * 0.85))} / week
                     </td>
                   </tr>
                   <tr>
                     <td className="px-6 py-4 text-base text-gray-900">
-                      Daily
+                      Extra days
                     </td>
                     <td className="px-6 py-4 text-right text-base font-semibold text-gray-900">
-                      {formatKRW(room.price_daily)}
+                      {formatKRW(room.price_daily)} / day
                     </td>
                   </tr>
                 </tbody>
               </table>
             </div>
             <p className="text-sm text-gray-500 mt-2">
-              All prices are estimates. Final pricing confirmed after review.
+              Bedding set provided for a one-time fee of ₩20,000. Towels included for stays of 4+ weeks.
             </p>
           </div>
         </div>

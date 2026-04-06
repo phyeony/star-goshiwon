@@ -57,13 +57,13 @@ export function RoomCard({ room }: { room: RoomWithImages }) {
           <div className="border-t border-gray-100 pt-4 flex justify-between items-end">
             <div>
               <span className="text-3xl font-extrabold text-gray-900">
-                {formatKRW(room.price_monthly)}
+                {formatKRW(room.price_weekly)}
               </span>
-              <span className="text-gray-500 text-base"> / month</span>
+              <span className="text-gray-500 text-base"> / week</span>
             </div>
-            {room.price_daily > 0 && (
-              <div className="text-sm text-gray-500">
-                Short stay: {formatKRW(room.price_daily)} / night
+            {room.price_monthly > 0 && (
+              <div className="text-sm text-green-600 font-medium">
+                4+ weeks: {formatKRW(room.price_monthly)} / 4 weeks (15% off)
               </div>
             )}
           </div>
