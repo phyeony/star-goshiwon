@@ -146,7 +146,7 @@ export default async function RoomDetailPage({ params }: Props) {
               </table>
             </div>
             <p className="text-sm text-gray-500 mt-2">
-              Bedding set provided for a one-time fee of ₩20,000. Towels included for stays of 4+ weeks.
+              Bedding set provided for a one-time fee of ₩20,000 (Optional). Towels included for stays of 4+ weeks.
             </p>
           </div>
         </div>

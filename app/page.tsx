@@ -1,10 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
-import { RoomCard } from "@/components/room-card";
+import { RoomCardVariantSplit } from "@/components/room-card-variants-client";
 import { SectionTitle } from "@/components/section-title";
 import { HeroSlideshow } from "@/components/hero-slideshow";
+import { SharedFacilities } from "@/components/shared-facilities";
 import { getPublicRooms } from "@/lib/queries";
-import { siteConfig, highlights, amenities, faqs } from "@/lib/site-data";
+import { siteConfig, amenities, faqs } from "@/lib/site-data";
 
 export const dynamic = "force-dynamic";
 
@@ -33,10 +34,15 @@ const amenityIcons: Record<string, React.ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.38 3.46L16 2 12 5 8 2 3.62 3.46a1 1 0 00-.76.95V6l3.14 1V21h12V7L21.14 6V4.41a1 1 0 00-.76-.95z" />
     </svg>
   ),
-  shield: (
-    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4" />
+  window: (
+    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="7" y="6" width="10" height="12" />
+      <path d="M7 6 L4 4 L1 2 L1 22 L4 20 L7 18" />
+      <path d="M4 4 L4 20" />
+      <path d="M1 12 L7 12" />
+      <path d="M17 6 L20 4 L23 2 L23 22 L20 20 L17 18" />
+      <path d="M20 4 L20 20" />
+      <path d="M17 12 L23 12" />
     </svg>
   ),
   package: (
@@ -70,35 +76,83 @@ export default async function HomePage() {
       {/* Hero */}
       <HeroSlideshow />
 
-      {/* Highlights Bar */}
-      <div className="bg-indigo-700 text-white py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            {highlights.map((item) => (
-              <div key={item.label}>
-                <div className="font-extrabold text-2xl">{item.value}</div>
-                <div className="text-indigo-200 text-sm mt-1">{item.label}</div>
-              </div>
-            ))}
+      {/* Key Info */}
+      <section className="bg-white py-14 border-b border-gray-200 snap-start scroll-mt-16">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+            <div className="flex items-start gap-4">
+            <span className="flex-shrink-0 w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </span>
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">
+                Save ₩60,000 when you stay 4+ weeks
+              </h3>
+              <p className="text-gray-500 mt-1">
+                From ₩100,000/week, or{" "}
+                <span className="font-semibold text-gray-900">₩340,000</span> for 4 weeks (15% off).
+                Minimum stay 7 days. Refundable ₩100,000 deposit · Optional ₩20,000 bedding set.
+              </p>
+            </div>
           </div>
+
+          <div className="flex items-start gap-4">
+            <span className="flex-shrink-0 w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+            </span>
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Private, quiet, men-only</h3>
+              <p className="text-gray-500 mt-1">We don&rsquo;t have a shared lounge — and that&rsquo;s by design. Our rooms are kept clean, quiet, and ready for you. If peace and privacy matter more than a party hostel vibe, you&rsquo;ll feel right at home.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-4">
+            <span className="flex-shrink-0 w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            </span>
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Right in the middle of Seoul</h3>
+              <p className="text-gray-500 mt-1">Gangnam, Hongdae, Myeongdong, Jongno, and major universities — all within 40~50 minutes by public transit.</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-4">
+            <span className="flex-shrink-0 w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg>
+            </span>
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">English support available</h3>
+              <p className="text-gray-500 mt-1">Check-in and booking handled in English. Day-to-day questions? Reach us anytime in English via WhatsApp. On-site, our owner is always around and happy to help.</p>
+            </div>
+          </div>
+
         </div>
-      </div>
+      </section>
 
       {/* Room Previews */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <SectionTitle
           title="Our Rooms"
-          subtitle="3 room types to fit your budget. All rooms include a bed, desk, WiFi, mini fridge, and AC. Minimum stay 7 days — stay 4+ weeks and save 15%."
+          subtitle="3 room types to fit your budget. All rooms include a bed, desk & chair, WiFi, mini fridge, AC/Heating, shelf & cabinet, and an outside-facing window. Stay 4+ weeks and save 15%."
         />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {rooms.slice(0, 3).map((room) => (
-            <RoomCard key={room.id} room={room} />
+            <RoomCardVariantSplit key={room.id} room={room} />
           ))}
         </div>
       </section>
 
+      {/* Shared Facilities */}
+      <section className="bg-white py-16 border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <SectionTitle
+            title="Shared Facilities"
+            subtitle="Common-area essentials, free for every guest to use."
+          />
+          <SharedFacilities />
+        </div>
+      </section>
+
       {/* Amenities */}
-      <section className="bg-white py-16">
+      {/* <section className="bg-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <SectionTitle
             title="What&rsquo;s Included"
@@ -120,7 +174,7 @@ export default async function HomePage() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* FAQ Preview */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">

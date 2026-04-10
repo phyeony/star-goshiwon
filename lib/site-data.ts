@@ -5,7 +5,7 @@ export const siteConfig = {
     "Foreigner-friendly men's goshiwon in central Seoul. No massive deposits, no long-term contracts. Clean, secure, fully-furnished private rooms — Gangnam 15 min, Hongdae 25 min by subway.",
   email: "stargoshiwon.seoul@gmail.com",
   phone: "+82-10-1234-5678",
-  whatsapp: "https://wa.me/821012345678",
+  whatsapp: "https://wa.me/message/ZY4AL4LPYCAYA1",
   kakao: "https://pf.kakao.com/seoulstay",
   address: "64, Manyang-ro 12ga-gil, Dongjak-gu, Seoul, Republic of Korea",
   mapUrl: "https://www.google.com/maps/place/Stargositel/data=!4m10!1m2!2m1!1z64W465-J7KeEIOyKpO2DgOqzoOyLnO2FlA!3m6!1s0x357c9f6736793a2b:0x7f3263912b31aa4c!8m2!3d37.5112885!4d126.948383!15sChnrhbjrn4nsp4Qg7Iqk7YOA6rOg7Iuc7YWUkgERYmVkX2FuZF9icmVha2Zhc3TgAQA!16s%2Fg%2F11k3n5dk8k",
@@ -28,7 +28,7 @@ export const amenities = [
   { icon: "snowflake", label: "AC / Heating" },
   { icon: "utensils", label: "Shared Kitchen" },
   { icon: "shirt", label: "Laundry Room" },
-  { icon: "shield", label: "24/7 Security" },
+  { icon: "window", label: "Outside-Facing Window" },
   { icon: "package", label: "Package Reception" },
   { icon: "fridge", label: "In-Room Mini Fridge" },
   { icon: "zap", label: "Utilities Included" },
@@ -43,48 +43,48 @@ export const faqs = [
   {
     question: "What documents do I need to check in?",
     answer:
-      "You will need your passport and a valid visa. We accept most visa types including tourist (B-1/B-2), student (D-2/D-4), working holiday (H-1), and work visas. We will verify your documents at check-in.",
+      "You will need your passport. We will verify your documents before approving your booking requests.",
   },
   {
     question: "Is a deposit required?",
     answer:
-      "We require a small refundable deposit equivalent to one week's rent, payable at check-in. There is no key money (보증금) or real estate agent fee required. The deposit is returned in full upon checkout if the room is in good condition.",
+      "We require a small refundable deposit of ₩100,000, payable at check-in. The deposit is returned in full upon checkout if the room is in good condition.",
   },
   {
     question: "What is included in the rent?",
     answer:
-      "Rent includes utilities (electricity, water, gas, internet), basic food supplies (rice, kimchi, ramen, eggs), access to shared kitchen and laundry facilities, and room cleaning supplies. Every room comes with a bed, desk, WiFi, mini fridge, and air conditioning. A bedding set is provided for a one-time fee of ₩20,000.",
+      "Rent includes utilities (electricity, water, gas, internet), basic food supplies (rice, kimchi, ramen), access to shared kitchen and laundry facilities. Every room comes with a bed, desk & chair, WiFi, mini fridge, AC/Heating, shelf & cabinet, and an outside-facing window. A bedding set is provided for a one-time fee of ₩20,000.",
   },
   {
     question: "What is the minimum stay?",
     answer:
-      "The minimum stay is 7 days (1 week). We charge on a weekly basis. If you stay 4 weeks or longer, you get a 15% discount automatically applied to your rate. Towels are provided for monthly stays only.",
+      "The minimum stay is 7 days (1 week). If you stay 4 weeks or longer, you get a 15% discount automatically applied to your rate. Towels are provided for monthly stays only.",
   },
   {
     question: "Can I see the room before booking?",
     answer:
       "Yes! We encourage room visits. Send us a booking request or contact us via WhatsApp/KakaoTalk to schedule a viewing. Walk-ins are also welcome during business hours (9 AM - 9 PM).",
   },
-  {
-    question: "Is there a curfew or house rules?",
-    answer:
-      "There is no curfew. You have 24/7 access with your personal door code. We do ask that residents keep noise to a minimum between 10 PM and 8 AM, and maintain cleanliness in shared areas.",
-  },
-  {
-    question: "How do I pay rent?",
-    answer:
-      "Monthly rent is paid via bank transfer to our Korean bank account at the beginning of each month. We can help you set up a Korean bank account if needed. Cash payment is also accepted.",
-  },
+  // {
+  //   question: "Is there a curfew or house rules?",
+  //   answer:
+  //     "There is no curfew. You have 24/7 access with your personal door code. We do ask that residents keep noise to a minimum between 10 PM and 8 AM, and maintain cleanliness in shared areas.",
+  // },
+  // {
+  //   question: "How do I pay rent?",
+  //   answer:
+  //     "Monthly rent is paid via bank transfer to our Korean bank account at the beginning of each month. We can help you set up a Korean bank account if needed. Cash payment is also accepted.",
+  // },
   {
     question: "Can I extend my stay?",
     answer:
       "Yes, you can extend your stay as long as the room is available. Just let us know at least one week before your current checkout date, and we will update your booking.",
   },
-  {
-    question: "What is the cancellation policy?",
-    answer:
-      "Cancellations made 7 or more days before check-in receive a full deposit refund. Cancellations within 7 days of check-in forfeit 50% of the deposit. No-shows forfeit the full deposit.",
-  },
+  // {
+  //   question: "What is the cancellation policy?",
+  //   answer:
+  //     "Cancellations made 7 or more days before check-in receive a full deposit refund. Cancellations within 7 days of check-in forfeit 50% of the deposit. No-shows forfeit the full deposit.",
+  // },
 ];
 
 export const policies = {

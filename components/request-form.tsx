@@ -301,7 +301,7 @@ export function RequestForm({ rooms, preselectedSlug, singleRoom }: RequestFormP
             <span>{formatKRW(estimate.total)}</span>
           </div>
           <p className="text-xs text-gray-500 mt-2">
-            + ₩20,000 one-time bedding fee at check-in
+            + ₩20,000 optional one-time bedding fee
           </p>
         </div>
       )}

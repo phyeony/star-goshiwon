@@ -8,115 +8,110 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 const rooms = [
   {
-    name: "Premium En-Suite Room",
-    slug: "premium-en-suite",
+    name: "Economy Room",
+    slug: "economy-room",
     description:
-      "Our largest and most private room with your own bathroom and an outer-facing window. Includes a single bed, desk, mini-fridge, and AC. Ideal for longer stays.",
-    price_monthly: 550000,
-    price_weekly: 165000,
-    price_daily: 25000,
+      "Our most affordable private room with shared shower and toilet facilities. Perfect for short stays, students, and budget-conscious guests. All rooms include an outside-facing window, fast Wi-Fi, AC/heating, a desk, and a mini fridge.",
+
+        price_monthly: 340000,
+    price_weekly: 100000,
+    price_daily: 15000,
     capacity: 1,
-    size_sqm: 8.5,
+    size_sqm: 45.5,
     amenities: [
-      "Private Shower",
+      "Shared Showers",
+      "Shared Toilets",
       "AC / Heat",
-      "Mini-fridge",
       "Fast WiFi",
       "Desk & Chair",
-      "Outer Window",
+      "Mini Fridge",
+      "Shelf & Cabinet",
+      "Outside-Facing Window",
     ],
     status: "available" as const,
-    featured: true,
+    featured: false,
     sort_order: 1,
   },
   {
-    name: "Standard Room",
-    slug: "standard-room",
+    name: "Private Shower Room",
+    slug: "room-with-private-shower",
     description:
-      "A comfortable private room with an inner window. Shared bathrooms on each floor. Includes a single bed, desk, and AC. Great value for budget-conscious stays.",
-    price_monthly: 350000,
-    price_weekly: 105000,
+      "A private room with your own shower and access to a shared toilet. A smart choice for guests who want extra convenience at a reasonable price. Includes an outside-facing window, fast Wi-Fi, AC/heating, a desk, and a mini fridge.",
+    price_monthly: 408000,
+    price_weekly: 120000,
     price_daily: 18000,
     capacity: 1,
-    size_sqm: 5.5,
+    size_sqm: 6.5,
     amenities: [
-      "Shared Showers",
+      "Private Shower",
+      "Shared Toilet",
       "AC / Heat",
       "Fast WiFi",
       "Desk & Chair",
-      "Inner Window",
+      "Mini Fridge",
+      "Shelf & Cabinet",
+      "Outside-Facing Window",
     ],
     status: "available" as const,
     featured: true,
     sort_order: 2,
   },
   {
-    name: "Economy Room",
-    slug: "economy-room",
+    name: "Private Shower & Toilet Room",
+    slug: "room-with-private-shower-and-toilet",
     description:
-      "Our most affordable option. A compact private room with shared bathroom facilities. Perfect for short-term stays and students on a tight budget.",
-    price_monthly: 280000,
-    price_weekly: 85000,
-    price_daily: 15000,
+      "Our most private room with both your own shower and toilet. Ideal for guests who want the most convenience and privacy during their stay. Includes an outside-facing window, fast Wi-Fi, AC/heating, a desk, and a mini fridge.",
+    price_monthly: 408000,
+    price_weekly: 120000,
+    price_daily: 18000,
     capacity: 1,
-    size_sqm: 4.0,
-    amenities: ["Shared Showers", "AC / Heat", "Fast WiFi", "Desk & Chair"],
-    status: "available_soon" as const,
-    featured: false,
-    sort_order: 3,
-  },
-  {
-    name: "Double Room",
-    slug: "double-room",
-    description:
-      "A larger room designed for two guests. Features a bunk bed or twin setup, shared bathroom, and extra storage space. Ideal for friends or couples.",
-    price_monthly: 450000,
-    price_weekly: 135000,
-    price_daily: 22000,
-    capacity: 2,
-    size_sqm: 9.0,
+    size_sqm: 6.5,
     amenities: [
-      "Shared Showers",
+      "Private Shower",
+      "Private Toilet",
       "AC / Heat",
-      "Mini-fridge",
       "Fast WiFi",
       "Desk & Chair",
-      "Extra Storage",
+      "Mini-fridge",
+      "Shelf & Cabinet",
+      "Outside-Facing Window",
     ],
-    status: "limited" as const,
-    featured: false,
-    sort_order: 4,
+    status: "available" as const,
+    featured: true,
+    sort_order: 3,
   },
 ];
 
-const roomImages: Record<string, { url: string; alt: string }[]> = {
-  "premium-en-suite": [
-    {
-      url: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      alt: "Premium En-Suite Room - clean modern room with private bathroom",
-    },
-    {
-      url: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      alt: "Premium En-Suite Room - desk and window area",
-    },
-  ],
-  "standard-room": [
-    {
-      url: "https://images.unsplash.com/photo-1540518614846-7eded433c457?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      alt: "Standard Room - cozy private room with bed and desk",
-    },
-  ],
+const roomImages: Record<string, { url: string; alt: string; sort_order: number }[]> = {
   "economy-room": [
-    {
-      url: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      alt: "Economy Room - compact and functional",
-    },
+    { url: "/images/economy/1.main.jpg", alt: "Economy room - main view", sort_order: 1 },
+    { url: "/images/economy/2.desk.jpg", alt: "Desk", sort_order: 2 },
+    { url: "/images/economy/3.right-side-cabinet.jpg", alt: "Cabinet on the right side", sort_order: 3 },
+    { url: "/images/economy/4.shelf.jpg", alt: "Shelf", sort_order: 4 },
+    { url: "/images/economy/5.ac.jpg", alt: "Air conditioning", sort_order: 5 },
+    { url: "/images/economy/6.refrigerator.jpg", alt: "Mini fridge", sort_order: 6 },
+    { url: "/images/economy/7.window-room-corner.jpg", alt: "Window and corner of the room", sort_order: 7 },
   ],
-  "double-room": [
-    {
-      url: "https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      alt: "Double Room - spacious room for two guests",
-    },
+  "room-with-private-shower": [
+    { url: "/images/private-shower/1.main.jpg", alt: "Private shower room - main view", sort_order: 1 },
+    { url: "/images/private-shower/2.main-2.jpg", alt: "Private shower room - alternate angle", sort_order: 2 },
+    { url: "/images/private-shower/3.shower-right-side.jpg", alt: "Private shower", sort_order: 3 },
+    { url: "/images/private-shower/4.window-and-shower.jpg", alt: "Window and shower", sort_order: 4 },
+    { url: "/images/private-shower/5.bathroom-sink.jpg", alt: "Bathroom sink", sort_order: 5 },
+    { url: "/images/private-shower/6.ac.jpg", alt: "Air conditioning", sort_order: 6 },
+    { url: "/images/private-shower/7.window-day.jpg", alt: "Window during the day", sort_order: 7 },
+    { url: "/images/private-shower/8.window-night.jpg", alt: "Window at night", sort_order: 8 },
+    { url: "/images/private-shower/9.refrigerator.jpg", alt: "Mini fridge", sort_order: 9 },
+  ],
+  "room-with-private-shower-and-toilet": [
+    { url: "/images/private-toilet-and-shower/1.main.jpg", alt: "Private shower and toilet room - main view", sort_order: 1 },
+    { url: "/images/private-toilet-and-shower/2.shower.jpg", alt: "Private shower", sort_order: 2 },
+    { url: "/images/private-toilet-and-shower/3.sink.png", alt: "Bathroom sink", sort_order: 3 },
+    { url: "/images/private-toilet-and-shower/4.toilet.jpg", alt: "Private toilet", sort_order: 4 },
+    { url: "/images/private-toilet-and-shower/4.window.jpg", alt: "Window", sort_order: 5 },
+    { url: "/images/private-toilet-and-shower/5.left-side.jpg", alt: "Left side of room", sort_order: 6 },
+    { url: "/images/private-toilet-and-shower/6.left-side-cabinet-shelf.jpg", alt: "Cabinet and shelf", sort_order: 7 },
+    { url: "/images/private-toilet-and-shower/7.refrigerator.jpg", alt: "Mini fridge", sort_order: 8 },
   ],
 };
 
@@ -145,12 +140,12 @@ async function seed() {
 
     // Insert images
     const images = roomImages[room.slug] || [];
-    for (let i = 0; i < images.length; i++) {
+    for (const image of images) {
       const { error: imgError } = await supabase.from("room_images").insert({
         room_id: insertedRoom.id,
-        url: images[i].url,
-        alt: images[i].alt,
-        sort_order: i,
+        url: image.url,
+        alt: image.alt,
+        sort_order: image.sort_order,
       });
 
       if (imgError) {

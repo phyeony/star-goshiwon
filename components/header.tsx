@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { siteConfig } from "@/lib/site-data";
 
 const navLinks = [
@@ -14,28 +15,52 @@ const navLinks = [
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+  const [visible, setVisible] = useState(!isHome);
+
+  useEffect(() => {
+    if (!isHome) {
+      setVisible(true);
+      return;
+    }
+
+    setVisible(false);
+
+    function handleScroll() {
+      const hero = document.getElementById("hero-section");
+      if (!hero) return;
+      const heroBottom = hero.offsetTop + hero.offsetHeight;
+      setVisible(window.scrollY > heroBottom - 80);
+    }
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isHome]);
 
   return (
-    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <nav
+      className={`bg-white border-b border-gray-200 sticky top-0 z-50 transition-all duration-500 ${
+        visible
+          ? "translate-y-0 opacity-100"
+          : "-translate-y-full opacity-0 pointer-events-none"
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center gap-2">
-            <svg
-              className="w-8 h-8 text-indigo-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-              />
-            </svg>
-            <span className="font-bold text-xl tracking-tight text-gray-900">
-              Seoul Stay
+            <span className="flex flex-col leading-none w-fit">
+              <span className="font-bold text-2xl tracking-tight text-[#0b1f4d]">
+                Star Gositel
+              </span>
+              <span className="-mt-0.5 flex items-center gap-1">
+                <span className="h-px flex-1 bg-[#4a5fb8]/60" />
+                <span className="text-[13px] font-medium tracking-wide text-[#4a5fb8] whitespace-nowrap">
+                  Seoul Goshiwon
+                </span>
+                <span className="h-px flex-1 bg-[#4a5fb8]/60" />
+              </span>
             </span>
           </Link>
 

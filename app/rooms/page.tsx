@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { RoomCard } from "@/components/room-card";
+import { RoomCardVariantSplit } from "@/components/room-card-variants-client";
 import { SectionTitle } from "@/components/section-title";
 import { getPublicRooms } from "@/lib/queries";
 
@@ -29,9 +29,9 @@ export default async function RoomsPage() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {rooms.map((room) => (
-            <RoomCard key={room.id} room={room} />
+            <RoomCardVariantSplit key={room.id} room={room} />
           ))}
         </div>
       )}

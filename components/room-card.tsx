@@ -38,7 +38,15 @@ export function RoomCard({ room }: { room: RoomWithImages }) {
 
           {room.amenities.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-6">
-              {room.amenities.slice(0, 4).map((amenity) => (
+               {room.amenities.map((amenity) => (
+                <span
+                  key={amenity}
+                  className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium border border-gray-200"
+                >
+                  {amenity}
+                </span>
+              ))}
+              {/* {room.amenities.slice(0, 4).map((amenity) => (
                 <span
                   key={amenity}
                   className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium border border-gray-200"
@@ -50,7 +58,7 @@ export function RoomCard({ room }: { room: RoomWithImages }) {
                 <span className="bg-gray-100 text-gray-500 px-3 py-1 rounded-full text-sm font-medium border border-gray-200">
                   +{room.amenities.length - 4} more
                 </span>
-              )}
+              )} */}
             </div>
           )}
 
