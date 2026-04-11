@@ -50,7 +50,10 @@ export async function POST(req: NextRequest) {
       admin_notes: "",
     });
 
-    // Send emails (non-blocking — don't fail the request on email errors)
+    // Send emails. Must be awaited: on Cloudflare Workers, un-awaited async
+    // work is cancelled once the Response is returned, which would kill the
+    // SMTP connection mid-handshake. allSettled ensures one failure doesn't
+    // abort the other send, and we don't fail the request on email errors.
     const emailData = {
       guest_name: data.guest_name,
       guest_email: data.guest_email,
@@ -62,10 +65,13 @@ export async function POST(req: NextRequest) {
       notes: data.notes,
     };
 
-    Promise.allSettled([
+    const results = await Promise.allSettled([
       sendGuestConfirmation(emailData),
       sendAdminNotification(emailData),
-    ]).catch(console.error);
+    ]);
+    for (const r of results) {
+      if (r.status === "rejected") console.error("Email send failed:", r.reason);
+    }
 
     return NextResponse.json(
       { id: bookingRequest.id, status: "success" },

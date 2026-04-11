@@ -5,7 +5,7 @@ import { siteConfig } from "@/lib/site-data";
 export const metadata: Metadata = {
   title: "Contact",
   description:
-    "Get in touch with Seoul Stay Goshiwon. Reach us by email or WhatsApp.",
+    "Get in touch with Seoul Goshiwon by Star Gositel. Reach us by email or WhatsApp.",
 };
 
 const contactMethods = [

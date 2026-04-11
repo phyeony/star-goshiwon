@@ -5,7 +5,7 @@ import { siteConfig, nearbyLocations } from "@/lib/site-data";
 export const metadata: Metadata = {
   title: "Location",
   description:
-    "Seoul Stay Goshiwon is located in Dongjak-gu, Seoul. Near Sangdo Station (Line 7) and Noryangjin Station (Line 1 & 9). See nearby transit, shops, and services.",
+    "Seoul Goshiwon by Star Gositel is located in Dongjak-gu, Seoul. Near Sangdo Station (Line 7) and Noryangjin Station (Line 1 & 9). See nearby transit, shops, and services.",
 };
 
 const typeLabels: Record<string, string> = {

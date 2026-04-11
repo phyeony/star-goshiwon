@@ -77,7 +77,7 @@ export default async function HomePage() {
       <HeroSlideshow />
 
       {/* Key Info */}
-      <section className="bg-white py-14 border-b border-gray-200 snap-start scroll-mt-16">
+      <section className="bg-white py-14 border-b border-gray-200">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
             <div className="flex items-start gap-4">
             <span className="flex-shrink-0 w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">

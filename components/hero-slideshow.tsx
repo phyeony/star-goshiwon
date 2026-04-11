@@ -222,21 +222,13 @@ export function HeroSlideshow() {
     return () => clearInterval(timer);
   }, [nextSlide]);
 
-  // Enable CSS scroll-snap on mount, disable on unmount
-  useEffect(() => {
-    document.documentElement.style.scrollSnapType = "y proximity";
-    return () => {
-      document.documentElement.style.scrollSnapType = "";
-    };
-  }, []);
-
   const variant = heroVariants[currentVariant];
 
   return (
     <div
       id="hero-section"
       ref={heroRef}
-      className="relative w-full h-[90vh] min-h-[600px] overflow-hidden bg-black -mt-16 pt-16 snap-start"
+      className="relative w-full h-[90vh] min-h-[600px] overflow-hidden bg-black -mt-16 pt-16"
     >
       {/* Background media layers */}
       {slides.map((s, i) => {
@@ -328,23 +320,20 @@ export function HeroSlideshow() {
             </h2>
 
             {variant.description && (
-              <p className="text-lg sm:text-xl text-gray-200 max-w-2xl mb-10 leading-relaxed whitespace-pre-line">
+              <p className="text-lg sm:text-xl text-gray-200 max-w-2xl mb-8 leading-relaxed whitespace-pre-line">
                 {variant.description}
               </p>
             )}
 
-            <div className={`flex flex-col sm:flex-row gap-4 ${!variant.description ? "mt-10" : ""}`}>
-              <Link
-                href="/rooms"
-                className={`${variant.font} inline-flex items-center justify-center px-8 py-4 text-lg sm:text-xl rounded-xl text-white bg-indigo-600/80 hover:bg-indigo-600 backdrop-blur-sm shadow-lg border border-indigo-400/30 transition duration-150 ease-in-out hero-text-shadow`}
-              >
-                View Available Rooms
-              </Link>
+            <div className={!variant.description ? "mt-10" : ""}>
               <Link
                 href="/request-to-book"
-                className={`${variant.font} inline-flex items-center justify-center px-8 py-4 text-lg sm:text-xl rounded-xl text-white bg-white/10 backdrop-blur-sm border-2 border-white/30 hover:bg-white/20 shadow-lg transition duration-150 ease-in-out hero-text-shadow`}
+                className="group inline-flex items-center gap-2 sm:gap-2.5 px-5 py-2 sm:px-6 sm:py-3 text-base sm:text-lg font-semibold rounded-full text-gray-900 bg-white hover:bg-gray-100 shadow-2xl transition"
               >
-                Request to Book
+                Book Your Room
+                <span className="text-indigo-600 transition group-hover:translate-x-0.5">
+                  →
+                </span>
               </Link>
             </div>
           </div>

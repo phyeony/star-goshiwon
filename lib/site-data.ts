@@ -1,11 +1,11 @@
 export const siteConfig = {
-  name: "Seoul Stay Goshiwon",
+  name: "Seoul Goshiwon by Star Gositel",
   tagline: "Your Comfortable Basecamp in Seoul",
   description:
-    "Foreigner-friendly men's goshiwon in central Seoul. No massive deposits, no long-term contracts. Clean, secure, fully-furnished private rooms — Gangnam 15 min, Hongdae 25 min by subway.",
+    "Foreigner-friendly men's goshiwon in central Seoul. No massive deposits, no long-term contracts. Clean, secure, fully-furnished private rooms — Hongdae, Gangnam 40 min by subway.",
   email: "stargoshiwon.seoul@gmail.com",
   phone: "+82-10-1234-5678",
-  whatsapp: "https://wa.me/message/ZY4AL4LPYCAYA1",
+  whatsapp: "https://wa.me/message/7FRHDMTCDZPPF1",
   kakao: "https://pf.kakao.com/seoulstay",
   address: "64, Manyang-ro 12ga-gil, Dongjak-gu, Seoul, Republic of Korea",
   mapUrl: "https://www.google.com/maps/place/Stargositel/data=!4m10!1m2!2m1!1z64W465-J7KeEIOyKpO2DgOqzoOyLnO2FlA!3m6!1s0x357c9f6736793a2b:0x7f3263912b31aa4c!8m2!3d37.5112885!4d126.948383!15sChnrhbjrn4nsp4Qg7Iqk7YOA6rOg7Iuc7YWUkgERYmVkX2FuZF9icmVha2Zhc3TgAQA!16s%2Fg%2F11k3n5dk8k",
@@ -63,7 +63,7 @@ export const faqs = [
   {
     question: "Can I see the room before booking?",
     answer:
-      "Yes! We encourage room visits. Send us a booking request or contact us via WhatsApp/KakaoTalk to schedule a viewing. Walk-ins are also welcome during business hours (9 AM - 9 PM).",
+      "Yes! We encourage room visits. Send us a booking request or contact us via WhatsApp to schedule a viewing. Walk-ins are also welcome during business hours (9 AM - 9 PM).",
   },
   // {
   //   question: "Is there a curfew or house rules?",

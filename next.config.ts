@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["worker-mailer", "cloudflare:sockets"],
   images: {
     remotePatterns: [
       {

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
 
-export default function AdminLayout() {
+export default function PoliciesLayout() {
   notFound();
 }
