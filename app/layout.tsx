@@ -43,11 +43,20 @@ export const metadata: Metadata = {
     siteName: siteConfig.name,
     locale: "en_US",
     type: "website",
+    images: [
+      {
+        url: "/images/hero/balcony-view.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Goshiwon room with balcony view in Seoul",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: siteConfig.name,
     description: siteConfig.description,
+    images: ["/images/hero/balcony-view.jpg"],
   },
   verification: {
     google: "k6UYqKp5TQzy36pTlf3HiOZb7JCnbG0a_2cJpzTHXVo",
