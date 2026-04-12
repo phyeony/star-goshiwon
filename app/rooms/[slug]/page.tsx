@@ -17,9 +17,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const room = await getRoomBySlug(slug);
   if (!room) return { title: "Room Not Found" };
 
+  const description = `${room.name} in Seoul — from ${formatKRW(room.price_weekly)}/week. ${room.description ?? "Foreigner-friendly goshiwon room with utilities included."}`;
+  const firstImage = room.room_images?.sort(
+    (a, b) => a.sort_order - b.sort_order
+  )[0]?.url;
+
   return {
-    title: room.name,
-    description: `${room.name} — from ${formatKRW(room.price_weekly)}/week. ${room.description}`,
+    title: `${room.name} — Goshiwon in Seoul`,
+    description,
+    alternates: { canonical: `/rooms/${room.slug}` },
+    openGraph: {
+      title: `${room.name} — Goshiwon in Seoul`,
+      description,
+      url: `${siteConfig.url}/rooms/${room.slug}`,
+      type: "website",
+      images: firstImage ? [{ url: firstImage }] : undefined,
+    },
   };
 }
 
@@ -41,8 +54,48 @@ export default async function RoomDetailPage({ params }: Props) {
     price_daily: room.price_daily,
   };
 
+  const accommodationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Accommodation",
+    "@id": `${siteConfig.url}/rooms/${room.slug}`,
+    name: room.name,
+    description: room.description ?? undefined,
+    url: `${siteConfig.url}/rooms/${room.slug}`,
+    image: images?.map((img) => img.url) ?? undefined,
+    floorSize: room.size_sqm
+      ? { "@type": "QuantitativeValue", value: room.size_sqm, unitCode: "MTK" }
+      : undefined,
+    numberOfRooms: 1,
+    occupancy: { "@type": "QuantitativeValue", maxValue: 1 },
+    amenityFeature: room.amenities?.map((name) => ({
+      "@type": "LocationFeatureSpecification",
+      name,
+      value: true,
+    })),
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "64, Manyang-ro 12ga-gil, Dongjak-gu",
+      addressLocality: "Seoul",
+      addressCountry: "KR",
+    },
+    offers: {
+      "@type": "Offer",
+      price: room.price_weekly,
+      priceCurrency: "KRW",
+      availability:
+        room.status === "available"
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+      url: `${siteConfig.url}/rooms/${room.slug}`,
+    },
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(accommodationJsonLd) }}
+      />
       <nav className="mb-6 text-sm text-gray-500">
         <Link href="/rooms" className="hover:text-indigo-600 transition">
           Rooms

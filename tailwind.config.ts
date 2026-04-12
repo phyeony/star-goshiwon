@@ -11,8 +11,6 @@ const config: Config = {
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
         caveat: ["Caveat", "cursive"],
-        shadows: ["Shadows Into Light", "cursive"],
-        patrick: ["Patrick Hand", "cursive"],
       },
     },
   },

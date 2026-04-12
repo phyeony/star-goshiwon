@@ -1,179 +1,42 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import Image from "next/image";
 import Link from "next/link";
 
 type Slide =
-  | { type: "image"; src: string }
+  | { type: "image"; base: string }
   | { type: "video"; src: string };
 
+const HERO_WIDTHS = [640, 1280, 1920, 2560] as const;
+
 const slides: Slide[] = [
-  { type: "image", src: "/images/hero/hill-street-night.jpg" },
-  { type: "image", src: "/images/hero/noryangjin-fish-market.jpg" },
-  { type: "image", src: "/images/hero/night-view.jpg" },
-  { type: "image", src: "/images/hero/hanok-village.jpg" },
-  { type: "image", src: "/images/hero/balcony-view.jpg" },
+  { type: "image", base: "hill-street-night" },
+  { type: "image", base: "noryangjin-fish-market" },
+  { type: "image", base: "night-view" },
+  { type: "image", base: "hanok-village" },
+  { type: "image", base: "balcony-view" },
 ];
 
-const heroVariants = [
-  // --- Caveat variants ---
-  {
-    font: "font-caveat font-bold",
-    label: "Caveat",
-    headlineWeekly: "₩100,000 a week.",
-    headlineMonthly: "₩340,000 for 4 weeks.",
-    subline: "Your life in the Heart of Seoul.",
-    headlineOnly: false,
-    description:
-      "Central Seoul. Private room.\nThe cheapest way to experience Korea.",
-  },
-  //   {
-  //   font: "font-caveat font-bold",
-  //   label: "Caveat korean",
-  //   headline: "₩100,000 a week.",
-  //   subline: "Your life in the Heart of Seoul.",
-  //   headlineOnly: false,
-  //   description:
-  //     "A private room in central Seoul for the price of a few dinners back home. No deposits, no contracts — just pack your bag and go.",
-  // },
-  // {
-  //   font: "font-caveat font-bold",
-  //   label: "Caveat Big",
-  //   headline: "$300 a month.",
-  //   subline: "Live in the Heart of Seoul.",
-  //   headlineOnly: true,
-  //   description:
-  //     "A private room in central Seoul for the price of a few dinners back home. No deposits, no contracts — just pack your bag and go.",
-  // },
-  //   {
-  //   font: "font-caveat font-bold",
-  //   label: "Caveat clean 2",
-  //   headline: "$300 a month.",
-  //   subline: "Your life in the Heart of Seoul.",
-  //   headlineOnly: false,
-  //   description: null,
-  // },
-  // {
-  //   font: "font-caveat font-bold",
-  //   label: "Caveat Clean",
-  //   headline: "$300 a month.",
-  //   subline: "Live in the Heart of Seoul.",
-  //   headlineOnly: true,
-  //   description: null,
-  // },
-  // // --- Shadows Into Light variants ---
-  // {
-  //   font: "font-shadows font-bold",
-  //   label: "Shadows",
-  //   headline: "Seoul for $300.",
-  //   subline: "Not a hostel. Your own room.",
-  //   headlineOnly: false,
-  //   description:
-  //     "Central Seoul. Private room. WiFi, AC, everything included. The cheapest way to experience Korea — and actually live here.",
-  // },
-  // {
-  //   font: "font-shadows",
-  //   label: "Shadows Big",
-  //   headline: "Seoul for $300.",
-  //   subline: "Your own room.",
-  //   headlineOnly: true,
-  //   description:
-  //     "Central Seoul. Private room. WiFi, AC, everything included. The cheapest way to experience Korea — and actually live here.",
-  // },
-  // {
-  //   font: "font-shadows",
-  //   label: "Shadows Clean",
-  //   headline: "Seoul for $300.",
-  //   subline: "Your own room.",
-  //   headlineOnly: true,
-  //   description: null,
-  // },
-  // // --- Patrick Hand variants ---
-  // {
-  //   font: "font-patrick",
-  //   label: "Patrick",
-  //   headline: "Live in Seoul.",
-  //   subline: "From $300/month. Seriously.",
-  //   headlineOnly: false,
-  //   description:
-  //     "A furnished private room in the centre of Seoul. Gangnam, Hongdae, Myeongdong — all under 50 minutes away. Start living, not just visiting.",
-  // },
-  // {
-  //   font: "font-patrick",
-  //   label: "Patrick Big",
-  //   headline: "Live in Seoul.",
-  //   subline: "$300 a month.",
-  //   headlineOnly: true,
-  //   description:
-  //     "A furnished private room in the centre of Seoul. Gangnam, Hongdae, Myeongdong — all under 50 minutes away. Start living, not just visiting.",
-  // },
-  // {
-  //   font: "font-patrick",
-  //   label: "Patrick Clean",
-  //   headline: "Live in Seoul.",
-  //   subline: "$300 a month.",
-  //   headlineOnly: true,
-  //   description: null,
-  // },
-  // // --- More attention-grabbing copy options ---
-  // {
-  //   font: "font-caveat font-bold",
-  //   label: "Bold 1",
-  //   headline: "Your Room in Seoul.",
-  //   subline: "$300. That's it.",
-  //   headlineOnly: true,
-  //   description:
-  //     "Private room, central location, WiFi, AC — all included. No deposit, no Korean needed. Just book and show up.",
-  // },
-  // {
-  //   font: "font-caveat font-bold",
-  //   label: "Bold 1 Clean",
-  //   headline: "Your Room in Seoul.",
-  //   subline: "$300. That's it.",
-  //   headlineOnly: true,
-  //   description: null,
-  // },
-  // {
-  //   font: "font-shadows",
-  //   label: "Bold 2",
-  //   headline: "Seoul.",
-  //   subline: "Private room. $300. Done.",
-  //   headlineOnly: false,
-  //   description:
-  //     "A real room with a lock on the door. Furnished, central Seoul, all utilities included. Stay a week or stay a year.",
-  // },
-  // {
-  //   font: "font-shadows",
-  //   label: "Bold 2 Clean",
-  //   headline: "Seoul.",
-  //   subline: "Private room. $300. Done.",
-  //   headlineOnly: false,
-  //   description: null,
-  // },
-  // {
-  //   font: "font-patrick",
-  //   label: "Bold 3",
-  //   headline: "Wake Up in Seoul.",
-  //   subline: "Private Room. $300/month.",
-  //   headlineOnly: false,
-  //   description:
-  //     "No lease. No deposit. No Korean required. A furnished private room in central Seoul — just book online and move in.",
-  // },
-  // {
-  //   font: "font-patrick",
-  //   label: "Bold 3 Clean",
-  //   headline: "Wake Up in Seoul.",
-  //   subline: "Private Room. $300/month.",
-  //   headlineOnly: false,
-  //   description: null,
-  // },
-];
+function heroSrc(base: string, width: number) {
+  return `/images/hero/optimized/${base}-${width}.webp`;
+}
+
+function heroSrcSet(base: string) {
+  return HERO_WIDTHS.map((w) => `${heroSrc(base, w)} ${w}w`).join(", ");
+}
+
+const variant = {
+  font: "font-caveat font-bold",
+  headlineWeekly: "₩100,000 a week.",
+  headlineMonthly: "₩340,000 for 4 weeks.",
+  subline: "Your life in the Heart of Seoul.",
+  headlineOnly: false,
+  description:
+    "Central Seoul. Private room.\nThe cheapest way to experience Korea.",
+};
 
 export function HeroSlideshow() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [currentVariant, setCurrentVariant] = useState(0);
-  const [textFading, setTextFading] = useState(false);
   const [pricingMode, setPricingMode] = useState<"weekly" | "monthly">("monthly");
   const heroRef = useRef<HTMLDivElement>(null);
 
@@ -185,44 +48,19 @@ export function HeroSlideshow() {
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
   }, []);
 
-  // Cycle font variant with a crossfade
-  const goToVariant = useCallback((idx: number) => {
-    setTextFading(true);
-    setTimeout(() => {
-      setCurrentVariant(idx);
-      setTextFading(false);
-    }, 300);
-  }, []);
-
-  // Arrow keys: left/right for images, up/down for font variants
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if (e.key === "ArrowRight") nextSlide();
       if (e.key === "ArrowLeft") prevSlide();
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        goToVariant(
-          (currentVariant + 1) % heroVariants.length
-        );
-      }
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        goToVariant(
-          (currentVariant - 1 + heroVariants.length) % heroVariants.length
-        );
-      }
     }
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [nextSlide, prevSlide, goToVariant, currentVariant]);
+  }, [nextSlide, prevSlide]);
 
-  // Auto-advance background every 5s
   useEffect(() => {
-    const timer = setInterval(nextSlide, 5000);
+    const timer = setInterval(nextSlide, 2500);
     return () => clearInterval(timer);
   }, [nextSlide]);
-
-  const variant = heroVariants[currentVariant];
 
   return (
     <div
@@ -253,17 +91,20 @@ export function HeroSlideshow() {
         }
         return (
           <div
-            key={s.src}
+            key={s.base}
             className={`absolute inset-0 transition-opacity duration-1000 ${
               i === currentSlide ? "opacity-100" : "opacity-0"
             }`}
           >
-            <Image
-              src={s.src}
+            <img
+              src={heroSrc(s.base, 1920)}
+              srcSet={heroSrcSet(s.base)}
+              sizes="100vw"
               alt="Seoul cityscape"
-              fill
-              className="object-cover"
-              priority={i === 0}
+              loading={i === 0 ? "eager" : "lazy"}
+              fetchPriority={i === 0 ? "high" : "auto"}
+              decoding="async"
+              className="absolute inset-0 w-full h-full object-cover"
             />
           </div>
         );
@@ -275,11 +116,7 @@ export function HeroSlideshow() {
       {/* Content */}
       <div className="relative z-10 h-full flex items-center">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-          <div
-            className={`max-w-3xl transition-opacity duration-300 ${
-              textFading ? "opacity-0" : "opacity-100"
-            }`}
-          >
+          <div className="max-w-3xl">
             {/* Pricing toggle */}
             <div className="inline-flex items-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 p-1 mb-6">
               <button
@@ -360,17 +197,8 @@ export function HeroSlideshow() {
         </svg>
       </button>
 
-      {/* Scroll hint */}
-      <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-20 animate-bounce">
-        <svg className="w-6 h-6 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7-7-7" />
-        </svg>
-      </div>
-
-      {/* Bottom bar: slide dots + font switcher */}
       <div className="absolute bottom-0 left-0 right-0 z-20 pb-6 pt-12 bg-gradient-to-t from-black/60 to-transparent">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          {/* Slide dots */}
           <div className="flex gap-2">
             {slides.map((s, i) => (
               <button
@@ -385,23 +213,6 @@ export function HeroSlideshow() {
               />
             ))}
           </div>
-
-          {/* Font variant switcher
-          <div className="flex gap-2 overflow-x-auto max-w-[60vw] scrollbar-hide">
-            {heroVariants.map((v, i) => (
-              <button
-                key={i}
-                onClick={() => goToVariant(i)}
-                className={`${v.font} px-4 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap backdrop-blur-sm border transition-all ${
-                  i === currentVariant
-                    ? "bg-white text-gray-900 border-white shadow-lg"
-                    : "bg-white/10 text-white border-white/20 hover:bg-white/20"
-                }`}
-              >
-                {v.label}
-              </button>
-            ))}
-          </div> */}
         </div>
       </div>
     </div>
