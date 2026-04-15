@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { SectionTitle } from "@/components/section-title";
 import { siteConfig, nearbyLocations } from "@/lib/site-data";
 
@@ -52,7 +53,8 @@ export default function LocationPage() {
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Map — sticky on desktop */}
         <div className="w-full lg:w-5/12">
-          <div className="lg:sticky lg:top-24 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+         <div className="lg:sticky lg:top-24">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="h-72 lg:h-80">
               <iframe
                 title="Seoul Stay Goshiwon location map"
@@ -100,6 +102,41 @@ export default function LocationPage() {
               </div>
             </div>
           </div>
+
+          <Link
+            href="/guides/incheon-airport-to-noryangjin"
+            className="mt-6 block bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 rounded-2xl p-5 transition"
+          >
+            <div className="flex items-start gap-3">
+              <svg
+                className="w-5 h-5 text-indigo-600 mt-0.5 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"
+                />
+              </svg>
+              <div>
+                <h3 className="text-base font-bold text-gray-900 mb-1">
+                  Arriving from Incheon Airport?
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Read our step-by-step transit guide with the fastest, most
+                  comfortable, and budget-friendly routes.
+                </p>
+                <span className="inline-block mt-2 text-sm font-medium text-indigo-600">
+                  Read the guide &rarr;
+                </span>
+              </div>
+            </div>
+          </Link>
+         </div>
         </div>
 
         {/* Nearby */}

@@ -1,24 +1,24 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getBlogPost, blogPosts } from "@/lib/blog-data";
+import { getGuide, guides } from "@/lib/guides-data";
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
 export async function generateStaticParams() {
-  return blogPosts.map((post) => ({ slug: post.slug }));
+  return guides.map((guide) => ({ slug: guide.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const post = getBlogPost(slug);
-  if (!post) return { title: "Post Not Found" };
+  const guide = getGuide(slug);
+  if (!guide) return { title: "Guide Not Found" };
 
   return {
-    title: post.title,
-    description: post.excerpt,
+    title: guide.seoTitle ? { absolute: guide.seoTitle } : guide.title,
+    description: guide.excerpt,
   };
 }
 
@@ -26,6 +26,7 @@ function renderContent(content: string) {
   const lines = content.split("\n");
   const elements: React.ReactNode[] = [];
   let listItems: string[] = [];
+  let tableRows: string[] = [];
   let key = 0;
 
   function flushList() {
@@ -39,6 +40,52 @@ function renderContent(content: string) {
       );
       listItems = [];
     }
+  }
+
+  function flushTable() {
+    if (tableRows.length === 0) return;
+    const parseRow = (row: string) =>
+      row.replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
+    const header = parseRow(tableRows[0]);
+    const hasSeparator =
+      tableRows.length > 1 && /^[\s\-|:]+$/.test(tableRows[1]);
+    const body = tableRows.slice(hasSeparator ? 2 : 1).map(parseRow);
+    elements.push(
+      <div key={key++} className="my-6 overflow-x-auto">
+        <table className="w-full text-sm border border-gray-200 rounded-2xl overflow-hidden">
+          <thead className="bg-gray-50">
+            <tr>
+              {header.map((cell, i) => (
+                <th
+                  key={i}
+                  className="text-left font-semibold text-gray-900 px-4 py-3 border-b border-gray-200"
+                >
+                  {renderInline(cell)}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {body.map((row, ri) => (
+              <tr
+                key={ri}
+                className="border-b border-gray-100 last:border-b-0"
+              >
+                {row.map((cell, ci) => (
+                  <td
+                    key={ci}
+                    className="text-gray-600 px-4 py-3 align-top"
+                  >
+                    {renderInline(cell)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+    tableRows = [];
   }
 
   function renderInline(text: string): React.ReactNode {
@@ -102,8 +149,15 @@ function renderContent(content: string) {
   for (const line of lines) {
     const trimmed = line.trim();
 
+    if (trimmed.startsWith("|") && trimmed.endsWith("|")) {
+      flushList();
+      tableRows.push(trimmed);
+      continue;
+    }
+
     if (trimmed.startsWith("## ")) {
       flushList();
+      flushTable();
       elements.push(
         <h2 key={key++} className="text-2xl font-bold text-gray-900 mt-10 mb-4">
           {trimmed.slice(3)}
@@ -111,17 +165,42 @@ function renderContent(content: string) {
       );
     } else if (trimmed.startsWith("### ")) {
       flushList();
+      flushTable();
       elements.push(
         <h3 key={key++} className="text-xl font-bold text-gray-900 mt-8 mb-3">
           {trimmed.slice(4)}
         </h3>
       );
+    } else if (trimmed.startsWith("![")) {
+      flushList();
+      flushTable();
+      const imgMatch = trimmed.match(/^!\[(.*?)\]\((.+?)\)$/);
+      if (imgMatch) {
+        elements.push(
+          <figure key={key++} className="my-6">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={imgMatch[2]}
+              alt={imgMatch[1]}
+              className="w-full rounded-2xl border border-gray-200"
+            />
+            {imgMatch[1] && (
+              <figcaption className="mt-2 text-sm text-gray-500 text-center">
+                {imgMatch[1]}
+              </figcaption>
+            )}
+          </figure>
+        );
+      }
     } else if (trimmed.startsWith("- ")) {
+      flushTable();
       listItems.push(trimmed.slice(2));
     } else if (trimmed === "") {
       flushList();
+      flushTable();
     } else {
       flushList();
+      flushTable();
       elements.push(
         <p key={key++} className="text-base text-gray-600 mb-4 leading-relaxed">
           {renderInline(trimmed)}
@@ -131,49 +210,50 @@ function renderContent(content: string) {
   }
 
   flushList();
+  flushTable();
   return elements;
 }
 
-export default async function BlogPostPage({ params }: Props) {
+export default async function GuidePage({ params }: Props) {
   const { slug } = await params;
-  const post = getBlogPost(slug);
+  const guide = getGuide(slug);
 
-  if (!post) notFound();
+  if (!guide) notFound();
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <nav className="mb-8 text-sm text-gray-500">
-        <Link href="/blog" className="hover:text-indigo-600 transition">
-          Blog
+        <Link href="/guides" className="hover:text-indigo-600 transition">
+          Guides
         </Link>
         <span className="mx-2">/</span>
-        <span className="text-gray-900 line-clamp-1">{post.title}</span>
+        <span className="text-gray-900 line-clamp-1">{guide.title}</span>
       </nav>
 
       <article>
         <header className="mb-8">
           <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight leading-tight mb-4">
-            {post.title}
+            {guide.title}
           </h1>
           <div className="flex items-center gap-3 text-sm text-gray-500">
-            <time dateTime={post.date}>
-              {new Date(post.date).toLocaleDateString("en-US", {
+            <time dateTime={guide.date}>
+              {new Date(guide.date).toLocaleDateString("en-US", {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
               })}
             </time>
             <span>&middot;</span>
-            <span>{post.readTime}</span>
+            <span>{guide.readTime}</span>
           </div>
         </header>
 
-        <div>{renderContent(post.content)}</div>
+        <div>{renderContent(guide.content)}</div>
       </article>
 
       <div className="mt-12 pt-8 border-t border-gray-200">
         <Link
-          href="/blog"
+          href="/guides"
           className="inline-flex items-center text-indigo-600 hover:text-indigo-700 text-sm font-medium transition"
         >
           <svg
@@ -190,7 +270,7 @@ export default async function BlogPostPage({ params }: Props) {
               d="M15 19l-7-7 7-7"
             />
           </svg>
-          Back to Blog
+          Back to Guides
         </Link>
       </div>
     </div>

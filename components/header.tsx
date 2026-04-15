@@ -7,6 +7,7 @@ import { siteConfig } from "@/lib/site-data";
 
 const navLinks = [
   { href: "/rooms", label: "Rooms" },
+  { href: "/guides", label: "Guides" },
   { href: "/faq", label: "FAQ" },
   { href: "/location", label: "Location" },
   { href: "/contact", label: "Contact" },

@@ -4,10 +4,12 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 
 const facilities = [
+  { src: "/images/guides/shared-kitchen/kitchen.jpg", label: "Shared Kitchen" },
   { src: "/images/common/balcony.jpg", label: "Balcony" },
   { src: "/images/common/laundry.png", label: "Laundry" },
   { src: "/images/common/microwave.jpg", label: "Microwave" },
   { src: "/images/common/rice-cooker.jpg", label: "Rice Cooker" },
+  { src: "/images/common/filtered-water-dispenser.jpg", label: "Filtered Water" },
 ];
 
 export function SharedFacilities() {

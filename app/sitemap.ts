@@ -16,7 +16,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${base}/policies`, lastModified: now, changeFrequency: "yearly", priority: 0.4 },
     { url: `${base}/request-to-book`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${base}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
+    { url: `${base}/guides`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
   ];
 
   let roomRoutes: MetadataRoute.Sitemap = [];
