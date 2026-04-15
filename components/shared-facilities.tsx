@@ -9,7 +9,7 @@ const facilities = [
   { src: "/images/common/laundry.png", label: "Laundry" },
   { src: "/images/common/microwave.jpg", label: "Microwave" },
   { src: "/images/common/rice-cooker.jpg", label: "Rice Cooker" },
-  { src: "/images/common/filtered-water-dispenser.jpg", label: "Filtered Water" },
+  { src: "/images/common/filtered-water-dispenser.jpg", label: "Filtered Water Dispenser" },
 ];
 
 export function SharedFacilities() {

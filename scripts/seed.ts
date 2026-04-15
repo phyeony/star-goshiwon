@@ -36,7 +36,7 @@ const rooms = [
     name: "Private Shower Room",
     slug: "room-with-private-shower",
     description:
-      "A private room with your own shower and access to a shared toilet. A smart choice for guests who want extra convenience at a reasonable price. Includes an outside-facing window, fast Wi-Fi, AC/heating, a desk, and a mini fridge.",
+      "A private room with your own shower and access to a shared toilet. With no toilet taking up space, the shower area is larger than in our Private Shower & Toilet Room. A smart choice for guests who want extra convenience at a reasonable price. Includes an outside-facing window, fast Wi-Fi, AC/heating, a desk, and a mini fridge.",
     price_monthly: 408000,
     price_weekly: 120000,
     price_daily: 18000,
@@ -44,6 +44,7 @@ const rooms = [
     size_sqm: 6.5,
     amenities: [
       "Private Shower",
+      "Bigger Shower Space",
       "Shared Toilet",
       "AC / Heat",
       "Fast WiFi",
