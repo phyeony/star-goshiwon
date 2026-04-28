@@ -112,6 +112,12 @@ export default async function RoomDetailPage({ params }: Props) {
             <ImageGallery images={images} roomName={room.name} />
           )}
 
+          {images && images.length > 0 && (
+            <p className="text-sm text-gray-500 italic mb-6 -mt-2">
+              Photos are representative. Rooms are randomly assigned within the same type — <strong className="font-semibold text-gray-700 not-italic">all rooms of the same type share identical amenities and size.</strong>
+            </p>
+          )}
+
           <div className="flex items-start justify-between mb-6">
             <div>
               <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
