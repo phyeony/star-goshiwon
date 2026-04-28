@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { siteConfig } from "@/lib/site-data";
 import { getPublicRooms } from "@/lib/queries";
+import { guides } from "@/lib/guides-data";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/policies`, lastModified: now, changeFrequency: "yearly", priority: 0.4 },
     { url: `${base}/request-to-book`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/guides`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
+    { url: `${base}/goshiwon-seoul`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
   ];
+
+  const guideRoutes: MetadataRoute.Sitemap = guides.map((guide) => ({
+    url: `${base}/guides/${guide.slug}`,
+    lastModified: guide.date ? new Date(guide.date) : now,
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
 
   let roomRoutes: MetadataRoute.Sitemap = [];
   try {
@@ -32,5 +41,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // If DB unreachable at build time, fall back to static routes only.
   }
 
-  return [...staticRoutes, ...roomRoutes];
+  return [...staticRoutes, ...guideRoutes, ...roomRoutes];
 }

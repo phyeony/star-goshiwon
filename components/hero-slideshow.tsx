@@ -117,6 +117,10 @@ export function HeroSlideshow() {
       <div className="relative z-10 h-full flex items-center">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className="max-w-3xl">
+            <h1 className="text-sm sm:text-base font-semibold uppercase tracking-widest text-white/90 mb-4 hero-text-shadow-heavy">
+              Goshiwon in Seoul for Foreigners
+            </h1>
+
             {/* Pricing toggle */}
             <div className="inline-flex items-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 p-1 mb-6">
               <button
@@ -141,11 +145,11 @@ export function HeroSlideshow() {
               </button>
             </div>
 
-            <h1
+            <p
               className={`${variant.font} text-6xl sm:text-7xl lg:text-8xl leading-[1.05] text-white mb-2 hero-text-shadow-heavy`}
             >
               {pricingMode === "weekly" ? variant.headlineWeekly : variant.headlineMonthly}
-            </h1>
+            </p>
             <h2
               className={`${variant.font} ${
                 variant.headlineOnly

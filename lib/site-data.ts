@@ -2,7 +2,7 @@ export const siteConfig = {
   name: "Seoul Goshiwon by Star Gositel",
   tagline: "Your Comfortable Basecamp in Seoul",
   description:
-    "Foreigner-friendly men's goshiwon in central Seoul. No massive deposits, no long-term contracts. Clean, secure, fully-furnished private rooms — Hongdae, Gangnam 40 min by subway.",
+    "Cheap, foreigner-friendly men's goshiwon in Seoul. Private rooms from ₩100,000/week with no big deposits and flexible stays. Easy access to Hongdae, Gangnam, and major universities.",
   email: "stargoshiwon.seoul@gmail.com",
   phone: "+82-10-1234-5678",
   whatsapp: "https://wa.me/message/7FRHDMTCDZPPF1",

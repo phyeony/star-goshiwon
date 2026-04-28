@@ -6,6 +6,7 @@ import { HeroSlideshow } from "@/components/hero-slideshow";
 import { SharedFacilities } from "@/components/shared-facilities";
 import { getPublicRooms } from "@/lib/queries";
 import { siteConfig, amenities, faqs } from "@/lib/site-data";
+import { guides } from "@/lib/guides-data";
 
 export const dynamic = "force-dynamic";
 
@@ -175,6 +176,176 @@ export default async function HomePage() {
           </div>
         </div>
       </section> */}
+
+      {/* About Goshiwons in Seoul (SEO content) */}
+      <section className="bg-white py-16 border-t border-gray-100">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-6">
+            What Is a Goshiwon in Seoul?
+          </h2>
+
+          <p className="text-base text-gray-600 mb-4 leading-relaxed">
+            A goshiwon (고시원) is a uniquely Korean type of housing: a private,
+            fully-furnished room with shared kitchen and laundry facilities.
+            Originally built in the 1980s for students preparing for civil-service
+            exams, goshiwons have since become Seoul&rsquo;s most popular form of
+            affordable, no-deposit short-term housing — used by university
+            students, working professionals, digital nomads, and increasingly,
+            foreigners visiting or relocating to Korea.
+          </p>
+
+          <p className="text-base text-gray-600 mb-4 leading-relaxed">
+            A typical goshiwon room in Seoul is small but practical: a single
+            bed, a desk, a wardrobe, mini-fridge, AC/heating, and a window. Rent
+            includes utilities, Wi-Fi, and basic pantry staples like rice, kimchi,
+            and ramen. There&rsquo;s no key money (보증금) like in a Korean apartment
+            lease — usually just a small refundable deposit, often ₩100,000 or
+            less.
+          </p>
+
+          <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">
+            Why Foreigners Choose a Goshiwon in Seoul
+          </h3>
+          <p className="text-base text-gray-600 mb-4 leading-relaxed">
+            Compared to hotels, Airbnbs, or short-term apartments, a goshiwon
+            offers three things that are hard to beat:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-base text-gray-600 mb-6 ml-1">
+            <li>
+              <strong className="font-semibold text-gray-900">No long-term commitment.</strong>{" "}
+              Stay one week, four weeks, or six months — your call. Most Korean
+              leases lock you in for a year and demand a multi-thousand-dollar
+              deposit. Goshiwons don&rsquo;t.
+            </li>
+            <li>
+              <strong className="font-semibold text-gray-900">Central locations.</strong>{" "}
+              Most goshiwons sit near subway stations and universities, putting
+              all of Seoul within 30–40 minutes by transit.
+            </li>
+            <li>
+              <strong className="font-semibold text-gray-900">Real privacy at a low price.</strong>{" "}
+              Hostels share rooms; goshiwons give you your own door, your own
+              desk, and your own quiet space.
+            </li>
+          </ul>
+
+          <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">
+            How Much Does a Goshiwon in Seoul Cost?
+          </h3>
+          <p className="text-base text-gray-600 mb-4 leading-relaxed">
+            Pricing varies by district and room type. Recent listing data shows
+            goshiwon rents top out around ₩480,000/month in Gangnam-gu,
+            ₩390,000 in Mapo-gu (Hongdae), and ₩410,000 in Jongno-gu. In
+            well-connected outer districts like Dongjak-gu — where Star Gositel
+            is located — rents top out around ₩340,000/month. Our standard
+            4-week rate is ₩340,000 (15% off), or ₩100,000/week.
+          </p>
+
+          <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">
+            Who Stays in a Goshiwon
+          </h3>
+          <ul className="list-disc list-inside space-y-2 text-base text-gray-600 mb-6 ml-1">
+            <li>Exchange students at SNU, Yonsei, Sogang, Hongdae-area schools, or Chung-Ang University</li>
+            <li>Digital nomads and remote workers spending 1–3 months in Korea</li>
+            <li>Travelers who want more than a hostel for less than a hotel</li>
+            <li>Working professionals on short-term assignments</li>
+          </ul>
+
+          <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">
+            What to Look For
+          </h3>
+          <p className="text-base text-gray-600 mb-4 leading-relaxed">
+            When choosing a goshiwon in Seoul as a foreigner, prioritize:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-base text-gray-600 mb-6 ml-1">
+            <li>
+              <strong className="font-semibold text-gray-900">English-speaking staff</strong> — the booking and check-in process is much smoother
+            </li>
+            <li>
+              <strong className="font-semibold text-gray-900">Walking distance to a major subway line</strong> — your daily commute makes or breaks the stay
+            </li>
+            <li>
+              <strong className="font-semibold text-gray-900">Outside-facing window</strong> — many older goshiwons have interior-facing rooms with no natural light
+            </li>
+            <li>
+              <strong className="font-semibold text-gray-900">Transparent pricing</strong> — fixed rates, no hidden cleaning fees, no last-minute deposit changes
+            </li>
+          </ul>
+
+          <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">
+            Why Star Gositel
+          </h3>
+          <p className="text-base text-gray-600 mb-4 leading-relaxed">
+            Star Gositel sits in Dongjak-gu, a quiet residential district that
+            puts central Seoul within easy reach without paying central-Seoul
+            prices. Sangdo Station (Line 7) is a 5-minute walk; Noryangjin
+            Station (Lines 1 and 9) is 10 minutes; Sindaebang (Line 2) is 12.
+            Gangnam, Hongdae, Myeongdong, and Itaewon are all within 25–30
+            minutes by subway, and every major Seoul university is reachable in
+            under 40 minutes.
+          </p>
+
+          <p className="text-base text-gray-600 mb-4 leading-relaxed">
+            Read our{" "}
+            <Link
+              href="/goshiwon-seoul"
+              className="text-indigo-600 hover:text-indigo-700 underline"
+            >
+              complete guide to goshiwons in Seoul
+            </Link>
+            , see{" "}
+            <Link
+              href="/rooms"
+              className="text-indigo-600 hover:text-indigo-700 underline"
+            >
+              our rooms
+            </Link>
+            , or check{" "}
+            <Link
+              href="/location"
+              className="text-indigo-600 hover:text-indigo-700 underline"
+            >
+              our location
+            </Link>
+            .
+          </p>
+        </div>
+      </section>
+
+      {/* Featured Guides */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <SectionTitle
+          title="Guides for Foreigners in Seoul"
+          subtitle="Practical reading before and during your stay in a goshiwon."
+        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {guides.slice(3, 7).map((g) => (
+            <Link
+              key={g.slug}
+              href={`/guides/${g.slug}`}
+              className="bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-md hover:border-indigo-200 transition flex flex-col"
+            >
+              <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">
+                {g.title}
+              </h3>
+              <p className="text-sm text-gray-600 mb-4 line-clamp-3 flex-1">
+                {g.excerpt}
+              </p>
+              <span className="text-sm font-medium text-indigo-600">
+                Read more →
+              </span>
+            </Link>
+          ))}
+        </div>
+        <div className="text-center mt-8">
+          <Link
+            href="/guides"
+            className="inline-flex items-center justify-center px-6 py-3 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition duration-150 ease-in-out"
+          >
+            View All Guides
+          </Link>
+        </div>
+      </section>
 
       {/* FAQ Preview */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
