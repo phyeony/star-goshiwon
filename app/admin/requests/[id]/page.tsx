@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getBookingRequestById } from "@/lib/queries";
-import { formatKRW } from "@/lib/pricing";
+import { formatUSD, formatApproxKRW } from "@/lib/pricing";
 import { BookingStatusBadge } from "@/components/status-badge";
 import { RequestActions } from "@/components/admin/request-actions";
 
@@ -115,12 +115,23 @@ export default async function RequestDetailPage({ params }: Props) {
                   {request.check_out_date}
                 </dd>
               </div>
+              <div>
+                <dt className="text-xs font-bold text-gray-500 uppercase">
+                  Bedding (prepaid)
+                </dt>
+                <dd className="text-base text-gray-900 mt-1">
+                  {request.bedding_prepaid ? "Yes ($15)" : "No (cash on arrival)"}
+                </dd>
+              </div>
               <div className="sm:col-span-2">
                 <dt className="text-xs font-bold text-gray-500 uppercase">
                   Estimated Total
                 </dt>
                 <dd className="text-2xl font-extrabold text-gray-900 mt-1">
-                  {formatKRW(request.estimated_total)}
+                  {formatUSD(request.estimated_total)}
+                  <span className="ml-3 text-base font-normal text-gray-500">
+                    {formatApproxKRW(request.estimated_total)}
+                  </span>
                 </dd>
               </div>
             </dl>

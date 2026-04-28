@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { siteConfig } from "@/lib/site-data";
+import { formatApproxKRW } from "@/lib/pricing";
 
 export const metadata: Metadata = {
   title: {
@@ -317,7 +318,7 @@ export default function GoshiwonSeoulPage() {
           We&rsquo;re one foreigner-friendly goshiwon in Dongjak-gu&rsquo;s
           Noryangjin neighborhood. Our pitch is simple: clean rooms,
           English-speaking management, transparent pricing, no surprise fees.
-          ₩100,000/week, ₩340,000/month for 4+ weeks (a 15% discount baked in).
+          $75({formatApproxKRW(74)})/week, $275({formatApproxKRW(275)})/4 weeks for 4+ weeks (a 15% discount baked in).
         </p>
         <p className="text-base text-gray-600 mb-4 leading-relaxed">
           If you&rsquo;re shopping around: visit a few goshiwons, including

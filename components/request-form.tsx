@@ -3,67 +3,22 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { Room } from "@/lib/types";
-import { formatKRW } from "@/lib/pricing";
+import {
+  calculateEstimate,
+  formatUSD,
+  formatApproxKRW,
+  getUsdPrices,
+  BEDDING_FEE_USD,
+  type PricingBreakdown,
+} from "@/lib/pricing";
 
-type RoomOption = Pick<Room, "name" | "slug" | "price_monthly" | "price_weekly" | "price_daily">;
+type RoomOption = Pick<Room, "name" | "slug">;
 
 interface RequestFormProps {
   rooms: RoomOption[];
   preselectedSlug?: string;
   /** When true, hides the room selector (use preselectedSlug to lock the room) */
   singleRoom?: boolean;
-}
-
-interface PricingBreakdown {
-  weeks: number;
-  days: number;
-  weeklySubtotal: number;
-  dailySubtotal: number;
-  subtotal: number;
-  discountApplied: boolean;
-  discount: number;
-  total: number;
-  label: string;
-}
-
-function calculateClientEstimate(
-  room: Pick<Room, "price_monthly" | "price_weekly" | "price_daily">,
-  checkIn: string,
-  checkOut: string
-): PricingBreakdown | null {
-  if (!checkIn || !checkOut) return null;
-  const start = new Date(checkIn);
-  const end = new Date(checkOut);
-  const totalDays = Math.ceil(
-    (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
-  );
-  if (totalDays <= 0) return null;
-
-  const weeks = Math.floor(totalDays / 7);
-  const days = totalDays % 7;
-
-  const weeklySubtotal = weeks * room.price_weekly;
-  const dailySubtotal = days * room.price_daily;
-  const subtotal = weeklySubtotal + dailySubtotal;
-
-  const discountApplied = weeks >= 4;
-  const discount = discountApplied ? Math.round(subtotal * 0.15) : 0;
-
-  const parts: string[] = [];
-  if (weeks > 0) parts.push(`${weeks} week${weeks > 1 ? "s" : ""}`);
-  if (days > 0) parts.push(`${days} day${days > 1 ? "s" : ""}`);
-
-  return {
-    weeks,
-    days,
-    weeklySubtotal,
-    dailySubtotal,
-    subtotal,
-    discountApplied,
-    discount,
-    total: subtotal - discount,
-    label: parts.join(", "),
-  };
 }
 
 export function RequestForm({ rooms, preselectedSlug, singleRoom }: RequestFormProps) {
@@ -78,6 +33,7 @@ export function RequestForm({ rooms, preselectedSlug, singleRoom }: RequestFormP
     check_in_date: "",
     check_out_date: "",
     notes: "",
+    bedding_prepaid: false,
   });
 
   const selectedRoom = rooms.find((r) => r.slug === form.room_slug);
@@ -86,18 +42,19 @@ export function RequestForm({ rooms, preselectedSlug, singleRoom }: RequestFormP
   useEffect(() => {
     if (selectedRoom && form.check_in_date && form.check_out_date) {
       setEstimate(
-        calculateClientEstimate(
-          selectedRoom,
+        calculateEstimate(
+          getUsdPrices(selectedRoom.slug),
           form.check_in_date,
-          form.check_out_date
+          form.check_out_date,
+          { beddingPrepaid: form.bedding_prepaid }
         )
       );
     } else {
       setEstimate(null);
     }
-  }, [selectedRoom, form.check_in_date, form.check_out_date]);
+  }, [selectedRoom, form.check_in_date, form.check_out_date, form.bedding_prepaid]);
 
-  function updateField(field: string, value: string | number) {
+  function updateField(field: string, value: string | number | boolean) {
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => {
       const next = { ...prev };
@@ -144,6 +101,7 @@ export function RequestForm({ rooms, preselectedSlug, singleRoom }: RequestFormP
   }
 
   const today = new Date().toISOString().split("T")[0];
+  const selectedUsd = selectedRoom ? getUsdPrices(selectedRoom.slug) : null;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
@@ -211,11 +169,14 @@ export function RequestForm({ rooms, preselectedSlug, singleRoom }: RequestFormP
             className="mt-1 block w-full border-none bg-transparent text-sm focus:ring-0 p-0 text-gray-900 outline-none"
             required
           >
-            {rooms.map((room) => (
-              <option key={room.slug} value={room.slug}>
-                {room.name} ({formatKRW(room.price_weekly)}/week)
-              </option>
-            ))}
+            {rooms.map((room) => {
+              const usd = getUsdPrices(room.slug);
+              return (
+                <option key={room.slug} value={room.slug}>
+                  {room.name} ({formatUSD(usd.weekly)}/week)
+                </option>
+              );
+            })}
           </select>
           {errors.room_slug && (
             <p className="text-xs text-red-600 mt-1">{errors.room_slug}</p>
@@ -272,40 +233,73 @@ export function RequestForm({ rooms, preselectedSlug, singleRoom }: RequestFormP
             <p className="text-xs text-red-600 mt-1">{errors.notes}</p>
           )}
         </div>
+
+        <label className="flex items-start gap-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+          <input
+            type="checkbox"
+            checked={form.bedding_prepaid}
+            onChange={(e) => updateField("bedding_prepaid", e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+          />
+          <span className="text-sm">
+            <span className="font-semibold text-gray-900">
+              Add bedding set — {formatUSD(BEDDING_FEE_USD)} prepaid
+            </span>
+            <span className="block text-xs text-gray-500 mt-0.5">
+              Otherwise pay ₩20,000 cash on arrival.
+            </span>
+          </span>
+        </label>
       </div>
 
-      {estimate && estimate.total > 0 && (
+      {estimate && estimate.total > 0 && selectedUsd && (
         <div className="bg-gray-50 rounded-lg p-4 mt-4 border border-gray-200">
           {estimate.weeks > 0 && (
             <div className="flex justify-between text-base text-gray-600 mb-2">
               <span>
-                {formatKRW(selectedRoom!.price_weekly)} x {estimate.weeks} week
+                {formatUSD(selectedUsd.weekly)} x {estimate.weeks} week
                 {estimate.weeks > 1 ? "s" : ""}
               </span>
-              <span>{formatKRW(estimate.weeklySubtotal)}</span>
+              <span>{formatUSD(estimate.weeklySubtotal)}</span>
             </div>
           )}
           {estimate.days > 0 && (
             <div className="flex justify-between text-base text-gray-600 mb-2">
               <span>
-                {formatKRW(selectedRoom!.price_daily)} x {estimate.days} day
+                {formatUSD(selectedUsd.daily)} x {estimate.days} day
                 {estimate.days > 1 ? "s" : ""}
               </span>
-              <span>{formatKRW(estimate.dailySubtotal)}</span>
+              <span>{formatUSD(estimate.dailySubtotal)}</span>
             </div>
           )}
           {estimate.discountApplied && (
             <div className="flex justify-between text-base text-green-600 mb-2">
               <span>Monthly discount (15%)</span>
-              <span>-{formatKRW(estimate.discount)}</span>
+              <span>-{formatUSD(estimate.discount)}</span>
+            </div>
+          )}
+          {estimate.beddingFee > 0 && (
+            <div className="flex justify-between text-base text-gray-600 mb-2">
+              <span>Bedding set (prepaid)</span>
+              <span>{formatUSD(estimate.beddingFee)}</span>
             </div>
           )}
           <div className="flex justify-between font-bold text-gray-900 text-lg border-t border-gray-200 pt-2 mt-2">
             <span>Estimated Total</span>
-            <span>{formatKRW(estimate.total)}</span>
+            <span>
+              {formatUSD(estimate.total)}
+              <span className="ml-2 text-sm font-normal text-gray-500">
+                {formatApproxKRW(estimate.total)}
+              </span>
+            </span>
           </div>
-          <p className="text-xs text-gray-500 mt-2">
-            + ₩20,000 optional one-time bedding fee
+          {!form.bedding_prepaid && (
+            <p className="text-xs text-gray-500 mt-2">
+              + ₩20,000 optional one-time bedding fee (cash on arrival)
+            </p>
+          )}
+          <p className="text-xs text-gray-500 mt-1">
+            + ₩100,000 refundable deposit (cash on arrival, returned at checkout)
           </p>
         </div>
       )}

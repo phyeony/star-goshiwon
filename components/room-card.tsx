@@ -1,13 +1,14 @@
 import Link from "next/link";
 import Image from "next/image";
 import { StatusBadge } from "./status-badge";
-import { formatKRW } from "@/lib/pricing";
+import { formatUSD, formatApproxKRW, getUsdPrices } from "@/lib/pricing";
 import type { RoomWithImages } from "@/lib/types";
 
 export function RoomCard({ room }: { room: RoomWithImages }) {
   const mainImage = room.room_images?.sort(
     (a, b) => a.sort_order - b.sort_order
   )[0];
+  const usd = getUsdPrices(room.slug);
 
   return (
     <Link href={`/rooms/${room.slug}`} className="block group">
@@ -46,32 +47,25 @@ export function RoomCard({ room }: { room: RoomWithImages }) {
                   {amenity}
                 </span>
               ))}
-              {/* {room.amenities.slice(0, 4).map((amenity) => (
-                <span
-                  key={amenity}
-                  className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium border border-gray-200"
-                >
-                  {amenity}
-                </span>
-              ))}
-              {room.amenities.length > 4 && (
-                <span className="bg-gray-100 text-gray-500 px-3 py-1 rounded-full text-sm font-medium border border-gray-200">
-                  +{room.amenities.length - 4} more
-                </span>
-              )} */}
             </div>
           )}
 
           <div className="border-t border-gray-100 pt-4 flex justify-between items-end">
             <div>
               <span className="text-3xl font-extrabold text-gray-900">
-                {formatKRW(room.price_weekly)}
+                {formatUSD(usd.weekly)}
               </span>
               <span className="text-gray-500 text-base"> / week</span>
+              <div className="text-sm text-gray-500 mt-1">
+                {formatApproxKRW(usd.weekly)}
+              </div>
             </div>
-            {room.price_monthly > 0 && (
-              <div className="text-sm text-green-600 font-medium">
-                4+ weeks: {formatKRW(room.price_monthly)} / 4 weeks (15% off)
+            {usd.monthly > 0 && (
+              <div className="text-sm text-green-600 font-medium text-right">
+                4+ weeks: {formatUSD(usd.monthly)} / 4 weeks (15% off)
+                <div className="text-xs text-gray-500 font-normal">
+                  {formatApproxKRW(usd.monthly)}
+                </div>
               </div>
             )}
           </div>

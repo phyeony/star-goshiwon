@@ -50,7 +50,9 @@ export interface BookingRequest {
   room_slug: string;
   check_in_date: string;
   check_out_date: string;
+  // USD (PayPal settles in USD). Existing rows pre-cutover may contain KRW.
   estimated_total: number;
+  bedding_prepaid: boolean;
   notes: string;
   status: BookingStatus;
   admin_notes: string;
@@ -97,6 +99,7 @@ export type BookingRequestInsert = {
   check_in_date: string;
   check_out_date: string;
   estimated_total?: number;
+  bedding_prepaid?: boolean;
   notes?: string;
   status?: BookingStatus;
   admin_notes?: string;

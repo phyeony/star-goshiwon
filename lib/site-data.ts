@@ -2,7 +2,7 @@ export const siteConfig = {
   name: "Seoul Goshiwon by Star Gositel",
   tagline: "Your Comfortable Basecamp in Seoul",
   description:
-    "Cheap, foreigner-friendly men's goshiwon in Seoul. Private rooms from ₩100,000/week with no big deposits and flexible stays. Easy access to Hongdae, Gangnam, and major universities.",
+    "Cheap, foreigner-friendly men's goshiwon in Seoul. Private rooms from $75/week (~₩110,000) with no big deposits and flexible stays. Easy access to Hongdae, Gangnam, and major universities.",
   email: "stargoshiwon.seoul@gmail.com",
   phone: "+82-10-1234-5678",
   whatsapp: "https://wa.me/message/7FRHDMTCDZPPF1",
@@ -17,8 +17,8 @@ export const siteConfig = {
 };
 
 export const highlights = [
-  { value: "0₩", label: "Key Money Deposit" },
-  { value: "₩100,000", label: "From / Week" },
+  { value: "$0", label: "Key Money Deposit" },
+  { value: "$75", label: "From / Week" },
   { value: "15% Off", label: "Monthly Stay Discount" },
   { value: "English", label: "Speaking Management" },
 ];
@@ -53,7 +53,7 @@ export const faqs = [
   {
     question: "What is included in the rent?",
     answer:
-      "Rent includes utilities (electricity, water, gas, internet), basic food supplies (rice, kimchi, ramen), access to shared kitchen and laundry facilities. Every room comes with a bed, desk & chair, WiFi, mini fridge, AC/Heating, shelf & cabinet, and an outside-facing window. A bedding set is provided for a one-time fee of ₩20,000.",
+      "Rent includes utilities (electricity, water, gas, internet), basic food supplies (rice, kimchi, ramen), access to shared kitchen and laundry facilities. Every room comes with a bed, desk & chair, WiFi, mini fridge, AC/Heating, shelf & cabinet, and an outside-facing window. A bedding set is available — $15 USD prepaid with your booking, or ₩20,000 cash on arrival.",
   },
   {
     question: "What is the minimum stay?",

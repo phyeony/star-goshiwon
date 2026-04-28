@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getRooms } from "@/lib/queries";
 import { StatusBadge } from "@/components/status-badge";
-import { formatKRW } from "@/lib/pricing";
+import { formatUSD, USD_PRICES_BY_SLUG } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
 
@@ -62,7 +62,9 @@ export default async function AdminRoomsPage() {
                       <p className="text-xs text-gray-500">/{room.slug}</p>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {formatKRW(room.price_monthly)}
+                      {USD_PRICES_BY_SLUG[room.slug]
+                        ? formatUSD(USD_PRICES_BY_SLUG[room.slug].monthly)
+                        : "—"}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
                       {room.capacity}

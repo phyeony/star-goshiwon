@@ -7,7 +7,8 @@ const sample = {
   check_in_date: "2026-05-01",
   check_out_date: "2026-05-29",
   guest_count: 1,
-  estimated_total: 780000,
+  estimated_total: 314,
+  bedding_prepaid: true,
   notes: "Hi! I'd like to arrive around 3pm. Is early check-in possible?",
 };
 

@@ -7,6 +7,7 @@ import { SharedFacilities } from "@/components/shared-facilities";
 import { getPublicRooms } from "@/lib/queries";
 import { siteConfig, amenities, faqs } from "@/lib/site-data";
 import { guides } from "@/lib/guides-data";
+import { formatApproxKRW } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
 
@@ -96,12 +97,12 @@ export default async function HomePage() {
             </span>
             <div>
               <h3 className="text-xl font-bold text-gray-900">
-                Save ₩60,000 when you stay 4+ weeks
+                Save $45 when you stay 4+ weeks
               </h3>
               <p className="text-gray-500 mt-1">
-                From ₩100,000/week, or{" "}
-                <span className="font-semibold text-gray-900">₩340,000</span> for 4 weeks (15% off).
-                Minimum stay 7 days. Refundable ₩100,000 deposit · Optional ₩20,000 bedding set.
+                From $75/week ({formatApproxKRW(75)}), or{" "}
+                <span className="font-semibold text-gray-900">$255</span> ({formatApproxKRW(255)}) for 4 weeks (15% off).
+                Minimum stay 7 days. Refundable ₩100,000 deposit · Optional bedding set $15 prepaid or ₩20,000 cash.
               </p>
             </div>
           </div>
@@ -240,7 +241,8 @@ export default async function HomePage() {
             ₩390,000 in Mapo-gu (Hongdae), and ₩410,000 in Jongno-gu. In
             well-connected outer districts like Dongjak-gu — where Star Gositel
             is located — rents top out around ₩340,000/month. Our standard
-            4-week rate is ₩340,000 (15% off), or ₩100,000/week.
+            4-week rate is $255 (~₩340,000) at 15% off, or $75/week
+            (~{formatApproxKRW(75)}). Rooms are charged in USD via PayPal.
           </p>
 
           <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">

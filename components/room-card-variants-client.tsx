@@ -4,18 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { StatusBadge } from "./status-badge";
-import { formatKRW } from "@/lib/pricing";
+import { formatUSD, formatApproxKRW, getUsdPrices } from "@/lib/pricing";
 import type { RoomWithImages } from "@/lib/types";
 
 function getMainImage(room: RoomWithImages) {
   return room.room_images?.sort((a, b) => a.sort_order - b.sort_order)[0];
 }
 
-/**
- * Amenities present in every room — these are "standard" and should be
- * de-emphasized so room-specific amenities (private shower, private toilet,
- * etc.) stand out as the actual differentiators.
- */
 const COMMON_AMENITY_KEYS = new Set([
   "acheat",
   "fastwifi",
@@ -94,28 +89,32 @@ function PricingBlock({
   mode: PricingMode;
   onChange: (mode: PricingMode) => void;
 }) {
+  const usd = getUsdPrices(room.slug);
   const isMonthly = mode === "monthly";
-  const price = isMonthly ? room.price_monthly : room.price_weekly;
+  const price = isMonthly ? usd.monthly : usd.weekly;
   const unit = isMonthly ? "/ 4 weeks" : "/ week";
-  const savings = room.price_weekly * 4 - room.price_monthly;
+  const savings = usd.weekly * 4 - usd.monthly;
 
   return (
     <div className="border-t border-gray-100 pt-4 mt-auto">
       <PricingToggle mode={mode} onChange={onChange} />
       <div className="flex items-baseline gap-2">
         <span className="text-3xl font-extrabold text-gray-900">
-          {formatKRW(price)}
+          {formatUSD(price)}
         </span>
         <span className="text-gray-500 text-base">{unit}</span>
       </div>
+      <div className="text-sm text-gray-500 mt-1">
+        {formatApproxKRW(price)}
+      </div>
       {isMonthly && savings > 0 && (
         <div className="mt-1 text-sm text-green-600 font-semibold">
-          Save {formatKRW(savings)} vs. weekly
+          Save {formatUSD(savings)} vs. weekly
         </div>
       )}
-      {!isMonthly && room.price_monthly > 0 && (
+      {!isMonthly && usd.monthly > 0 && (
         <div className="mt-1 text-sm text-gray-500">
-          Stay 4+ weeks for {formatKRW(room.price_monthly)} (save 15%)
+          Stay 4+ weeks for {formatUSD(usd.monthly)} (save 15%)
         </div>
       )}
     </div>

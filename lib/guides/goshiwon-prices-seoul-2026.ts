@@ -140,8 +140,8 @@ In other words, even the cheapest goshiwon is a real operating business with thi
 
 For comparison, our pricing in Dongjak-gu (Noryangjin / Sangdo area):
 
-- **Weekly:** from ₩100,000
-- **Monthly (4 weeks):** from ₩340,000 (15% off)
+- **Weekly:** from ₩110,000
+- **Monthly (4 weeks):** from ₩370,000 (15% off)
 - **Refundable deposit:** ₩100,000
 - **Bedding set (optional):** ₩20,000 one-time
 

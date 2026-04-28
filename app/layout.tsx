@@ -75,7 +75,7 @@ const lodgingJsonLd = {
   email: siteConfig.email,
   telephone: siteConfig.phone,
   image: `${siteConfig.url}/images/og-cover.jpg`,
-  priceRange: "₩100,000–₩500,000",
+  priceRange: "$75–$300",
   address: {
     "@type": "PostalAddress",
     streetAddress: "64, Manyang-ro 12ga-gil, Dongjak-gu",

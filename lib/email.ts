@@ -1,5 +1,5 @@
 import { siteConfig } from "./site-data";
-import { formatKRW } from "./pricing";
+import { formatUSD, formatApproxKRW } from "./pricing";
 
 interface BookingEmailData {
   guest_name: string;
@@ -9,7 +9,12 @@ interface BookingEmailData {
   check_out_date: string;
   guest_count: number;
   estimated_total: number;
+  bedding_prepaid: boolean;
   notes: string;
+}
+
+function formatTotal(amount: number) {
+  return `${formatUSD(amount)} (${formatApproxKRW(amount)})`;
 }
 
 function getSmtpConfig() {
@@ -87,7 +92,8 @@ export function buildGuestConfirmationHtml(data: BookingEmailData) {
         <tr><td style="padding: 6px 0; color: #6b7280;">Check-in</td><td style="padding: 6px 0; text-align: right; font-weight: 600;">${data.check_in_date}</td></tr>
         <tr><td style="padding: 6px 0; color: #6b7280;">Check-out</td><td style="padding: 6px 0; text-align: right; font-weight: 600;">${data.check_out_date}</td></tr>
         <tr><td style="padding: 6px 0; color: #6b7280;">Guests</td><td style="padding: 6px 0; text-align: right; font-weight: 600;">${data.guest_count}</td></tr>
-        <tr style="border-top: 1px solid #e5e7eb;"><td style="padding: 10px 0 6px; color: #6b7280; font-weight: 600;">Estimated Total</td><td style="padding: 10px 0 6px; text-align: right; font-weight: 700; font-size: 16px;">${formatKRW(data.estimated_total)}</td></tr>
+        ${data.bedding_prepaid ? `<tr><td style="padding: 6px 0; color: #6b7280;">Bedding set</td><td style="padding: 6px 0; text-align: right; font-weight: 600;">$15 prepaid</td></tr>` : ""}
+        <tr style="border-top: 1px solid #e5e7eb;"><td style="padding: 10px 0 6px; color: #6b7280; font-weight: 600;">Estimated Total</td><td style="padding: 10px 0 6px; text-align: right; font-weight: 700; font-size: 16px;">${formatTotal(data.estimated_total)}</td></tr>
       </table>
       ${data.notes ? `<p style="margin: 12px 0 0; padding-top: 12px; border-top: 1px solid #e5e7eb; font-size: 14px; color: #6b7280;"><strong>Your message:</strong> ${data.notes}</p>` : ""}
     </div>
@@ -121,8 +127,8 @@ Request Summary:
 - Room: ${data.room_name}
 - Check-in: ${data.check_in_date}
 - Check-out: ${data.check_out_date}
-- Guests: ${data.guest_count}
-- Estimated Total: ${formatKRW(data.estimated_total)}
+- Guests: ${data.guest_count}${data.bedding_prepaid ? `\n- Bedding set: $15 prepaid` : ""}
+- Estimated Total: ${formatTotal(data.estimated_total)}
 ${data.notes ? `- Your message: ${data.notes}` : ""}
 
 IMPORTANT: This is a request, not a confirmed booking.
@@ -156,7 +162,8 @@ export async function sendAdminNotification(data: BookingEmailData) {
     <tr><td style="padding: 6px 0; color: #6b7280;">체크인</td><td style="padding: 6px 0;">${data.check_in_date}</td></tr>
     <tr><td style="padding: 6px 0; color: #6b7280;">체크아웃</td><td style="padding: 6px 0;">${data.check_out_date}</td></tr>
     <tr><td style="padding: 6px 0; color: #6b7280;">인원</td><td style="padding: 6px 0;">${data.guest_count}명</td></tr>
-    <tr style="border-top: 1px solid #e5e7eb;"><td style="padding: 10px 0 6px; color: #6b7280;">예상 금액</td><td style="padding: 10px 0 6px; font-weight: 700; font-size: 16px;">${formatKRW(data.estimated_total)}</td></tr>
+    ${data.bedding_prepaid ? `<tr><td style="padding: 6px 0; color: #6b7280;">침구 세트</td><td style="padding: 6px 0;">$15 선결제</td></tr>` : ""}
+    <tr style="border-top: 1px solid #e5e7eb;"><td style="padding: 10px 0 6px; color: #6b7280;">예상 금액</td><td style="padding: 10px 0 6px; font-weight: 700; font-size: 16px;">${formatTotal(data.estimated_total)}</td></tr>
   </table>
   ${data.notes ? `<p style="margin: 16px 0 0; padding: 12px; background: #f9fafb; border-radius: 8px; font-size: 14px;"><strong>고객 메시지:</strong> ${data.notes}</p>` : ""}
   <p style="margin-top: 20px;"><a href="${siteConfig.url}/admin/requests" style="display: inline-block; background: #4f46e5; color: #fff; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600;">대시보드에서 확인하기</a></p>
@@ -169,8 +176,8 @@ export async function sendAdminNotification(data: BookingEmailData) {
 객실: ${data.room_name}
 체크인: ${data.check_in_date}
 체크아웃: ${data.check_out_date}
-인원: ${data.guest_count}명
-예상 금액: ${formatKRW(data.estimated_total)}
+인원: ${data.guest_count}명${data.bedding_prepaid ? `\n침구 세트: $15 선결제` : ""}
+예상 금액: ${formatTotal(data.estimated_total)}
 ${data.notes ? `고객 메시지: ${data.notes}` : ""}
 
 확인하기: ${siteConfig.url}/admin/requests`;

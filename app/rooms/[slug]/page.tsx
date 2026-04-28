@@ -5,7 +5,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { ImageGallery } from "@/components/image-lightbox";
 import { RequestForm } from "@/components/request-form";
 import { getRoomBySlug } from "@/lib/queries";
-import { formatKRW } from "@/lib/pricing";
+import { formatUSD, formatApproxKRW, getUsdPrices } from "@/lib/pricing";
 import { siteConfig } from "@/lib/site-data";
 
 interface Props {
@@ -17,7 +17,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const room = await getRoomBySlug(slug);
   if (!room) return { title: "Room Not Found" };
 
-  const description = `${room.name} in Seoul — from ${formatKRW(room.price_weekly)}/week. ${room.description ?? "Foreigner-friendly goshiwon room with utilities included."}`;
+  const usd = getUsdPrices(room.slug);
+  const description = `${room.name} in Seoul — from ${formatUSD(usd.weekly)}/week. ${room.description ?? "Foreigner-friendly goshiwon room with utilities included."}`;
   const firstImage = room.room_images?.sort(
     (a, b) => a.sort_order - b.sort_order
   )[0]?.url;
@@ -46,12 +47,11 @@ export default async function RoomDetailPage({ params }: Props) {
     (a, b) => a.sort_order - b.sort_order
   );
 
+  const usd = getUsdPrices(room.slug);
+
   const roomOption = {
     name: room.name,
     slug: room.slug,
-    price_monthly: room.price_monthly,
-    price_weekly: room.price_weekly,
-    price_daily: room.price_daily,
   };
 
   const accommodationJsonLd = {
@@ -80,8 +80,8 @@ export default async function RoomDetailPage({ params }: Props) {
     },
     offers: {
       "@type": "Offer",
-      price: room.price_weekly,
-      priceCurrency: "KRW",
+      price: usd.weekly,
+      priceCurrency: "USD",
       availability:
         room.status === "available"
           ? "https://schema.org/InStock"
@@ -89,6 +89,8 @@ export default async function RoomDetailPage({ params }: Props) {
       url: `${siteConfig.url}/rooms/${room.slug}`,
     },
   };
+
+  const discountedWeeklyUsd = Math.round(usd.weekly * 0.85);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -182,7 +184,10 @@ export default async function RoomDetailPage({ params }: Props) {
                       Weekly (min. 7 days)
                     </td>
                     <td className="px-6 py-4 text-right text-base font-semibold text-gray-900">
-                      {formatKRW(room.price_weekly)} / week
+                      {formatUSD(usd.weekly)} / week
+                      <div className="text-xs text-gray-500 font-normal">
+                        {formatApproxKRW(usd.weekly)}
+                      </div>
                     </td>
                   </tr>
                   <tr className="border-b border-gray-100 bg-green-50">
@@ -190,7 +195,10 @@ export default async function RoomDetailPage({ params }: Props) {
                       4+ weeks (15% off)
                     </td>
                     <td className="px-6 py-4 text-right text-base font-semibold text-green-800">
-                      {formatKRW(Math.round(room.price_weekly * 0.85))} / week
+                      {formatUSD(discountedWeeklyUsd)} / week
+                      <div className="text-xs text-green-700/80 font-normal">
+                        {formatApproxKRW(discountedWeeklyUsd)}
+                      </div>
                     </td>
                   </tr>
                   <tr>
@@ -198,14 +206,17 @@ export default async function RoomDetailPage({ params }: Props) {
                       Extra days
                     </td>
                     <td className="px-6 py-4 text-right text-base font-semibold text-gray-900">
-                      {formatKRW(room.price_daily)} / day
+                      {formatUSD(usd.daily)} / day
+                      <div className="text-xs text-gray-500 font-normal">
+                        {formatApproxKRW(usd.daily)}
+                      </div>
                     </td>
                   </tr>
                 </tbody>
               </table>
             </div>
             <p className="text-sm text-gray-500 mt-2">
-              Bedding set provided for a one-time fee of ₩20,000 (Optional). Towels included for stays of 4+ weeks.
+              Rates charged in USD via PayPal. Bedding set: $15 USD prepaid with your booking, or ₩20,000 cash on arrival. Towels included for stays of 4+ weeks.
             </p>
           </div>
         </div>

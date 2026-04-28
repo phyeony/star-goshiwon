@@ -20,6 +20,7 @@ export const bookingRequestSchema = z
       message: "Invalid check-out date",
     }),
     notes: z.string().max(1000, "Notes are too long").default(""),
+    bedding_prepaid: z.boolean().default(false),
   })
   .refine(
     (data) => {

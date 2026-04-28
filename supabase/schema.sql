@@ -61,7 +61,9 @@ CREATE TABLE booking_requests (
   room_slug TEXT NOT NULL,
   check_in_date DATE NOT NULL,
   check_out_date DATE NOT NULL,
+  -- estimated_total is USD post-cutover (PayPal). Pre-cutover rows are KRW.
   estimated_total INTEGER NOT NULL DEFAULT 0,
+  bedding_prepaid BOOLEAN NOT NULL DEFAULT false,
   notes TEXT NOT NULL DEFAULT '',
   status booking_status NOT NULL DEFAULT 'new',
   admin_notes TEXT NOT NULL DEFAULT '',

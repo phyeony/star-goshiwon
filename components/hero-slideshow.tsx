@@ -27,8 +27,8 @@ function heroSrcSet(base: string) {
 
 const variant = {
   font: "font-caveat font-bold",
-  headlineWeekly: "₩100,000 a week.",
-  headlineMonthly: "₩340,000 for 4 weeks.",
+  headlineWeekly: "$75 a week.",
+  headlineMonthly: "$255 for 4 weeks.",
   subline: "Your life in the Heart of Seoul.",
   headlineOnly: false,
   description:

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { bookingRequestSchema } from "@/lib/validation";
 import { getRoomBySlug, createBookingRequest } from "@/lib/queries";
-import { calculateEstimate } from "@/lib/pricing";
+import { calculateEstimate, getUsdPrices } from "@/lib/pricing";
 import { sendGuestConfirmation, sendAdminNotification } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
@@ -28,14 +28,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Server-side price calculation
+    // Server-side price calculation in USD. Never trust the client total —
+    // we recompute from the slug-keyed USD prices and the bedding flag.
     const estimate = calculateEstimate(
-      room,
+      getUsdPrices(room.slug),
       data.check_in_date,
-      data.check_out_date
+      data.check_out_date,
+      { beddingPrepaid: data.bedding_prepaid }
     );
 
-    // Store booking request
+    // Store booking request (estimated_total is USD post-cutover)
     const bookingRequest = await createBookingRequest({
       guest_name: data.guest_name,
       guest_email: data.guest_email,
@@ -45,15 +47,12 @@ export async function POST(req: NextRequest) {
       check_in_date: data.check_in_date,
       check_out_date: data.check_out_date,
       estimated_total: estimate.total,
+      bedding_prepaid: data.bedding_prepaid,
       notes: data.notes,
       status: "new",
       admin_notes: "",
     });
 
-    // Send emails. Must be awaited: on Cloudflare Workers, un-awaited async
-    // work is cancelled once the Response is returned, which would kill the
-    // SMTP connection mid-handshake. allSettled ensures one failure doesn't
-    // abort the other send, and we don't fail the request on email errors.
     const emailData = {
       guest_name: data.guest_name,
       guest_email: data.guest_email,
@@ -62,6 +61,7 @@ export async function POST(req: NextRequest) {
       check_out_date: data.check_out_date,
       guest_count: data.guest_count,
       estimated_total: estimate.total,
+      bedding_prepaid: data.bedding_prepaid,
       notes: data.notes,
     };
 

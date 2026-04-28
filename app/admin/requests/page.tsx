@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getBookingRequests } from "@/lib/queries";
 import { BookingStatusBadge } from "@/components/status-badge";
-import { formatKRW } from "@/lib/pricing";
+import { formatUSD } from "@/lib/pricing";
 import type { BookingStatus } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -109,7 +109,7 @@ export default async function AdminRequestsPage({
                       {req.check_in_date} → {req.check_out_date}
                     </td>
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                      {formatKRW(req.estimated_total)}
+                      {formatUSD(req.estimated_total)}
                     </td>
                     <td className="px-6 py-4">
                       <BookingStatusBadge status={req.status} />

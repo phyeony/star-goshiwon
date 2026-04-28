@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBookingRequestById } from "@/lib/queries";
-import { formatKRW } from "@/lib/pricing";
+import { formatUSD, formatApproxKRW } from "@/lib/pricing";
 import { siteConfig } from "@/lib/site-data";
 
 export const metadata: Metadata = {
@@ -73,12 +73,23 @@ export default async function SuccessPage({
                 {request.guest_count}
               </dd>
             </div>
+            {request.bedding_prepaid && (
+              <div className="flex justify-between">
+                <dt className="text-sm text-gray-500">Bedding set</dt>
+                <dd className="text-sm font-medium text-gray-900">
+                  $15 prepaid
+                </dd>
+              </div>
+            )}
             <div className="flex justify-between border-t border-gray-200 pt-3">
               <dt className="text-sm font-semibold text-gray-900">
                 Estimated Total
               </dt>
               <dd className="text-sm font-bold text-gray-900">
-                {formatKRW(request.estimated_total)}
+                {formatUSD(request.estimated_total)}
+                <span className="ml-2 font-normal text-gray-500">
+                  {formatApproxKRW(request.estimated_total)}
+                </span>
               </dd>
             </div>
           </dl>
