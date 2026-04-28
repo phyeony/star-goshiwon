@@ -147,6 +147,10 @@ export function RequestForm({ rooms, preselectedSlug, singleRoom }: RequestFormP
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-900">
+        <strong className="font-semibold">Men-only property.</strong> This goshiwon accepts male guests only.
+      </div>
+
       <div className="flex border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500">
         <div className="w-1/2 border-r border-gray-300 p-3 bg-white">
           <label
