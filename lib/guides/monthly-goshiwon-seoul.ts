@@ -3,7 +3,7 @@ import type { Guide } from "./types";
 export const guide: Guide = {
   slug: "monthly-goshiwon-seoul",
   title: "Monthly Goshiwon Stays in Seoul: Complete Guide for Foreigners",
-  seoTitle: "Monthly Goshiwon in Seoul | Seoul Goshiwon by Star Gositel",
+  seoTitle: "Monthly Goshiwon in Seoul | Seoul Goshiwon by Star Goshiwon",
   excerpt:
     "How monthly goshiwon stays work in Seoul: prices by district, what's included, discounts, and why a goshiwon beats officetels and monthly Airbnbs.",
   date: "2026-04-19",
@@ -75,7 +75,7 @@ Cheaper districts like Gwanak-gu, Dongjak-gu, and Yeongdeungpo-gu often have bet
 
 Many goshiwons offer discounts for stays of 4+ weeks (the standard "monthly" pricing). Examples:
 
-- **Star Gositel:** 15% off for 4+ week stays. ₩100,000/week becomes ₩340,000/month.
+- **Star Goshiwon:** 15% off for 4+ week stays. ₩100,000/week becomes ₩340,000/month.
 - Some operators cap the discount at 3 months
 - Negotiating directly often yields a better rate than the listed price, especially in low season
 

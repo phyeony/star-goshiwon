@@ -3,7 +3,7 @@ import type { Guide } from "./types";
 export const guide: Guide = {
   slug: "goshiwon-prices-seoul-2026",
   title: "Goshiwon Prices in Seoul (2026): A Complete Breakdown",
-  seoTitle: "Goshiwon Prices in Seoul 2026 | Seoul Goshiwon by Star Gositel",
+  seoTitle: "Goshiwon Prices in Seoul 2026 | Seoul Goshiwon by Star Goshiwon",
   excerpt:
     "What goshiwons actually cost in Seoul in 2026 — by district, by room type, with hidden fees explained. Updated weekly and monthly price tables.",
   date: "2026-04-19",
@@ -46,7 +46,7 @@ A few observations from the data:
 
 - **Gangdong-gu** has the highest ceiling (₩520,000), driven by a few premium goshiwons near the Olympic Park area.
 - **Gwanak-gu** is the cheapest district overall — both for deposit and rent — thanks to the dense supply around Sillim and the SNU campus.
-- **Dongjak-gu** (where Star Gositel is located) tops out at ₩340,000/month — exactly our standard 4-week rate.
+- **Dongjak-gu** (where Star Goshiwon is located) tops out at ₩340,000/month — exactly our standard 4-week rate.
 - **Yangcheon-gu** has the highest minimum deposit (₩290,000) — outliers in the data, mostly newer-build goshiwons.
 - For a private bathroom, add roughly ₩50,000–₩100,000/month on top of the listed rent. For a private shower without toilet, ₩30,000–₩50,000.
 
@@ -136,7 +136,7 @@ For a typical ₩400,000/month goshiwon in Seoul, here's roughly where the money
 
 In other words, even the cheapest goshiwon is a real operating business with thin margins — not a stripped-down room someone is dumping at a discount. The price is mostly fixed costs.
 
-## Star Gositel Pricing
+## Star Goshiwon Pricing
 
 For comparison, our pricing in Dongjak-gu (Noryangjin / Sangdo area):
 

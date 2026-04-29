@@ -3,16 +3,16 @@ import type { Guide } from "./types";
 export const guide: Guide = {
   slug: "shared-kitchen",
   title: "Shared Kitchen Guide",
-  seoTitle: "Shared Kitchen Guide | Seoul Goshiwon by Star Gositel",
+  seoTitle: "Shared Kitchen Guide | Seoul Goshiwon by Star Goshiwon",
   excerpt:
-    "Read the shared kitchen guide at Seoul Goshiwon by Star Gositel. Find kitchen rules, quiet hours, shared food information, and appliance tips for a comfortable stay in Seoul.",
+    "Read the shared kitchen guide at Seoul Goshiwon by Star Goshiwon. Find kitchen rules, quiet hours, shared food information, and appliance tips for a comfortable stay in Seoul.",
   date: "2026-04-15",
   readTime: "3 min read",
-  content: `Hello, and welcome to **Seoul Goshiwon by Star Gositel**.
+  content: `Hello, and welcome to **Seoul Goshiwon by Star Goshiwon**.
 
 Thank you for choosing our guesthouse. To help all guests enjoy a clean, comfortable, and respectful shared space, please read the kitchen guide below.
 
-![Shared kitchen at Seoul Goshiwon by Star Gositel](/images/guides/shared-kitchen/kitchen.jpg)
+![Shared kitchen at Seoul Goshiwon by Star Goshiwon](/images/guides/shared-kitchen/kitchen.jpg)
 
 ## Kitchen Rules
 

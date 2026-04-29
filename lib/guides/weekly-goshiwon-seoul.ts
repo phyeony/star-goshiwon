@@ -3,7 +3,7 @@ import type { Guide } from "./types";
 export const guide: Guide = {
   slug: "weekly-goshiwon-seoul",
   title: "Weekly Goshiwon Stays in Seoul: Cheaper Than a Hostel, Better Than a Hotel",
-  seoTitle: "Weekly Goshiwon in Seoul | Seoul Goshiwon by Star Gositel",
+  seoTitle: "Weekly Goshiwon in Seoul | Seoul Goshiwon by Star Goshiwon",
   excerpt:
     "Weekly goshiwon stays in Seoul beat hostels and hotels for short trips. Pricing, what's included, and the best districts for a 1–2 week stay.",
   date: "2026-04-19",
@@ -95,7 +95,7 @@ Pick by what you actually want to do:
 
 The room is the same. What changes:
 
-- **No or smaller monthly discount** (Star Gositel's 15% discount kicks in at 4 weeks)
+- **No or smaller monthly discount** (Star Goshiwon's 15% discount kicks in at 4 weeks)
 - **Bedding/towels often charged separately** — sometimes free for monthly guests
 - **No need for ARC** — your passport is enough
 

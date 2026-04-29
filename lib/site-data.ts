@@ -1,5 +1,5 @@
 export const siteConfig = {
-  name: "Seoul Goshiwon by Star Gositel",
+  name: "Seoul Goshiwon by Star Goshiwon",
   tagline: "Your Comfortable Basecamp in Seoul",
   description:
     "Cheap, foreigner-friendly men's goshiwon in Seoul. Private rooms from $75/week (~₩110,000) with no big deposits and flexible stays. Easy access to Hongdae, Gangnam, and major universities.",
@@ -8,7 +8,7 @@ export const siteConfig = {
   whatsapp: "https://wa.me/message/7FRHDMTCDZPPF1",
   kakao: "https://pf.kakao.com/seoulstay",
   address: "64, Manyang-ro 12ga-gil, Dongjak-gu, Seoul, Republic of Korea",
-  mapUrl: "https://www.google.com/maps/place/Stargositel/data=!4m10!1m2!2m1!1z64W465-J7KeEIOyKpO2DgOqzoOyLnO2FlA!3m6!1s0x357c9f6736793a2b:0x7f3263912b31aa4c!8m2!3d37.5112885!4d126.948383!15sChnrhbjrn4nsp4Qg7Iqk7YOA6rOg7Iuc7YWUkgERYmVkX2FuZF9icmVha2Zhc3TgAQA!16s%2Fg%2F11k3n5dk8k",
+  mapUrl: "https://www.google.com/maps/place/%EC%8A%A4%ED%83%80%EA%B3%A0%EC%8B%9C%EC%9B%90stargoshiwon/@37.5113087,126.9483812,17z/data=!3m1!4b1!4m10!3m9!1s0x357c9f6736793a2b:0x7f3263912b31aa4c!5m3!1s2026-05-10!4m1!1i2!8m2!3d37.5113087!4d126.9483812!16s%2Fg%2F11k3n5dk8k",
   naverMapUrl: "https://map.naver.com/p/entry/place/20857528?c=15.00,0,0,0,dh&placePath=/home",
   kakaoMapUrl: "https://map.kakao.com/?urlX=488593.9999999978&urlY=1114406.000000001&urlLevel=3&itemId=27473089&q=%EC%8A%A4%ED%83%80%EA%B3%A0%EC%8B%9C%ED%85%94&srcid=27473089&map_type=TYPE_MAP",
   coordinates: { lat: 37.5112885, lng: 126.948383 },

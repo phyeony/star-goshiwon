@@ -43,7 +43,7 @@ function parseFromAddress(): { name?: string; email: string } {
     if (match) return { name: match[1] || undefined, email: match[2] };
     return { email: raw };
   }
-  return { name: "Seoul Goshiwon By Star Gositel", email: siteConfig.email };
+  return { name: "Seoul Goshiwon By Star Goshiwon", email: siteConfig.email };
 }
 
 const fromAddress = parseFromAddress();
@@ -57,7 +57,7 @@ export function buildGuestConfirmationHtml(data: BookingEmailData) {
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="left" style="border-collapse: collapse;">
       <tr>
         <td style="color: #0b1f4d; font-weight: 700; font-size: 26px; line-height: 1; letter-spacing: -0.5px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-          Star Gositel
+          Star Goshiwon
         </td>
       </tr>
       <tr>
@@ -106,14 +106,14 @@ export function buildGuestConfirmationHtml(data: BookingEmailData) {
 
     <p style="font-size: 16px; margin-top: 24px;">
       Best regards,<br />
-      <strong>Seoul Goshiwon by Star Gositel</strong><br />
+      <strong>Seoul Goshiwon by Star Goshiwon</strong><br />
       <span style="color: #6b7280;">${siteConfig.address}</span><br />
       <a href="mailto:${siteConfig.email}" style="color: #4f46e5;">${siteConfig.email}</a>
     </p>
   </div>
 
   <div style="background-color: #f9fafb; padding: 16px 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px; text-align: center;">
-    <p style="margin: 0; font-size: 12px; color: #9ca3af;">Seoul Goshiwon by Star Gositel &middot; Dongjak-gu, Seoul</p>
+    <p style="margin: 0; font-size: 12px; color: #9ca3af;">Seoul Goshiwon by Star Goshiwon &middot; Dongjak-gu, Seoul</p>
   </div>
 </div>`.trim();
 }
@@ -121,7 +121,7 @@ export function buildGuestConfirmationHtml(data: BookingEmailData) {
 export function buildGuestConfirmationText(data: BookingEmailData) {
   return `Hi ${data.guest_name},
 
-Thank you for your booking request at Seoul Goshiwon by Star Gositel!
+Thank you for your booking request at Seoul Goshiwon by Star Goshiwon!
 
 Request Summary:
 - Room: ${data.room_name}
@@ -137,13 +137,13 @@ We will review availability and contact you via email within ${siteConfig.respon
 If you have any questions, reply to this email or reach us on WhatsApp.
 
 Best regards,
-Seoul Goshiwon by Star Gositel
+Seoul Goshiwon by Star Goshiwon
 ${siteConfig.email}`;
 }
 
 export async function sendGuestConfirmation(data: BookingEmailData) {
   const subject =
-    "Your booking request has been received — Seoul Goshiwon by Star Gositel";
+    "Your booking request has been received — Seoul Goshiwon by Star Goshiwon";
   const html = buildGuestConfirmationHtml(data);
   const text = buildGuestConfirmationText(data);
   await sendEmail(data.guest_email, subject, text, html);

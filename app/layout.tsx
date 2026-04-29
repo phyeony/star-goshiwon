@@ -7,7 +7,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: "Cheap Goshiwon in Seoul for Foreigners | Star Gositel",
+    default: "Cheap Goshiwon in Seoul for Foreigners | Star Goshiwon",
     template: `%s | ${siteConfig.name}`,
   },
   description: siteConfig.description,
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "Cheap Goshiwon in Seoul for Foreigners | Star Gositel",
+    title: "Cheap Goshiwon in Seoul for Foreigners | Star Goshiwon",
     description: siteConfig.description,
     url: siteConfig.url,
     siteName: siteConfig.name,

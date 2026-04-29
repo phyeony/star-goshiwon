@@ -3,12 +3,12 @@ import type { Guide } from "./types";
 export const guide: Guide = {
   slug: "laundry",
   title: "Laundry Guide for Guests",
-  seoTitle: "Laundry Guide for Guests | Seoul Goshiwon by Star Gositel",
+  seoTitle: "Laundry Guide for Guests | Seoul Goshiwon by Star Goshiwon",
   excerpt:
-    "Learn how to use the shared laundry room at Star Gositel Seoul, including washing machine instructions, detergent use, and rooftop drying rack information for guests.",
+    "Learn how to use the shared laundry room at Star Goshiwon Seoul, including washing machine instructions, detergent use, and rooftop drying rack information for guests.",
   date: "2026-04-15",
   readTime: "3 min read",
-  content: `Welcome to **Seoul Goshiwon by Star Gositel**. This guide walks you through how to use our shared laundry room so you can wash and dry your clothes comfortably during your stay.
+  content: `Welcome to **Seoul Goshiwon by Star Goshiwon**. This guide walks you through how to use our shared laundry room so you can wash and dry your clothes comfortably during your stay.
 
 ## Where to Find the Laundry Room
 

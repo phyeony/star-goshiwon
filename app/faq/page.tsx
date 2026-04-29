@@ -14,7 +14,7 @@ export default function FAQPage() {
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <SectionTitle
         title="Frequently Asked Questions"
-        subtitle="Everything you need to know about living at Seoul Goshiwon by Star Gositel."
+        subtitle="Everything you need to know about living at Seoul Goshiwon by Star Goshiwon."
       />
 
       <div className="space-y-4">

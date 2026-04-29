@@ -3,7 +3,7 @@ import type { Guide } from "./types";
 export const guide: Guide = {
   slug: "goshiwon-vs-hasukjib-vs-officetel",
   title: "Goshiwon vs Hasukjib vs Officetel: Which Is Right for You?",
-  seoTitle: "Goshiwon vs Hasukjib vs Officetel | Seoul Goshiwon by Star Gositel",
+  seoTitle: "Goshiwon vs Hasukjib vs Officetel | Seoul Goshiwon by Star Goshiwon",
   excerpt:
     "The three main Korean housing types compared — costs, deposits, lease lengths, and which one actually fits your situation as a foreigner in Seoul.",
   date: "2026-04-19",

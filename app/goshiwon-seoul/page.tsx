@@ -6,7 +6,7 @@ import { formatApproxKRW } from "@/lib/pricing";
 export const metadata: Metadata = {
   title: {
     absolute:
-      "Goshiwon in Seoul: The Complete Foreigner's Guide (2026) | Star Gositel",
+      "Goshiwon in Seoul: The Complete Foreigner's Guide (2026) | Star Goshiwon",
   },
   description:
     "A complete guide to goshiwons in Seoul — history, prices by district, what's inside a building, how to read a listing, and what foreigners miss. Written by a goshiwon operator with years of experience.",
@@ -312,7 +312,7 @@ export default function GoshiwonSeoulPage() {
         </p>
 
         <h2 className="text-2xl font-bold text-gray-900 mt-10 mb-4">
-          Where Star Gositel Fits In
+          Where Star Goshiwon Fits In
         </h2>
         <p className="text-base text-gray-600 mb-4 leading-relaxed">
           We&rsquo;re one foreigner-friendly goshiwon in Dongjak-gu&rsquo;s

@@ -6,7 +6,7 @@ import { siteConfig, nearbyLocations } from "@/lib/site-data";
 export const metadata: Metadata = {
   title: "Location",
   description:
-    "Seoul Goshiwon by Star Gositel is located in Dongjak-gu, Seoul. Near Sangdo Station (Line 7) and Noryangjin Station (Line 1 & 9). See nearby transit, shops, and services.",
+    "Seoul Goshiwon by Star Goshiwon is located in Dongjak-gu, Seoul. Near Sangdo Station (Line 7) and Noryangjin Station (Line 1 & 9). See nearby transit, shops, and services.",
 };
 
 const typeLabels: Record<string, string> = {
@@ -58,7 +58,7 @@ export default function LocationPage() {
             <div className="h-72 lg:h-80">
               <iframe
                 title="Seoul Stay Goshiwon location map"
-                src={`https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1582.5!2d126.948383!3d37.5112885!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x357c9f6736793a2b%3A0x7f3263912b31aa4c!2sStargositel!5e0!3m2!1sen!2skr!4v1`}
+                src={`https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3164.8562384810907!2d126.9483812!3d37.51130870000001!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x357c9f6736793a2b%3A0x7f3263912b31aa4c!2z7Iqk7YOA6rOg7Iuc7JuQc3Rhcmdvc2hpd29u!5e0!3m2!1sko!2s!4v1777449570804!5m2!1sko!2s`}
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}

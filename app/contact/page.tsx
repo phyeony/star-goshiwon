@@ -5,7 +5,7 @@ import { siteConfig } from "@/lib/site-data";
 export const metadata: Metadata = {
   title: "Contact",
   description:
-    "Get in touch with Seoul Goshiwon by Star Gositel. Reach us by email or WhatsApp.",
+    "Get in touch with Seoul Goshiwon by Star Goshiwon. Reach us by email or WhatsApp.",
 };
 
 const contactMethods = [
@@ -70,7 +70,7 @@ export default function ContactPage() {
 
       <div className="mt-12 bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
         <h3 className="text-xl font-bold text-gray-900 mb-2">Visit Us</h3>
-        <p className="text-lg font-semibold text-gray-800">Star Gositel</p>
+        <p className="text-lg font-semibold text-gray-800">Star Goshiwon</p>
         <p className="text-base text-gray-600 mt-1">{siteConfig.address}</p>
         <p className="text-sm text-gray-500 mt-2">
           Walk-ins welcome during business hours: 9 AM – 9 PM KST

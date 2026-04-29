@@ -239,7 +239,7 @@ export default async function HomePage() {
             Pricing varies by district and room type. Recent listing data shows
             goshiwon rents top out around ₩480,000/month in Gangnam-gu,
             ₩390,000 in Mapo-gu (Hongdae), and ₩410,000 in Jongno-gu. In
-            well-connected outer districts like Dongjak-gu — where Star Gositel
+            well-connected outer districts like Dongjak-gu — where Star Goshiwon
             is located — rents top out around ₩340,000/month. Our standard
             4-week rate is $255 (~₩340,000) at 15% off, or $75/week
             (~{formatApproxKRW(75)}). Rooms are charged in USD via PayPal.
@@ -277,10 +277,10 @@ export default async function HomePage() {
           </ul>
 
           <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">
-            Why Star Gositel
+            Why Star Goshiwon
           </h3>
           <p className="text-base text-gray-600 mb-4 leading-relaxed">
-            Star Gositel sits in Dongjak-gu, a quiet residential district that
+            Star Goshiwon sits in Dongjak-gu, a quiet residential district that
             puts central Seoul within easy reach without paying central-Seoul
             prices. Sangdo Station (Line 7) is a 5-minute walk; Noryangjin
             Station (Lines 1 and 9) is 10 minutes; Sindaebang (Line 2) is 12.
@@ -401,7 +401,7 @@ export default async function HomePage() {
             Ready to find your room in Seoul?
           </h2>
           <p className="mt-4 text-lg text-indigo-200">
-            Submit a booking request to Stargositel and we&rsquo;ll get back to
+            Submit a booking request to Stargoshiwon and we&rsquo;ll get back to
             you within {siteConfig.responseTime}. No payment required.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">

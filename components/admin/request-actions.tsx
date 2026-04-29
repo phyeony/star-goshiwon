@@ -50,7 +50,7 @@ export function RequestActions({
   }
 
   const mailtoSubject = encodeURIComponent(
-    `Re: Your booking request at Seoul Goshiwon by Star Gositel`
+    `Re: Your booking request at Seoul Goshiwon by Star Goshiwon`
   );
   const mailtoBody = encodeURIComponent(
     `Hi ${request.guest_name},\n\nRegarding your booking request for ${request.rooms?.name || request.room_slug} (${request.check_in_date} to ${request.check_out_date}):\n\n`

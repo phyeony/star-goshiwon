@@ -10,7 +10,7 @@ export function Footer() {
             <Link href="/" className="flex items-center gap-2 mb-4">
               <span className="flex flex-col leading-none w-fit">
                 <span className="font-bold text-2xl tracking-tight text-[#0b1f4d]">
-                  Star Gositel
+                  Star Goshiwon
                 </span>
                 <span className="-mt-0.5 flex items-center gap-1">
                   <span className="h-px flex-1 bg-[#4a5fb8]/60" />
