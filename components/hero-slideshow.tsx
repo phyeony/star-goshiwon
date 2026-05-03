@@ -32,7 +32,7 @@ const variant = {
   subline: "Your life in the Heart of Seoul.",
   headlineOnly: false,
   description:
-    "Central Seoul. Private room.\nThe cheapest way to experience Korea.",
+    "Central Seoul. Private room. Men Only.\nThe cheapest way to experience Korea.",
 };
 
 export function HeroSlideshow() {
