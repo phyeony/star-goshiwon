@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { siteConfig } from "@/lib/site-data";
 import { getPublicRooms } from "@/lib/queries";
 import { guides } from "@/lib/guides-data";
+import { ARCHIVED_POLICY_VERSIONS } from "@/lib/policy-versions";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/faq`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${base}/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${base}/policies`, lastModified: now, changeFrequency: "yearly", priority: 0.4 },
+    { url: `${base}/policies/ko`, lastModified: now, changeFrequency: "yearly", priority: 0.4 },
+    { url: `${base}/policies/archive`, lastModified: now, changeFrequency: "yearly", priority: 0.2 },
+    { url: `${base}/policies/ko/archive`, lastModified: now, changeFrequency: "yearly", priority: 0.2 },
     { url: `${base}/request-to-book`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/guides`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
     { url: `${base}/goshiwon-seoul`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },

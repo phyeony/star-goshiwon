@@ -1,4 +1,12 @@
 import { buildGuestConfirmationHtml, buildGuestConfirmationText } from "@/lib/email";
+import { calculateEstimate, getUsdPrices } from "@/lib/pricing";
+
+const sampleBreakdown = calculateEstimate(
+  getUsdPrices("room-with-private-shower"),
+  "2026-05-01",
+  "2026-05-29",
+  { beddingPrepaid: true }
+);
 
 const sample = {
   guest_name: "Jane Doe",
@@ -7,9 +15,10 @@ const sample = {
   check_in_date: "2026-05-01",
   check_out_date: "2026-05-29",
   guest_count: 1,
-  estimated_total: 314,
+  estimated_total: sampleBreakdown.total,
   bedding_prepaid: true,
   notes: "Hi! I'd like to arrive around 3pm. Is early check-in possible?",
+  breakdown: sampleBreakdown,
 };
 
 export default function EmailPreviewPage() {

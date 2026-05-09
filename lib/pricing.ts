@@ -4,6 +4,11 @@ export const KRW_PER_USD = 1480;
 
 export const BEDDING_FEE_USD = 15;
 
+// Refundable security deposit, prepaid via PayPal with the booking and refunded
+// via PayPal at the end of the stay. Set in USD (PayPal canonical) and roughly
+// equivalent to ₩100,000 at KRW_PER_USD = 1480.
+export const DEPOSIT_USD = 70;
+
 export interface UsdPriceTier {
   weekly: number;
   daily: number;
@@ -33,6 +38,7 @@ export interface PricingBreakdown {
   subtotal: number;
   discount: number;
   beddingFee: number;
+  deposit: number;
   total: number;
   label: string;
 }
@@ -60,6 +66,7 @@ export function calculateEstimate(
     subtotal: 0,
     discount: 0,
     beddingFee: 0,
+    deposit: 0,
     total: 0,
     label: "",
   };
@@ -77,7 +84,8 @@ export function calculateEstimate(
   const discountApplied = weeks >= 4;
   const discount = discountApplied ? Math.round(subtotal * 0.15) : 0;
   const beddingFee = options.beddingPrepaid ? BEDDING_FEE_USD : 0;
-  const total = subtotal - discount + beddingFee;
+  const deposit = DEPOSIT_USD;
+  const total = subtotal - discount + beddingFee + deposit;
 
   const parts: string[] = [];
   if (weeks > 0) parts.push(`${weeks} week${weeks > 1 ? "s" : ""}`);
@@ -94,6 +102,7 @@ export function calculateEstimate(
     subtotal,
     discount,
     beddingFee,
+    deposit,
     total,
     label: parts.join(", ") || "0 days",
   };

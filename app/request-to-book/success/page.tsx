@@ -2,7 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBookingRequestById } from "@/lib/queries";
-import { formatUSD, formatApproxKRW } from "@/lib/pricing";
+import {
+  formatUSD,
+  formatApproxKRW,
+  DEPOSIT_USD,
+  calculateEstimate,
+  getUsdPrices,
+} from "@/lib/pricing";
 import { siteConfig } from "@/lib/site-data";
 
 export const metadata: Metadata = {
@@ -19,6 +25,20 @@ export default async function SuccessPage({
 
   const request = await getBookingRequestById(id);
   if (!request) notFound();
+
+  // Recompute price breakdown from stored room slug + dates + bedding flag.
+  // Wrapped in try/catch so older requests with retired room slugs still render.
+  let breakdown: ReturnType<typeof calculateEstimate> | null = null;
+  try {
+    breakdown = calculateEstimate(
+      getUsdPrices(request.room_slug),
+      request.check_in_date,
+      request.check_out_date,
+      { beddingPrepaid: request.bedding_prepaid }
+    );
+  } catch {
+    breakdown = null;
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -73,6 +93,38 @@ export default async function SuccessPage({
                 {request.guest_count}
               </dd>
             </div>
+            {breakdown && breakdown.weeks > 0 && (
+              <div className="flex justify-between border-t border-gray-100 pt-3">
+                <dt className="text-sm text-gray-500">
+                  {formatUSD(breakdown.weeklyRate)} × {breakdown.weeks} week
+                  {breakdown.weeks > 1 ? "s" : ""}
+                </dt>
+                <dd className="text-sm font-medium text-gray-900">
+                  {formatUSD(breakdown.weeklySubtotal)}
+                </dd>
+              </div>
+            )}
+            {breakdown && breakdown.days > 0 && (
+              <div className="flex justify-between">
+                <dt className="text-sm text-gray-500">
+                  {formatUSD(breakdown.dailyRate)} × {breakdown.days} day
+                  {breakdown.days > 1 ? "s" : ""}
+                </dt>
+                <dd className="text-sm font-medium text-gray-900">
+                  {formatUSD(breakdown.dailySubtotal)}
+                </dd>
+              </div>
+            )}
+            {breakdown?.discountApplied && (
+              <div className="flex justify-between">
+                <dt className="text-sm text-green-700">
+                  Long-stay discount (15%)
+                </dt>
+                <dd className="text-sm font-medium text-green-700">
+                  −{formatUSD(breakdown.discount)}
+                </dd>
+              </div>
+            )}
             {request.bedding_prepaid && (
               <div className="flex justify-between">
                 <dt className="text-sm text-gray-500">Bedding set</dt>
@@ -81,9 +133,15 @@ export default async function SuccessPage({
                 </dd>
               </div>
             )}
+            <div className="flex justify-between">
+              <dt className="text-sm text-gray-500">Refundable deposit</dt>
+              <dd className="text-sm font-medium text-gray-900">
+                {formatUSD(DEPOSIT_USD)} prepaid
+              </dd>
+            </div>
             <div className="flex justify-between border-t border-gray-200 pt-3">
               <dt className="text-sm font-semibold text-gray-900">
-                Estimated Total
+                Total to prepay
               </dt>
               <dd className="text-sm font-bold text-gray-900">
                 {formatUSD(request.estimated_total)}
@@ -93,6 +151,10 @@ export default async function SuccessPage({
               </dd>
             </div>
           </dl>
+          <p className="mt-3 text-xs text-gray-500">
+            The {formatUSD(DEPOSIT_USD)} deposit is refunded via PayPal at the
+            end of your stay if the room is left undamaged.
+          </p>
         </div>
 
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">

@@ -216,7 +216,7 @@ export default async function RoomDetailPage({ params }: Props) {
               </table>
             </div>
             <p className="text-sm text-gray-500 mt-2">
-              Rates charged in USD via PayPal. Bedding set: $15 USD prepaid with your booking, or ₩20,000 cash on arrival. Towels included for stays of 4+ weeks.
+              Rates charged in USD via PayPal. A $70 refundable deposit (≈ ₩100,000) is prepaid with your booking and refunded via PayPal at the end of your stay. Bedding set: $15 USD, optional, prepaid with your booking. Towels included for stays of 4+ weeks.
             </p>
           </div>
         </div>

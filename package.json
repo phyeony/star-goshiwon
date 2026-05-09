@@ -9,7 +9,8 @@
     "lint": "next lint",
     "seed": "npx tsx scripts/seed.ts",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "deploy": "dotenv -e .env.production -- opennextjs-cloudflare build && dotenv -e .env.production -- opennextjs-cloudflare deploy --env=\"\"",
+    "deploy:staging": "dotenv -e .env.staging -- opennextjs-cloudflare build && dotenv -e .env.staging -- opennextjs-cloudflare deploy --env staging",
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "postinstall": "patch-package"
@@ -31,6 +32,7 @@
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.20",
     "dotenv": "^17.4.0",
+    "dotenv-cli": "^11.0.0",
     "patch-package": "^8.0.1",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",

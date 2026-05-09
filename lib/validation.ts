@@ -21,6 +21,11 @@ export const bookingRequestSchema = z
     }),
     notes: z.string().max(1000, "Notes are too long").default(""),
     bedding_prepaid: z.boolean().default(false),
+    policies_accepted: z.literal(true, {
+      errorMap: () => ({
+        message: "Please review and accept the booking policies to continue",
+      }),
+    }),
   })
   .refine(
     (data) => {

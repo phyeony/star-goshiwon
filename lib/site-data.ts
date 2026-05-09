@@ -43,17 +43,17 @@ export const faqs = [
   {
     question: "What documents do I need to check in?",
     answer:
-      "You will need your passport. We will verify your documents before approving your booking requests.",
+      "Check-in is self check-in, so all document verification happens before you arrive. Send us clear photos of your passport and your valid Korean visa (or other proof of legal stay, such as a visa-free entry stamp). We verify these before approving your booking — no originals need to be presented on arrival.",
   },
   {
     question: "Is a deposit required?",
     answer:
-      "We require a small refundable deposit of ₩100,000, payable at check-in. The deposit is returned in full upon checkout if the room is in good condition.",
+      "Yes. A refundable $70 deposit (≈ ₩100,000) is prepaid via PayPal together with your first payment. We refund it via PayPal at the end of your stay if the room is left undamaged.",
   },
   {
     question: "What is included in the rent?",
     answer:
-      "Rent includes utilities (electricity, water, gas, internet), basic food supplies (rice, kimchi, ramen), access to shared kitchen and laundry facilities. Every room comes with a bed, desk & chair, WiFi, mini fridge, AC/Heating, shelf & cabinet, and an outside-facing window. A bedding set is available — $15 USD prepaid with your booking, or ₩20,000 cash on arrival.",
+      "Rent includes utilities (electricity, water, gas, internet), basic food supplies (rice, kimchi, ramen), access to shared kitchen and laundry facilities. Every room comes with a bed, desk & chair, WiFi, mini fridge, AC/Heating, shelf & cabinet, and an outside-facing window. A bedding set is available for $15 USD, prepaid via PayPal with your booking.",
   },
   {
     question: "What is the minimum stay?",
@@ -86,41 +86,6 @@ export const faqs = [
   //     "Cancellations made 7 or more days before check-in receive a full deposit refund. Cancellations within 7 days of check-in forfeit 50% of the deposit. No-shows forfeit the full deposit.",
   // },
 ];
-
-export const policies = {
-  cancellation: {
-    title: "Cancellation Policy",
-    content: `
-- Cancellations made 7+ days before check-in: full deposit refund
-- Cancellations within 7 days of check-in: 50% deposit forfeited
-- No-shows: full deposit forfeited
-- Early checkout after check-in: remaining prepaid rent refunded minus 1 week penalty
-    `.trim(),
-  },
-  houseRules: {
-    title: "House Rules",
-    content: `
-- Quiet hours: 10 PM – 8 AM
-- No smoking inside the building
-- No pets allowed
-- No overnight guests without prior approval
-- Keep shared areas clean after use
-- Dispose of trash in designated bins with proper separation
-- Do not tamper with locks, fire alarms, or safety equipment
-- Report any maintenance issues promptly
-    `.trim(),
-  },
-  checkInOut: {
-    title: "Check-in / Check-out",
-    content: `
-- Check-in: 2 PM – 9 PM (other times by arrangement)
-- Check-out: by 11 AM on departure date
-- Bring your passport and visa for identity verification
-- Deposit is due at check-in (cash or bank transfer)
-- Room key code will be provided at check-in
-    `.trim(),
-  },
-};
 
 export const nearbyLocations = [
   { name: "Sangdo Station (Line 7)", distance: "5 min walk", type: "transit" },

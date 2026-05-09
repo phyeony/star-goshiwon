@@ -100,9 +100,9 @@ export default async function HomePage() {
                 Save $45 when you stay 4+ weeks
               </h3>
               <p className="text-gray-500 mt-1">
-                From $75/week ({formatApproxKRW(75)}), or{" "}
-                <span className="font-semibold text-gray-900">$255</span> ({formatApproxKRW(255)}) for 4 weeks (15% off).
-                Minimum stay 7 days. Refundable ₩100,000 deposit · Optional bedding set $15 prepaid or ₩20,000 cash.
+                From $75({formatApproxKRW(75)})/week, or{" "}
+                <span className="font-semibold text-gray-900">$255({formatApproxKRW(255)})</span> for 4 weeks (15% off).
+                Minimum stay 7 days. $70(≈ ₩100,000) refundable deposit · Optional $15 bedding set.
               </p>
             </div>
           </div>

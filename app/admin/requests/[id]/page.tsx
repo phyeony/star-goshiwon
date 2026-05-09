@@ -120,7 +120,7 @@ export default async function RequestDetailPage({ params }: Props) {
                   Bedding (prepaid)
                 </dt>
                 <dd className="text-base text-gray-900 mt-1">
-                  {request.bedding_prepaid ? "Yes ($15)" : "No (cash on arrival)"}
+                  {request.bedding_prepaid ? "Yes ($15)" : "Not added"}
                 </dd>
               </div>
               <div className="sm:col-span-2">

@@ -63,6 +63,7 @@ export async function POST(req: NextRequest) {
       estimated_total: estimate.total,
       bedding_prepaid: data.bedding_prepaid,
       notes: data.notes,
+      breakdown: estimate,
     };
 
     const results = await Promise.allSettled([

@@ -9,6 +9,7 @@ import {
   formatApproxKRW,
   getUsdPrices,
   BEDDING_FEE_USD,
+  DEPOSIT_USD,
   type PricingBreakdown,
 } from "@/lib/pricing";
 
@@ -34,6 +35,7 @@ export function RequestForm({ rooms, preselectedSlug, singleRoom }: RequestFormP
     check_out_date: "",
     notes: "",
     bedding_prepaid: false,
+    policies_accepted: false,
   });
 
   const selectedRoom = rooms.find((r) => r.slug === form.room_slug);
@@ -105,10 +107,6 @@ export function RequestForm({ rooms, preselectedSlug, singleRoom }: RequestFormP
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-900">
-        <strong className="font-semibold">Men-only property.</strong> This goshiwon accepts male guests only.
-      </div>
-
       <div className="flex border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500">
         <div className="w-1/2 border-r border-gray-300 p-3 bg-white">
           <label
@@ -246,7 +244,7 @@ export function RequestForm({ rooms, preselectedSlug, singleRoom }: RequestFormP
               Add bedding set — {formatUSD(BEDDING_FEE_USD)} prepaid
             </span>
             <span className="block text-xs text-gray-500 mt-0.5">
-              Otherwise pay ₩20,000 cash on arrival.
+              Optional. If you don&rsquo;t add it, bedding is not provided.
             </span>
           </span>
         </label>
@@ -280,12 +278,18 @@ export function RequestForm({ rooms, preselectedSlug, singleRoom }: RequestFormP
           )}
           {estimate.beddingFee > 0 && (
             <div className="flex justify-between text-base text-gray-600 mb-2">
-              <span>Bedding set (prepaid)</span>
+              <span>Bedding set</span>
               <span>{formatUSD(estimate.beddingFee)}</span>
             </div>
           )}
+          {estimate.deposit > 0 && (
+            <div className="flex justify-between text-base text-gray-600 mb-2">
+              <span>Refundable deposit</span>
+              <span>{formatUSD(estimate.deposit)}</span>
+            </div>
+          )}
           <div className="flex justify-between font-bold text-gray-900 text-lg border-t border-gray-200 pt-2 mt-2">
-            <span>Estimated Total</span>
+            <span>Total</span>
             <span>
               {formatUSD(estimate.total)}
               <span className="ml-2 text-sm font-normal text-gray-500">
@@ -293,16 +297,50 @@ export function RequestForm({ rooms, preselectedSlug, singleRoom }: RequestFormP
               </span>
             </span>
           </div>
-          {!form.bedding_prepaid && (
-            <p className="text-xs text-gray-500 mt-2">
-              + ₩20,000 optional one-time bedding fee (cash on arrival)
-            </p>
-          )}
-          <p className="text-xs text-gray-500 mt-1">
-            + ₩100,000 refundable deposit (cash on arrival, returned at checkout)
+          <p className="text-xs text-gray-500 mt-2">
+            Includes a {formatUSD(DEPOSIT_USD)} refundable deposit, returned via
+            PayPal at the end of your stay if the room is left undamaged.
           </p>
         </div>
       )}
+
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-4">
+        <p className="text-sm font-semibold text-gray-900 mb-2">
+          Before you submit, please note:
+        </p>
+        <ul className="list-disc pl-5 space-y-1 text-sm text-gray-700">
+          <li>Up-front payment via PayPal (USD).</li>
+          <li><strong className="font-semibold">Men-only</strong> property.</li>
+                    <li><strong className="font-semibold">Minimum 7 days</strong> stay.</li>
+        </ul>
+        <label className="flex items-start gap-2.5 cursor-pointer mt-3 pt-3 border-t border-gray-200">
+          <input
+            type="checkbox"
+            checked={form.policies_accepted}
+            onChange={(e) =>
+              updateField("policies_accepted", e.target.checked)
+            }
+            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+          />
+          <span className="text-sm text-gray-900">
+            I have read and agree to the{" "}
+            <a
+              href="/policies"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-indigo-600 hover:underline font-medium"
+            >
+              booking &amp; house policies
+            </a>
+            .
+          </span>
+        </label>
+        {errors.policies_accepted && (
+          <p className="text-sm text-red-600 mt-2">
+            {errors.policies_accepted}
+          </p>
+        )}
+      </div>
 
       {errors._form && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">

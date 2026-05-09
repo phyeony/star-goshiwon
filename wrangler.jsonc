@@ -32,5 +32,32 @@
 	},
 	"observability": {
 		"enabled": true
+	},
+	"env": {
+		"staging": {
+			"name": "goshiwon-staging",
+			"routes": [
+				{
+					"pattern": "staging.goshiwonseoul.com",
+					"custom_domain": true
+				}
+			],
+			"vars": {
+				"STAGING": "true"
+			},
+			"assets": {
+				"directory": ".open-next/assets",
+				"binding": "ASSETS"
+			},
+			"services": [
+				{
+					"binding": "WORKER_SELF_REFERENCE",
+					"service": "goshiwon-staging"
+				}
+			],
+			"images": {
+				"binding": "IMAGES"
+			}
+		}
 	}
 }

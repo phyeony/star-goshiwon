@@ -1,5 +1,10 @@
 import { siteConfig } from "./site-data";
-import { formatUSD, formatApproxKRW } from "./pricing";
+import {
+  formatUSD,
+  formatApproxKRW,
+  DEPOSIT_USD,
+  type PricingBreakdown,
+} from "./pricing";
 
 interface BookingEmailData {
   guest_name: string;
@@ -11,6 +16,79 @@ interface BookingEmailData {
   estimated_total: number;
   bedding_prepaid: boolean;
   notes: string;
+  breakdown: PricingBreakdown;
+}
+
+function renderRateRowsHtml(b: PricingBreakdown) {
+  const rows: string[] = [];
+  if (b.weeks > 0) {
+    rows.push(
+      `<tr><td style="padding: 6px 0; color: #6b7280;">${formatUSD(b.weeklyRate)} × ${b.weeks} week${b.weeks > 1 ? "s" : ""}</td><td style="padding: 6px 0; text-align: right; font-weight: 600;">${formatUSD(b.weeklySubtotal)}</td></tr>`
+    );
+  }
+  if (b.days > 0) {
+    rows.push(
+      `<tr><td style="padding: 6px 0; color: #6b7280;">${formatUSD(b.dailyRate)} × ${b.days} day${b.days > 1 ? "s" : ""}</td><td style="padding: 6px 0; text-align: right; font-weight: 600;">${formatUSD(b.dailySubtotal)}</td></tr>`
+    );
+  }
+  if (b.discountApplied) {
+    rows.push(
+      `<tr><td style="padding: 6px 0; color: #15803d;">Long-stay discount (15%)</td><td style="padding: 6px 0; text-align: right; font-weight: 600; color: #15803d;">−${formatUSD(b.discount)}</td></tr>`
+    );
+  }
+  return rows.join("");
+}
+
+function renderRateLinesText(b: PricingBreakdown, currencyLabel?: string) {
+  const lines: string[] = [];
+  if (b.weeks > 0) {
+    lines.push(
+      `- ${formatUSD(b.weeklyRate)} × ${b.weeks} week${b.weeks > 1 ? "s" : ""}: ${formatUSD(b.weeklySubtotal)}`
+    );
+  }
+  if (b.days > 0) {
+    lines.push(
+      `- ${formatUSD(b.dailyRate)} × ${b.days} day${b.days > 1 ? "s" : ""}: ${formatUSD(b.dailySubtotal)}`
+    );
+  }
+  if (b.discountApplied) {
+    lines.push(`- ${currencyLabel ?? "Long-stay discount (15%)"}: −${formatUSD(b.discount)}`);
+  }
+  return lines.join("\n");
+}
+
+function renderRateRowsHtmlKo(b: PricingBreakdown) {
+  const rows: string[] = [];
+  if (b.weeks > 0) {
+    rows.push(
+      `<tr><td style="padding: 6px 0; color: #6b7280;">${formatUSD(b.weeklyRate)} × ${b.weeks}주</td><td style="padding: 6px 0; font-weight: 600;">${formatUSD(b.weeklySubtotal)}</td></tr>`
+    );
+  }
+  if (b.days > 0) {
+    rows.push(
+      `<tr><td style="padding: 6px 0; color: #6b7280;">${formatUSD(b.dailyRate)} × ${b.days}일</td><td style="padding: 6px 0; font-weight: 600;">${formatUSD(b.dailySubtotal)}</td></tr>`
+    );
+  }
+  if (b.discountApplied) {
+    rows.push(
+      `<tr><td style="padding: 6px 0; color: #15803d;">장기 숙박 할인 (15%)</td><td style="padding: 6px 0; font-weight: 600; color: #15803d;">−${formatUSD(b.discount)}</td></tr>`
+    );
+  }
+  return rows.join("");
+}
+
+function renderRateLinesTextKo(b: PricingBreakdown) {
+  const lines: string[] = [];
+  if (b.weeks > 0) {
+    lines.push(`- ${formatUSD(b.weeklyRate)} × ${b.weeks}주: ${formatUSD(b.weeklySubtotal)}`);
+  }
+  if (b.days > 0) {
+    lines.push(`- ${formatUSD(b.dailyRate)} × ${b.days}일: ${formatUSD(b.dailySubtotal)}`);
+  }
+  if (b.discountApplied) {
+    lines.push(`- 장기 숙박 할인 (15%): −${formatUSD(b.discount)}`);
+  }
+  return lines.join("\n");
 }
 
 function formatTotal(amount: number) {
@@ -92,15 +170,21 @@ export function buildGuestConfirmationHtml(data: BookingEmailData) {
         <tr><td style="padding: 6px 0; color: #6b7280;">Check-in</td><td style="padding: 6px 0; text-align: right; font-weight: 600;">${data.check_in_date}</td></tr>
         <tr><td style="padding: 6px 0; color: #6b7280;">Check-out</td><td style="padding: 6px 0; text-align: right; font-weight: 600;">${data.check_out_date}</td></tr>
         <tr><td style="padding: 6px 0; color: #6b7280;">Guests</td><td style="padding: 6px 0; text-align: right; font-weight: 600;">${data.guest_count}</td></tr>
+        <tr><td colspan="2" style="padding: 8px 0 0;"><div style="border-top: 1px solid #e5e7eb;"></div></td></tr>
+        ${renderRateRowsHtml(data.breakdown)}
         ${data.bedding_prepaid ? `<tr><td style="padding: 6px 0; color: #6b7280;">Bedding set</td><td style="padding: 6px 0; text-align: right; font-weight: 600;">$15 prepaid</td></tr>` : ""}
-        <tr style="border-top: 1px solid #e5e7eb;"><td style="padding: 10px 0 6px; color: #6b7280; font-weight: 600;">Estimated Total</td><td style="padding: 10px 0 6px; text-align: right; font-weight: 700; font-size: 16px;">${formatTotal(data.estimated_total)}</td></tr>
+        <tr><td style="padding: 6px 0; color: #6b7280;">Refundable deposit</td><td style="padding: 6px 0; text-align: right; font-weight: 600;">${formatUSD(DEPOSIT_USD)} prepaid</td></tr>
+        <tr style="border-top: 1px solid #e5e7eb;"><td style="padding: 10px 0 6px; color: #6b7280; font-weight: 600;">Total to prepay</td><td style="padding: 10px 0 6px; text-align: right; font-weight: 700; font-size: 16px;">${formatTotal(data.estimated_total)}</td></tr>
       </table>
+      <p style="margin: 8px 0 0; font-size: 12px; color: #6b7280;">The ${formatUSD(DEPOSIT_USD)} deposit is refunded via PayPal at the end of your stay if the room is left undamaged.</p>
       ${data.notes ? `<p style="margin: 12px 0 0; padding-top: 12px; border-top: 1px solid #e5e7eb; font-size: 14px; color: #6b7280;"><strong>Your message:</strong> ${data.notes}</p>` : ""}
     </div>
 
     <div style="background-color: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; padding: 12px 16px; margin: 20px 0;">
       <p style="margin: 0; font-size: 14px; color: #92400e;"><strong>Important:</strong> This is a request, not a confirmed booking. We will review availability and respond via email within ${siteConfig.responseTime}.</p>
     </div>
+
+    <p style="margin: 16px 0; font-size: 13px; color: #6b7280;">By submitting this request and completing the PayPal payment, you reaffirm the <a href="${siteConfig.url}/policies" style="color: #4f46e5;">booking &amp; house policies</a>, including the men-only restriction, 7-day minimum stay, and cancellation terms.</p>
 
     <p style="font-size: 16px;">If you have any questions, reply to this email or reach us on WhatsApp.</p>
 
@@ -127,12 +211,18 @@ Request Summary:
 - Room: ${data.room_name}
 - Check-in: ${data.check_in_date}
 - Check-out: ${data.check_out_date}
-- Guests: ${data.guest_count}${data.bedding_prepaid ? `\n- Bedding set: $15 prepaid` : ""}
-- Estimated Total: ${formatTotal(data.estimated_total)}
-${data.notes ? `- Your message: ${data.notes}` : ""}
+- Guests: ${data.guest_count}
+
+Price breakdown:
+${renderRateLinesText(data.breakdown)}${data.bedding_prepaid ? `\n- Bedding set: $15 prepaid` : ""}
+- Refundable deposit: ${formatUSD(DEPOSIT_USD)} prepaid (refunded via PayPal at end of stay)
+- Total to prepay: ${formatTotal(data.estimated_total)}
+${data.notes ? `\n- Your message: ${data.notes}` : ""}
 
 IMPORTANT: This is a request, not a confirmed booking.
 We will review availability and contact you via email within ${siteConfig.responseTime}.
+
+By submitting this request and completing the PayPal payment, you reaffirm the booking & house policies (men-only, 7-day minimum, cancellation terms): ${siteConfig.url}/policies
 
 If you have any questions, reply to this email or reach us on WhatsApp.
 
@@ -162,8 +252,11 @@ export async function sendAdminNotification(data: BookingEmailData) {
     <tr><td style="padding: 6px 0; color: #6b7280;">체크인</td><td style="padding: 6px 0;">${data.check_in_date}</td></tr>
     <tr><td style="padding: 6px 0; color: #6b7280;">체크아웃</td><td style="padding: 6px 0;">${data.check_out_date}</td></tr>
     <tr><td style="padding: 6px 0; color: #6b7280;">인원</td><td style="padding: 6px 0;">${data.guest_count}명</td></tr>
+    <tr><td colspan="2" style="padding: 8px 0 0;"><div style="border-top: 1px solid #e5e7eb;"></div></td></tr>
+    ${renderRateRowsHtmlKo(data.breakdown)}
     ${data.bedding_prepaid ? `<tr><td style="padding: 6px 0; color: #6b7280;">침구 세트</td><td style="padding: 6px 0;">$15 선결제</td></tr>` : ""}
-    <tr style="border-top: 1px solid #e5e7eb;"><td style="padding: 10px 0 6px; color: #6b7280;">예상 금액</td><td style="padding: 10px 0 6px; font-weight: 700; font-size: 16px;">${formatTotal(data.estimated_total)}</td></tr>
+    <tr><td style="padding: 6px 0; color: #6b7280;">보증금 (환불)</td><td style="padding: 6px 0;">${formatUSD(DEPOSIT_USD)} 선결제</td></tr>
+    <tr style="border-top: 1px solid #e5e7eb;"><td style="padding: 10px 0 6px; color: #6b7280;">총 선결제 금액</td><td style="padding: 10px 0 6px; font-weight: 700; font-size: 16px;">${formatTotal(data.estimated_total)}</td></tr>
   </table>
   ${data.notes ? `<p style="margin: 16px 0 0; padding: 12px; background: #f9fafb; border-radius: 8px; font-size: 14px;"><strong>고객 메시지:</strong> ${data.notes}</p>` : ""}
   <p style="margin-top: 20px;"><a href="${siteConfig.url}/admin/requests" style="display: inline-block; background: #4f46e5; color: #fff; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600;">대시보드에서 확인하기</a></p>
@@ -176,9 +269,13 @@ export async function sendAdminNotification(data: BookingEmailData) {
 객실: ${data.room_name}
 체크인: ${data.check_in_date}
 체크아웃: ${data.check_out_date}
-인원: ${data.guest_count}명${data.bedding_prepaid ? `\n침구 세트: $15 선결제` : ""}
-예상 금액: ${formatTotal(data.estimated_total)}
-${data.notes ? `고객 메시지: ${data.notes}` : ""}
+인원: ${data.guest_count}명
+
+요금 내역:
+${renderRateLinesTextKo(data.breakdown)}${data.bedding_prepaid ? `\n- 침구 세트: $15 선결제` : ""}
+- 보증금 (환불): ${formatUSD(DEPOSIT_USD)} 선결제 (체크아웃 시 PayPal로 환불)
+- 총 선결제 금액: ${formatTotal(data.estimated_total)}
+${data.notes ? `\n고객 메시지: ${data.notes}` : ""}
 
 확인하기: ${siteConfig.url}/admin/requests`;
 
@@ -191,6 +288,23 @@ async function sendEmail(
   text: string,
   html?: string
 ) {
+  // In local development and on the staging worker, redirect all outgoing
+  // email to DEV_EMAIL_OVERRIDE so booking confirmations and admin
+  // notifications can be tested without emailing real guests. Also send
+  // FROM the override address so traces stay in the dev mailbox, not the
+  // production sender's Sent folder. Tag the subject with the original
+  // recipient so the intent is obvious in the inbox.
+  let effectiveFrom = fromAddress;
+  const isNonProdEnv =
+    process.env.NODE_ENV === "development" || process.env.STAGING === "true";
+  if (isNonProdEnv && process.env.DEV_EMAIL_OVERRIDE) {
+    const originalTo = to;
+    to = process.env.DEV_EMAIL_OVERRIDE;
+    const tag = process.env.STAGING === "true" ? "STAGING" : "DEV";
+    subject = `[${tag} → ${originalTo}] ${subject}`;
+    effectiveFrom = { name: `Goshiwon ${tag}`, email: process.env.DEV_EMAIL_OVERRIDE };
+  }
+
   const config = getSmtpConfig();
 
   if (!config) {
@@ -216,9 +330,9 @@ async function sendEmail(
         },
       });
       const info = await transport.sendMail({
-        from: fromAddress.name
-          ? `${fromAddress.name} <${fromAddress.email}>`
-          : fromAddress.email,
+        from: effectiveFrom.name
+          ? `${effectiveFrom.name} <${effectiveFrom.email}>`
+          : effectiveFrom.email,
         to,
         subject,
         text,
@@ -232,7 +346,7 @@ async function sendEmail(
       // esbuild rewrites into an ESM-incompatible dynamic-require shim.
       const { WorkerMailer } = await import("worker-mailer/dist/index.mjs");
       await WorkerMailer.send(config, {
-        from: fromAddress,
+        from: effectiveFrom,
         to,
         subject,
         text,

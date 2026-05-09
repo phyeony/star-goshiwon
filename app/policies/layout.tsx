@@ -1,5 +1,7 @@
-import { notFound } from "next/navigation";
-
-export default function PoliciesLayout() {
-  notFound();
+export default function PoliciesLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return children;
 }
