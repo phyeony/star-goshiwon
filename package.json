@@ -9,14 +9,15 @@
     "lint": "next lint",
     "seed": "npx tsx scripts/seed.ts",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "deploy": "dotenv -e .env.production -- opennextjs-cloudflare build && dotenv -e .env.production -- opennextjs-cloudflare deploy --env=\"\"",
-    "deploy:staging": "dotenv -e .env.staging -- opennextjs-cloudflare build && dotenv -e .env.staging -- opennextjs-cloudflare deploy --env staging",
+    "deploy": "dotenv -e .env.production -- opennextjs-cloudflare build && opennextjs-cloudflare deploy --env=\"\" -- --keep-vars --secrets-file .env.production.secrets",
+    "deploy:staging": "dotenv -e .env.staging -- opennextjs-cloudflare build && opennextjs-cloudflare deploy --env staging -- --keep-vars --secrets-file .env.staging.secrets",
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "postinstall": "patch-package"
   },
   "dependencies": {
     "@opennextjs/cloudflare": "^1.18.0",
+    "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.49.1",
     "next": "^15.1.0",
     "nodemailer": "^8.0.4",
@@ -26,6 +27,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@shakystar/memorize": "^1.0.0",
     "@types/node": "^22.10.0",
     "@types/nodemailer": "^8.0.0",
     "@types/react": "^19.0.0",

@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { getSupabaseServiceClient } from "./supabase";
 import type {
   Room,
   RoomWithImages,
@@ -6,13 +6,20 @@ import type {
   RoomUpdate,
   BookingRequest,
   BookingRequestInsert,
+  BookingRequestUpdate,
   BookingRequestWithRoom,
   BookingStatus,
+  EmailTemplate,
+  EmailTemplateInsert,
+  EmailTemplateUpdate,
+  EmailSend,
+  EmailSendInsert,
 } from "./types";
 
 // ─── Rooms ───
 
 export async function getRooms(): Promise<RoomWithImages[]> {
+  const supabase = getSupabaseServiceClient();
   const { data, error } = await supabase
     .from("rooms")
     .select("*, room_images(*)")
@@ -23,6 +30,7 @@ export async function getRooms(): Promise<RoomWithImages[]> {
 }
 
 export async function getPublicRooms(): Promise<RoomWithImages[]> {
+  const supabase = getSupabaseServiceClient();
   const { data, error } = await supabase
     .from("rooms")
     .select("*, room_images(*)")
@@ -36,6 +44,7 @@ export async function getPublicRooms(): Promise<RoomWithImages[]> {
 export async function getRoomBySlug(
   slug: string
 ): Promise<RoomWithImages | null> {
+  const supabase = getSupabaseServiceClient();
   const { data, error } = await supabase
     .from("rooms")
     .select("*, room_images(*)")
@@ -50,6 +59,7 @@ export async function getRoomBySlug(
 }
 
 export async function getRoomById(id: string): Promise<Room | null> {
+  const supabase = getSupabaseServiceClient();
   const { data, error } = await supabase
     .from("rooms")
     .select("*")
@@ -64,6 +74,7 @@ export async function getRoomById(id: string): Promise<Room | null> {
 }
 
 export async function createRoom(room: RoomInsert): Promise<Room> {
+  const supabase = getSupabaseServiceClient();
   const { data, error } = await supabase
     .from("rooms")
     .insert(room)
@@ -78,6 +89,7 @@ export async function updateRoom(
   id: string,
   updates: RoomUpdate
 ): Promise<Room> {
+  const supabase = getSupabaseServiceClient();
   const { data, error } = await supabase
     .from("rooms")
     .update(updates)
@@ -90,6 +102,7 @@ export async function updateRoom(
 }
 
 export async function deleteRoom(id: string): Promise<void> {
+  const supabase = getSupabaseServiceClient();
   const { error } = await supabase.from("rooms").delete().eq("id", id);
   if (error) throw error;
 }
@@ -101,6 +114,7 @@ export async function getBookingRequests(filters?: {
   from?: string;
   to?: string;
 }): Promise<BookingRequestWithRoom[]> {
+  const supabase = getSupabaseServiceClient();
   let query = supabase
     .from("booking_requests")
     .select("*, rooms(name, slug)")
@@ -124,6 +138,7 @@ export async function getBookingRequests(filters?: {
 export async function getBookingRequestById(
   id: string
 ): Promise<BookingRequestWithRoom | null> {
+  const supabase = getSupabaseServiceClient();
   const { data, error } = await supabase
     .from("booking_requests")
     .select("*, rooms(name, slug)")
@@ -137,9 +152,27 @@ export async function getBookingRequestById(
   return data as BookingRequestWithRoom;
 }
 
+export async function getBookingRequestByPaymentOrderId(
+  orderId: string
+): Promise<BookingRequestWithRoom | null> {
+  const supabase = getSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("booking_requests")
+    .select("*, rooms(name, slug)")
+    .eq("payment_order_id", orderId)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") return null;
+    throw error;
+  }
+  return data as BookingRequestWithRoom;
+}
+
 export async function createBookingRequest(
   request: BookingRequestInsert
 ): Promise<BookingRequest> {
+  const supabase = getSupabaseServiceClient();
   const { data, error } = await supabase
     .from("booking_requests")
     .insert(request)
@@ -152,8 +185,9 @@ export async function createBookingRequest(
 
 export async function updateBookingRequest(
   id: string,
-  updates: Partial<Pick<BookingRequest, "status" | "admin_notes">>
+  updates: BookingRequestUpdate
 ): Promise<BookingRequest> {
+  const supabase = getSupabaseServiceClient();
   const { data, error } = await supabase
     .from("booking_requests")
     .update(updates)
@@ -165,9 +199,117 @@ export async function updateBookingRequest(
   return data as BookingRequest;
 }
 
+// ─── Email Templates ───
+
+export async function getEmailTemplates(): Promise<EmailTemplate[]> {
+  const supabase = getSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("email_templates")
+    .select("*")
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data as EmailTemplate[]) ?? [];
+}
+
+export async function getEmailTemplateById(
+  id: string
+): Promise<EmailTemplate | null> {
+  const supabase = getSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("email_templates")
+    .select("*")
+    .eq("id", id)
+    .single();
+  if (error) {
+    if (error.code === "PGRST116") return null;
+    throw error;
+  }
+  return data as EmailTemplate;
+}
+
+export async function getEmailTemplateBySlug(
+  slug: string
+): Promise<EmailTemplate | null> {
+  const supabase = getSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("email_templates")
+    .select("*")
+    .eq("slug", slug)
+    .single();
+  if (error) {
+    if (error.code === "PGRST116") return null;
+    throw error;
+  }
+  return data as EmailTemplate;
+}
+
+export async function createEmailTemplate(
+  insert: EmailTemplateInsert
+): Promise<EmailTemplate> {
+  const supabase = getSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("email_templates")
+    .insert(insert)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as EmailTemplate;
+}
+
+export async function updateEmailTemplate(
+  id: string,
+  updates: EmailTemplateUpdate
+): Promise<EmailTemplate> {
+  const supabase = getSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("email_templates")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as EmailTemplate;
+}
+
+export async function deleteEmailTemplate(id: string): Promise<void> {
+  const supabase = getSupabaseServiceClient();
+  const { error } = await supabase.from("email_templates").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// ─── Email Sends (per-send audit log) ───
+
+export async function createEmailSend(
+  insert: EmailSendInsert
+): Promise<EmailSend> {
+  const supabase = getSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("email_sends")
+    .insert(insert)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as EmailSend;
+}
+
+export async function getEmailSendsForRequest(
+  bookingRequestId: string
+): Promise<EmailSend[]> {
+  const supabase = getSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("email_sends")
+    .select("*")
+    .eq("booking_request_id", bookingRequestId)
+    .order("sent_at", { ascending: false });
+  if (error) throw error;
+  return (data as EmailSend[]) ?? [];
+}
+
 // ─── Stats ───
 
 export async function getAdminStats() {
+  const supabase = getSupabaseServiceClient();
   const { count: totalRequests } = await supabase
     .from("booking_requests")
     .select("*", { count: "exact", head: true });

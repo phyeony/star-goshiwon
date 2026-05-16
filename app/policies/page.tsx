@@ -128,8 +128,9 @@ export default function PoliciesPage() {
           <p>
             All amounts are quoted and charged in <strong>USD via PayPal</strong>.
             KRW figures shown on the site are approximate, calculated from the
-            current exchange rate. PayPal accepts most major credit and debit
-            cards; a PayPal account is not required.
+            current exchange rate. PayPal may offer credit or debit card
+            checkout without a PayPal account, depending on your location,
+            account settings, and PayPal risk checks.
           </p>
           <p>
             <strong>Everything is prepaid via PayPal at booking confirmation</strong>{" "}
@@ -256,57 +257,26 @@ export default function PoliciesPage() {
             Early check-out after you&rsquo;ve moved in
           </h3>
           <p>
-            We refund a percentage of the <strong>unused portion</strong> of
-            your stay (calculated pro-rata by remaining days at your effective
-            daily rate), based on how much written notice you give. The 10%
-            admin fee on early termination matches the Korean Fair Trade
-            Commission&rsquo;s consumer-dispute standard for shared
-            residential rentals.
+            Once you have checked in, the room rate is{" "}
+            <strong>non-refundable</strong>. If you leave early for any reason,
+            the remaining nights of your stay are forfeited and no portion of
+            the room rate is returned.
           </p>
-          <div className="overflow-x-auto -mx-2 sm:mx-0">
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr className="bg-gray-50 border-y border-gray-200">
-                  <th className="text-left font-semibold text-gray-900 px-3 py-2">
-                    Notice given before intended departure
-                  </th>
-                  <th className="text-left font-semibold text-gray-900 px-3 py-2">
-                    Refund of unused portion
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                <tr>
-                  <td className="px-3 py-3 align-top">
-                    <strong>7+ days notice</strong>
-                  </td>
-                  <td className="px-3 py-3 align-top text-gray-700">
-                    <strong>90%</strong> (10% admin fee)
-                  </td>
-                </tr>
-                <tr>
-                  <td className="px-3 py-3 align-top">
-                    <strong>Less than 7 days notice</strong>
-                  </td>
-                  <td className="px-3 py-3 align-top text-gray-700">
-                    <strong>80%</strong>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
           <ul className="list-disc pl-6 space-y-1.5 mt-3">
             <li>
-              If your actual stay drops below 4 weeks, the 15% long-stay
-              discount is recalculated and the difference is deducted from your
-              refund. If recalculation shows you owe more than what was
-              prepaid, the balance is due before checkout.
-            </li>
-            <li>
-              The <strong>$70 deposit</strong> is returned via PayPal after
-              checkout if the room is left clean and undamaged. See{" "}
+              The <strong>$70 security deposit</strong> is unaffected and is
+              returned via PayPal after checkout if the room is left clean and
+              undamaged. See{" "}
               <a href="#deposit" className="text-indigo-600 hover:underline">
                 Security Deposit & Damages
+              </a>
+              .
+            </li>
+            <li>
+              Documented medical emergencies, force majeure, and other serious
+              events outside your control are reviewed case by case — see{" "}
+              <a href="#force-majeure" className="text-indigo-600 hover:underline">
+                Force Majeure
               </a>
               .
             </li>

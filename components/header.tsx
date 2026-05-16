@@ -16,6 +16,8 @@ const navLinks = [
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
+  const isAdmin =
+    pathname?.startsWith("/admin") || pathname?.startsWith("/login");
   const isHome = pathname === "/";
   const [visible, setVisible] = useState(!isHome);
 
@@ -38,6 +40,8 @@ export function Header() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [isHome]);
+
+  if (isAdmin) return null;
 
   return (
     <nav

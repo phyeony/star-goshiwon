@@ -14,9 +14,19 @@ CREATE TYPE booking_status AS ENUM (
   'reviewing',
   'contacted',
   'approved',
+  'confirmed',
   'declined',
   'expired',
   'closed'
+);
+
+CREATE TYPE payment_status AS ENUM (
+  'none',
+  'pending',
+  'paid',
+  'failed',
+  'expired',
+  'refunded'
 );
 
 -- Room types table
@@ -64,6 +74,17 @@ CREATE TABLE booking_requests (
   -- estimated_total is USD post-cutover (PayPal). Pre-cutover rows are KRW.
   estimated_total INTEGER NOT NULL DEFAULT 0,
   bedding_prepaid BOOLEAN NOT NULL DEFAULT false,
+  payment_status payment_status NOT NULL DEFAULT 'none',
+  payment_provider TEXT,
+  payment_order_id TEXT,
+  payment_capture_id TEXT,
+  payment_approval_url TEXT,
+  payment_amount INTEGER,
+  payment_currency TEXT,
+  payment_created_at TIMESTAMPTZ,
+  payment_paid_at TIMESTAMPTZ,
+  payment_expires_at TIMESTAMPTZ,
+  payment_error TEXT NOT NULL DEFAULT '',
   notes TEXT NOT NULL DEFAULT '',
   status booking_status NOT NULL DEFAULT 'new',
   admin_notes TEXT NOT NULL DEFAULT '',
@@ -73,6 +94,8 @@ CREATE TABLE booking_requests (
 
 CREATE INDEX idx_booking_requests_status ON booking_requests(status);
 CREATE INDEX idx_booking_requests_created_at ON booking_requests(created_at DESC);
+CREATE INDEX idx_booking_requests_payment_order_id ON booking_requests(payment_order_id);
+CREATE INDEX idx_booking_requests_payment_status ON booking_requests(payment_status);
 
 -- Auto-update updated_at trigger
 CREATE OR REPLACE FUNCTION update_updated_at()

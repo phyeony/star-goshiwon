@@ -67,21 +67,21 @@ export function RoomForm({ room }: RoomFormProps) {
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || "Failed to save room");
+        setError(data.error || "객실 저장에 실패했습니다");
         return;
       }
 
       router.push("/admin/rooms");
       router.refresh();
     } catch {
-      setError("Network error. Please try again.");
+      setError("네트워크 오류입니다. 다시 시도해 주세요.");
     } finally {
       setSubmitting(false);
     }
   }
 
   async function handleDelete() {
-    if (!room || !confirm("Are you sure you want to delete this room?")) return;
+    if (!room || !confirm("이 객실을 삭제하시겠습니까?")) return;
 
     try {
       const res = await fetch(`/api/admin/rooms/${room.id}`, {
@@ -92,7 +92,7 @@ export function RoomForm({ room }: RoomFormProps) {
         router.refresh();
       }
     } catch {
-      setError("Failed to delete room.");
+      setError("객실 삭제에 실패했습니다.");
     }
   }
 
@@ -113,7 +113,7 @@ export function RoomForm({ room }: RoomFormProps) {
             htmlFor="name"
             className="block text-xs font-bold text-gray-700 uppercase mb-1"
           >
-            Room Name
+            객실명
           </label>
           <input
             id="name"
@@ -132,7 +132,7 @@ export function RoomForm({ room }: RoomFormProps) {
             htmlFor="slug"
             className="block text-xs font-bold text-gray-700 uppercase mb-1"
           >
-            Slug
+            슬러그
           </label>
           <input
             id="slug"
@@ -150,7 +150,7 @@ export function RoomForm({ room }: RoomFormProps) {
           htmlFor="description"
           className="block text-xs font-bold text-gray-700 uppercase mb-1"
         >
-          Description
+          설명
         </label>
         <textarea
           id="description"
@@ -167,7 +167,7 @@ export function RoomForm({ room }: RoomFormProps) {
             htmlFor="price_monthly"
             className="block text-xs font-bold text-gray-700 uppercase mb-1"
           >
-            Monthly (KRW)
+            월 요금 (KRW)
           </label>
           <input
             id="price_monthly"
@@ -185,7 +185,7 @@ export function RoomForm({ room }: RoomFormProps) {
             htmlFor="price_weekly"
             className="block text-xs font-bold text-gray-700 uppercase mb-1"
           >
-            Weekly (KRW)
+            주 요금 (KRW)
           </label>
           <input
             id="price_weekly"
@@ -203,7 +203,7 @@ export function RoomForm({ room }: RoomFormProps) {
             htmlFor="price_daily"
             className="block text-xs font-bold text-gray-700 uppercase mb-1"
           >
-            Daily (KRW)
+            일 요금 (KRW)
           </label>
           <input
             id="price_daily"
@@ -222,7 +222,7 @@ export function RoomForm({ room }: RoomFormProps) {
             htmlFor="capacity"
             className="block text-xs font-bold text-gray-700 uppercase mb-1"
           >
-            Capacity
+            수용 인원
           </label>
           <input
             id="capacity"
@@ -239,7 +239,7 @@ export function RoomForm({ room }: RoomFormProps) {
             htmlFor="size_sqm"
             className="block text-xs font-bold text-gray-700 uppercase mb-1"
           >
-            Size (m²)
+            면적 (m²)
           </label>
           <input
             id="size_sqm"
@@ -255,7 +255,7 @@ export function RoomForm({ room }: RoomFormProps) {
             htmlFor="status"
             className="block text-xs font-bold text-gray-700 uppercase mb-1"
           >
-            Status
+            상태
           </label>
           <select
             id="status"
@@ -263,10 +263,10 @@ export function RoomForm({ room }: RoomFormProps) {
             onChange={(e) => updateField("status", e.target.value)}
             className="block w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           >
-            <option value="available">Available</option>
-            <option value="available_soon">Available Soon</option>
-            <option value="limited">Limited Availability</option>
-            <option value="unavailable">Unavailable</option>
+            <option value="available">예약 가능</option>
+            <option value="available_soon">곧 예약 가능</option>
+            <option value="limited">잔여 객실 적음</option>
+            <option value="unavailable">예약 불가</option>
           </select>
         </div>
       </div>
@@ -276,7 +276,7 @@ export function RoomForm({ room }: RoomFormProps) {
           htmlFor="amenities"
           className="block text-xs font-bold text-gray-700 uppercase mb-1"
         >
-          Amenities (comma-separated)
+          편의 시설 (쉼표로 구분)
         </label>
         <input
           id="amenities"
@@ -294,7 +294,7 @@ export function RoomForm({ room }: RoomFormProps) {
             htmlFor="sort_order"
             className="block text-xs font-bold text-gray-700 uppercase mb-1"
           >
-            Sort Order
+            정렬 순서
           </label>
           <input
             id="sort_order"
@@ -312,7 +312,7 @@ export function RoomForm({ room }: RoomFormProps) {
               onChange={(e) => updateField("featured", e.target.checked)}
               className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
             />
-            <span className="text-sm text-gray-700">Featured on homepage</span>
+            <span className="text-sm text-gray-700">홈페이지 추천 객실</span>
           </label>
         </div>
       </div>
@@ -325,7 +325,7 @@ export function RoomForm({ room }: RoomFormProps) {
               onClick={handleDelete}
               className="text-sm text-red-600 hover:text-red-700 font-medium transition"
             >
-              Delete Room
+              객실 삭제
             </button>
           )}
         </div>
@@ -335,14 +335,14 @@ export function RoomForm({ room }: RoomFormProps) {
             onClick={() => router.back()}
             className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition duration-150 ease-in-out"
           >
-            Cancel
+            취소
           </button>
           <button
             type="submit"
             disabled={submitting}
             className="flex items-center justify-center px-6 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition duration-150 ease-in-out disabled:opacity-50"
           >
-            {submitting ? "Saving..." : room ? "Update Room" : "Create Room"}
+            {submitting ? "저장 중..." : room ? "객실 수정" : "객실 만들기"}
           </button>
         </div>
       </div>

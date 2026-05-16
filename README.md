@@ -112,3 +112,46 @@ Access the admin dashboard at `/admin`. Features:
 ## Email
 
 Email integration is scaffolded in `lib/email.ts`. When no SMTP is configured, emails are logged to console. To enable real emails, set the SMTP environment variables or integrate a service like Resend or SendGrid.
+
+## Deployment Environment
+
+Local `.env.*` files are build inputs only. `npm run deploy:staging` loads `.env.staging` for the OpenNext build, but deployed Cloudflare Workers read runtime values from Cloudflare environment variables and secrets.
+
+Recommended setup:
+
+1. Keep `.env.local`, `.env.staging`, and `.env.production` for local builds and previews. Staging/production build files should only need build-time non-secrets such as `NEXT_PUBLIC_SITE_URL` and `STAGING`.
+2. Put non-secret runtime values in Cloudflare dashboard variables or `wrangler.jsonc` `vars`. Examples: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SITE_URL`, `ADMIN_EMAIL`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `FROM_EMAIL`, `DEV_EMAIL_OVERRIDE`, `PAYPAL_ENV`, `PAYPAL_CLIENT_ID`, and `STAGING`.
+3. Put secret runtime values in `.env.staging.secrets` and `.env.production.secrets`. Use `.env.secrets.example` as the template.
+4. Deploy with the existing scripts. They build from `.env.staging` or `.env.production`, then upload only the matching `*.secrets` file to Cloudflare.
+5. Keep `--keep-vars` in the deploy scripts so dashboard-managed variables are not deleted by Wrangler.
+
+Required Supabase keys:
+
+```bash
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+```
+
+Only `SUPABASE_URL` and `SUPABASE_ANON_KEY` are plain runtime variables. `SUPABASE_SERVICE_ROLE_KEY` belongs in the matching `*.secrets` file.
+
+Secret file example:
+
+```bash
+cp .env.secrets.example .env.staging.secrets
+cp .env.secrets.example .env.production.secrets
+```
+
+Deploy staging:
+
+```bash
+npm run deploy:staging
+```
+
+The staging deploy script builds with `.env.staging`, then deploys with:
+
+```bash
+opennextjs-cloudflare deploy --env staging -- --keep-vars --secrets-file .env.staging.secrets
+```
+
+Cloudflare treats values uploaded through `--secrets-file` as secrets. Plain environment variables must be configured separately through Cloudflare dashboard variables or `wrangler.jsonc` `vars`.

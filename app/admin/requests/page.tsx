@@ -3,6 +3,7 @@ import { getBookingRequests } from "@/lib/queries";
 import { BookingStatusBadge } from "@/components/status-badge";
 import { formatUSD } from "@/lib/pricing";
 import type { BookingStatus } from "@/lib/types";
+import { BOOKING_STATUS_LABELS, PAYMENT_STATUS_LABELS_KO } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,7 @@ const statusOptions: (BookingStatus | "all")[] = [
   "reviewing",
   "contacted",
   "approved",
+  "confirmed",
   "declined",
   "expired",
   "closed",
@@ -33,7 +35,7 @@ export default async function AdminRequestsPage({
   return (
     <div>
       <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-8">
-        Booking Requests
+        예약 요청
       </h1>
 
       {/* Filters */}
@@ -41,6 +43,8 @@ export default async function AdminRequestsPage({
         {statusOptions.map((s) => {
           const isActive =
             s === "all" ? !filterStatus || filterStatus === "all" : filterStatus === s;
+          const label =
+            s === "all" ? "전체" : BOOKING_STATUS_LABELS[s as BookingStatus];
           return (
             <Link
               key={s}
@@ -51,7 +55,7 @@ export default async function AdminRequestsPage({
                   : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
               }`}
             >
-              {s === "all" ? "All" : s.charAt(0).toUpperCase() + s.slice(1)}
+              {label}
             </Link>
           );
         })}
@@ -59,7 +63,7 @@ export default async function AdminRequestsPage({
 
       {requests.length === 0 ? (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
-          <p className="text-gray-500">No requests found.</p>
+          <p className="text-gray-500">예약 요청이 없습니다.</p>
         </div>
       ) : (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
@@ -68,22 +72,25 @@ export default async function AdminRequestsPage({
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
                   <th className="text-left px-6 py-3 text-xs font-bold text-gray-700 uppercase">
-                    Guest
+                    고객
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-bold text-gray-700 uppercase">
-                    Room
+                    객실
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-bold text-gray-700 uppercase">
-                    Dates
+                    숙박 일정
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-bold text-gray-700 uppercase">
-                    Total
+                    금액
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-bold text-gray-700 uppercase">
-                    Status
+                    상태
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-bold text-gray-700 uppercase">
-                    Date
+                    결제
+                  </th>
+                  <th className="text-left px-6 py-3 text-xs font-bold text-gray-700 uppercase">
+                    접수일
                   </th>
                 </tr>
               </thead>
@@ -113,6 +120,9 @@ export default async function AdminRequestsPage({
                     </td>
                     <td className="px-6 py-4">
                       <BookingStatusBadge status={req.status} />
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {PAYMENT_STATUS_LABELS_KO[req.payment_status]}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
                       {new Date(req.created_at).toLocaleDateString()}

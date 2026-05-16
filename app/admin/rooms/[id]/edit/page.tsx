@@ -14,7 +14,7 @@ export default async function EditRoomPage({ params }: Props) {
   return (
     <div>
       <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-8">
-        Edit Room: {room.name}
+        객실 수정: {room.name}
       </h1>
       <RoomForm room={room} />
     </div>

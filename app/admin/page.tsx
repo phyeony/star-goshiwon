@@ -10,21 +10,21 @@ export default async function AdminDashboard() {
 
   const statCards = [
     {
-      label: "Total Rooms",
+      label: "전체 객실",
       value: stats.totalRooms,
-      sub: `${stats.availableRooms} available`,
+      sub: `예약 가능 ${stats.availableRooms}개`,
     },
     {
-      label: "Total Requests",
+      label: "전체 예약 요청",
       value: stats.totalRequests,
-      sub: `${stats.newRequests} new`,
+      sub: `신규 ${stats.newRequests}건`,
     },
   ];
 
   return (
     <div>
       <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-8">
-        Dashboard
+        대시보드
       </h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -45,18 +45,18 @@ export default async function AdminDashboard() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
           <h2 className="text-lg font-semibold text-gray-900">
-            Recent Booking Requests
+            최근 예약 요청
           </h2>
           <Link
             href="/admin/requests"
             className="text-sm text-indigo-600 hover:text-indigo-700 font-medium transition"
           >
-            View All
+            전체 보기
           </Link>
         </div>
         {recentRequests.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
-            No booking requests yet.
+            아직 예약 요청이 없습니다.
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -64,19 +64,19 @@ export default async function AdminDashboard() {
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
                   <th className="text-left px-6 py-3 text-xs font-bold text-gray-700 uppercase">
-                    Guest
+                    고객
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-bold text-gray-700 uppercase">
-                    Room
+                    객실
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-bold text-gray-700 uppercase">
-                    Dates
+                    숙박 일정
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-bold text-gray-700 uppercase">
-                    Status
+                    상태
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-bold text-gray-700 uppercase">
-                    Submitted
+                    접수일
                   </th>
                 </tr>
               </thead>

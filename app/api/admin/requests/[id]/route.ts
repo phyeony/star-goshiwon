@@ -7,6 +7,7 @@ const validStatuses: BookingStatus[] = [
   "reviewing",
   "contacted",
   "approved",
+  "confirmed",
   "declined",
   "expired",
   "closed",

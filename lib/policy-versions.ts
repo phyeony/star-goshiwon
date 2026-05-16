@@ -28,9 +28,9 @@ export const POLICY_VERSIONS: PolicyVersion[] = [
     id: "v2-percentage",
     effectiveFrom: "2026-05-09",
     summary:
-      "Cancellation refunds are calculated as a tiered percentage of total room rate (100/90/70/50/0) based on how far in advance you cancel. Early checkout refunds a percentage of the unused portion based on notice given.",
+      "Cancellation refunds are calculated as a tiered percentage of total room rate (100/90/70/50/0) based on how far in advance you cancel. Once you have checked in, the room rate is non-refundable for any unused portion of the stay.",
     summaryKo:
-      "취소 환불은 취소 시점에 따라 총 객실료의 비율(100/90/70/50/0)로 산정됩니다. 조기 퇴실 환불은 통지 시점에 따라 잔여 숙박분의 비율로 환불됩니다.",
+      "취소 환불은 취소 시점에 따라 총 객실료의 비율(100/90/70/50/0)로 산정됩니다. 체크인 이후에는 잔여 숙박분에 대해 객실료가 환불되지 않습니다.",
   },
 ];
 

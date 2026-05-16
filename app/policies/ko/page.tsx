@@ -113,9 +113,7 @@ export default function PoliciesKoPage() {
             이내에 답변드립니다.
           </p>
           <ul className="list-disc pl-6 space-y-1.5">
-            <li>
-              요청 승인 후 PayPal로 첫 선결제가 완료된 시점에 예약이 확정됩니다.
-            </li>
+            <li>요청 승인 후 발송된 PayPal 결제 링크에서 선결제가 완료된 시점에 예약이 확정됩니다.</li>
             <li>
               결제 링크 발송 후 <strong>48시간 이내</strong>에 결제가
               이루어지지 않을 경우, 해당 객실은 다른 손님에게 안내될 수
@@ -135,11 +133,12 @@ export default function PoliciesKoPage() {
           <p>
             모든 금액은 <strong>USD(미국 달러) 기준으로 PayPal을 통해 결제</strong>
             됩니다. 사이트에 표시된 원화(₩) 금액은 현재 환율 기준의 참고
-            금액입니다. PayPal은 대부분의 신용카드와 체크카드를 지원하며,
-            PayPal 계정이 없어도 결제 가능합니다.
+            금액입니다. PayPal 계정 없이 카드 결제가 표시될 수 있으나, 해당
+            옵션은 손님의 위치, PayPal 계정 설정 및 PayPal의 위험 심사에 따라
+            달라질 수 있습니다.
           </p>
           <p>
-            <strong>모든 금액은 예약 확정 시 PayPal로 선결제됩니다</strong> —
+            <strong>모든 금액은 예약 승인 후 PayPal 결제 링크로 선결제됩니다</strong> —
             체크인 시 별도의 현금 결제는 없습니다. 한 번의 PayPal 결제로 다음
             항목이 모두 처리됩니다:
           </p>
@@ -257,54 +256,25 @@ export default function PoliciesKoPage() {
             입실 후 조기 퇴실
           </h3>
           <p>
-            남은 잔여 숙박분(잔여 일수 × 일할 단가로 산정)에 대해 서면 통지
-            시점에 따라 아래 비율로 환불됩니다. 10% 행정 수수료는 한국
-            공정거래위원회의 소비자분쟁해결기준(공동 주거시설 조기 해지)을
-            준용한 것입니다.
+            체크인 이후에는 객실료가 <strong>환불되지 않습니다</strong>.
+            어떠한 사유로든 조기 퇴실 시 잔여 숙박일은 환불되지 않으며, 객실료의
+            일부도 반환되지 않습니다.
           </p>
-          <div className="overflow-x-auto -mx-2 sm:mx-0">
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr className="bg-gray-50 border-y border-gray-200">
-                  <th className="text-left font-semibold text-gray-900 px-3 py-2">
-                    퇴실 예정일 기준 통지 시점
-                  </th>
-                  <th className="text-left font-semibold text-gray-900 px-3 py-2">
-                    잔여 숙박분 환불 비율
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                <tr>
-                  <td className="px-3 py-3 align-top">
-                    <strong>7일 이상 전 통지</strong>
-                  </td>
-                  <td className="px-3 py-3 align-top text-gray-700">
-                    <strong>90%</strong> (10% 행정 수수료)
-                  </td>
-                </tr>
-                <tr>
-                  <td className="px-3 py-3 align-top">
-                    <strong>7일 미만 통지</strong>
-                  </td>
-                  <td className="px-3 py-3 align-top text-gray-700">
-                    <strong>80%</strong>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
           <ul className="list-disc pl-6 space-y-1.5 mt-3">
             <li>
-              실제 숙박 기간이 4주 미만으로 단축될 경우, 15% 장기 할인이
-              재계산되어 환불액에서 차감됩니다. 재계산 결과 추가 결제가
-              필요한 경우 퇴실 전에 정산해야 합니다.
-            </li>
-            <li>
-              <strong>$70 보증금</strong>은 객실에 손상이 없고 청결하게
-              정리된 경우 퇴실 후 PayPal로 전액 환불됩니다. 자세한 내용은{" "}
+              <strong>$70 보증금</strong>은 영향을 받지 않으며, 객실에 손상이
+              없고 청결하게 정리된 경우 퇴실 후 PayPal로 전액 환불됩니다.
+              자세한 내용은{" "}
               <a href="#deposit" className="text-indigo-600 hover:underline">
                 보증금 및 손해 배상
+              </a>
+              {" "}항목을 참고해 주세요.
+            </li>
+            <li>
+              증빙 가능한 의료 응급 상황, 불가항력, 기타 본인의 통제 범위를
+              벗어난 중대한 사유는 사안별로 검토됩니다. {" "}
+              <a href="#force-majeure" className="text-indigo-600 hover:underline">
+                불가항력
               </a>
               {" "}항목을 참고해 주세요.
             </li>

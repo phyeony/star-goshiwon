@@ -1,7 +1,18 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { siteConfig } from "@/lib/site-data";
 
 export function Footer() {
+  const pathname = usePathname();
+  if (
+    pathname?.startsWith("/admin") ||
+    pathname?.startsWith("/login")
+  ) {
+    return null;
+  }
+
   return (
     <footer className="bg-white border-t border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

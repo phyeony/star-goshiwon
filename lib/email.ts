@@ -5,6 +5,9 @@ import {
   DEPOSIT_USD,
   type PricingBreakdown,
 } from "./pricing";
+import { wrapEmailHtml } from "./email-html";
+
+export { wrapEmailHtml, textToEmailHtml } from "./email-html";
 
 interface BookingEmailData {
   guest_name: string;
@@ -17,6 +20,18 @@ interface BookingEmailData {
   bedding_prepaid: boolean;
   notes: string;
   breakdown: PricingBreakdown;
+}
+
+interface PaymentLinkEmailData {
+  guest_name: string;
+  guest_email: string;
+  room_name: string;
+  check_in_date: string;
+  check_out_date: string;
+  guest_count: number;
+  estimated_total: number;
+  payment_url: string;
+  payment_expires_at: string;
 }
 
 function renderRateRowsHtml(b: PricingBreakdown) {
@@ -129,37 +144,7 @@ const adminEmail =
   process.env.ADMIN_EMAIL || "stargoshiwon.seoul@gmail.com";
 
 export function buildGuestConfirmationHtml(data: BookingEmailData) {
-  return `
-<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; color: #1f2937;">
-  <div style="background-color: #ffffff; padding: 20px 24px 8px; border: 1px solid #e5e7eb; border-bottom: none; border-radius: 12px 12px 0 0;">
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="left" style="border-collapse: collapse;">
-      <tr>
-        <td style="color: #0b1f4d; font-weight: 700; font-size: 26px; line-height: 1; letter-spacing: -0.5px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-          Star Goshiwon
-        </td>
-      </tr>
-      <tr>
-        <td style="padding-top: 0px;">
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <td width="50%" valign="middle" style="width: 50%; padding: 0;">
-                <div style="border-top: 1px solid rgba(74,95,184,0.6); font-size: 0; line-height: 0; height: 1px;">&nbsp;</div>
-              </td>
-              <td valign="middle" align="center" style="padding: 0 6px; color: #4a5fb8; font-size: 13px; font-weight: 500; white-space: nowrap; letter-spacing: 0.5px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-align: center;">
-                Seoul Goshiwon
-              </td>
-              <td width="50%" valign="middle" style="width: 50%; padding: 0;">
-                <div style="border-top: 1px solid rgba(74,95,184,0.6); font-size: 0; line-height: 0; height: 1px;">&nbsp;</div>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-    <div style="clear: both;"></div>
-  </div>
-
-  <div style="background-color: #ffffff; padding: 8px 24px 24px; border: 1px solid #e5e7eb; border-top: none;">
+  const inner = `
     <p style="font-size: 16px; margin-top: 0;">Hi ${data.guest_name},</p>
     <p style="margin-top: 16px; font-size: 16px;">Thank you for your booking request! We have received it and will review availability shortly.</p>
 
@@ -193,13 +178,9 @@ export function buildGuestConfirmationHtml(data: BookingEmailData) {
       <strong>Seoul Goshiwon by Star Goshiwon</strong><br />
       <span style="color: #6b7280;">${siteConfig.address}</span><br />
       <a href="mailto:${siteConfig.email}" style="color: #4f46e5;">${siteConfig.email}</a>
-    </p>
-  </div>
+    </p>`;
 
-  <div style="background-color: #f9fafb; padding: 16px 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px; text-align: center;">
-    <p style="margin: 0; font-size: 12px; color: #9ca3af;">Seoul Goshiwon by Star Goshiwon &middot; Dongjak-gu, Seoul</p>
-  </div>
-</div>`.trim();
+  return wrapEmailHtml(inner);
 }
 
 export function buildGuestConfirmationText(data: BookingEmailData) {
@@ -282,7 +263,109 @@ ${data.notes ? `\n고객 메시지: ${data.notes}` : ""}
   await sendEmail(adminEmail, subject, text, html);
 }
 
-async function sendEmail(
+export async function sendPaymentLinkEmail(data: PaymentLinkEmailData) {
+  const deadline = new Date(data.payment_expires_at).toLocaleString("en-US", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  });
+  const subject =
+    "Your booking request is approved — review and pay to confirm";
+  const html = wrapEmailHtml(`
+    <h1 style="font-size: 22px; margin: 0 0 16px;">Your booking request is approved</h1>
+    <p>Hi ${data.guest_name},</p>
+    <p>Good news — your request for <strong>${data.room_name}</strong> has been approved. To confirm your booking, please review the details on our website and complete payment before <strong>${deadline}</strong>.</p>
+    <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin: 20px 0;">
+      <p style="margin: 0 0 8px;"><strong>Room:</strong> ${data.room_name}</p>
+      <p style="margin: 0 0 8px;"><strong>Dates:</strong> ${data.check_in_date} to ${data.check_out_date}</p>
+      <p style="margin: 0 0 8px;"><strong>Guests:</strong> ${data.guest_count}</p>
+      <p style="margin: 0;"><strong>Total to prepay:</strong> ${formatTotal(data.estimated_total)}</p>
+    </div>
+    <p style="margin: 24px 0;">
+      <a href="${data.payment_url}" style="display: inline-block; background: #4f46e5; color: #ffffff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 700;">Review and pay securely</a>
+    </p>
+    <p style="font-size: 13px; color: #6b7280;">This button opens the booking summary on our website first. From there, you can continue to PayPal. PayPal may offer card checkout without a PayPal account, depending on your location, account settings, and PayPal risk checks.</p>
+    <p>This booking is not confirmed until payment is completed.</p>
+    <p>Best regards,<br /><strong>Seoul Goshiwon by Star Goshiwon</strong></p>
+  `);
+
+  const text = `Hi ${data.guest_name},
+
+Your booking request for ${data.room_name} has been approved.
+
+Dates: ${data.check_in_date} to ${data.check_out_date}
+Guests: ${data.guest_count}
+Total to prepay: ${formatTotal(data.estimated_total)}
+
+Please review your booking details and complete payment before ${deadline} to confirm your booking:
+${data.payment_url}
+
+This link opens the booking summary on our website first. From there, you can continue to PayPal. PayPal may offer card checkout without a PayPal account, depending on your location, account settings, and PayPal risk checks.
+
+This booking is not confirmed until payment is completed.
+
+Best regards,
+Seoul Goshiwon by Star Goshiwon`;
+
+  await sendEmail(data.guest_email, subject, text, html);
+}
+
+export async function sendPaymentConfirmedEmail(
+  data: Omit<PaymentLinkEmailData, "payment_url" | "payment_expires_at">
+) {
+  const subject = "Your booking is confirmed — Seoul Goshiwon by Star Goshiwon";
+  const html = wrapEmailHtml(`
+    <h1 style="font-size: 22px; margin: 0 0 16px;">Your booking is confirmed</h1>
+    <p>Hi ${data.guest_name},</p>
+    <p>We have received your payment and your booking is now confirmed.</p>
+    <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin: 20px 0;">
+      <p style="margin: 0 0 8px;"><strong>Room:</strong> ${data.room_name}</p>
+      <p style="margin: 0 0 8px;"><strong>Dates:</strong> ${data.check_in_date} to ${data.check_out_date}</p>
+      <p style="margin: 0 0 8px;"><strong>Guests:</strong> ${data.guest_count}</p>
+      <p style="margin: 0;"><strong>Paid:</strong> ${formatTotal(data.estimated_total)}</p>
+    </div>
+    <p>We will follow up by email with check-in details.</p>
+    <p>Best regards,<br /><strong>Seoul Goshiwon by Star Goshiwon</strong></p>
+  `);
+
+  const text = `Hi ${data.guest_name},
+
+We have received your payment and your booking is now confirmed.
+
+Room: ${data.room_name}
+Dates: ${data.check_in_date} to ${data.check_out_date}
+Guests: ${data.guest_count}
+Paid: ${formatTotal(data.estimated_total)}
+
+We will follow up by email with check-in details.
+
+Best regards,
+Seoul Goshiwon by Star Goshiwon`;
+
+  await Promise.all([
+    sendEmail(data.guest_email, subject, text, html),
+    sendEmail(
+      adminEmail,
+      `예약 확정 - ${data.guest_name}님`,
+      `결제가 완료되어 예약이 확정되었습니다.
+
+고객명: ${data.guest_name}
+이메일: ${data.guest_email}
+객실: ${data.room_name}
+체크인: ${data.check_in_date}
+체크아웃: ${data.check_out_date}
+결제 금액: ${formatTotal(data.estimated_total)}
+
+확인하기: ${siteConfig.url}/admin/requests`
+    ),
+  ]);
+}
+
+export async function sendEmail(
   to: string,
   subject: string,
   text: string,
