@@ -9,11 +9,16 @@ import type {
   BookingRequestUpdate,
   BookingRequestWithRoom,
   BookingStatus,
+  PaymentOrder,
+  PaymentOrderInsert,
+  PaymentOrderUpdate,
   EmailTemplate,
   EmailTemplateInsert,
   EmailTemplateUpdate,
   EmailSend,
   EmailSendInsert,
+  EmailReceive,
+  EmailReceiveInsert,
 } from "./types";
 
 // ─── Rooms ───
@@ -152,6 +157,30 @@ export async function getBookingRequestById(
   return data as BookingRequestWithRoom;
 }
 
+export async function getLatestBookingRequestByGuestEmail(
+  guestEmail: string
+): Promise<BookingRequest | null> {
+  const matches = await getOpenBookingRequestsByGuestEmail(guestEmail, 1);
+  return matches[0] ?? null;
+}
+
+export async function getOpenBookingRequestsByGuestEmail(
+  guestEmail: string,
+  limit = 10
+): Promise<BookingRequest[]> {
+  const supabase = getSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("booking_requests")
+    .select("*")
+    .ilike("guest_email", guestEmail.trim().toLowerCase())
+    .not("status", "in", "(closed,declined,expired)")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return (data as BookingRequest[]) ?? [];
+}
+
 export async function getBookingRequestByPaymentOrderId(
   orderId: string
 ): Promise<BookingRequestWithRoom | null> {
@@ -197,6 +226,95 @@ export async function updateBookingRequest(
 
   if (error) throw error;
   return data as BookingRequest;
+}
+
+// ─── Payment Orders ───
+
+export async function createPaymentOrder(
+  insert: PaymentOrderInsert
+): Promise<PaymentOrder> {
+  const supabase = getSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("payment_orders")
+    .insert(insert)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as PaymentOrder;
+}
+
+export async function getPaymentOrderByProviderOrderId(
+  providerOrderId: string
+): Promise<PaymentOrder | null> {
+  const supabase = getSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("payment_orders")
+    .select("*")
+    .eq("provider_order_id", providerOrderId)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") return null;
+    throw error;
+  }
+  return data as PaymentOrder;
+}
+
+export async function getActivePaymentOrderForRequest(
+  bookingRequestId: string
+): Promise<PaymentOrder | null> {
+  const supabase = getSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("payment_orders")
+    .select("*")
+    .eq("booking_request_id", bookingRequestId)
+    .eq("is_active", true)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data as PaymentOrder | null;
+}
+
+export async function updatePaymentOrder(
+  id: string,
+  updates: PaymentOrderUpdate
+): Promise<PaymentOrder> {
+  const supabase = getSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("payment_orders")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as PaymentOrder;
+}
+
+export async function updatePaymentOrderByProviderOrderId(
+  providerOrderId: string,
+  updates: PaymentOrderUpdate
+): Promise<PaymentOrder | null> {
+  const existing = await getPaymentOrderByProviderOrderId(providerOrderId);
+  if (!existing) return null;
+  return updatePaymentOrder(existing.id, updates);
+}
+
+export async function supersedeActivePaymentOrders(
+  bookingRequestId: string
+): Promise<void> {
+  const supabase = getSupabaseServiceClient();
+  const { error } = await supabase
+    .from("payment_orders")
+    .update({ is_active: false, status: "superseded" })
+    .eq("booking_request_id", bookingRequestId)
+    .eq("is_active", true)
+    .in("status", ["created", "approved"]);
+
+  if (error) throw error;
 }
 
 // ─── Email Templates ───
@@ -304,6 +422,106 @@ export async function getEmailSendsForRequest(
     .order("sent_at", { ascending: false });
   if (error) throw error;
   return (data as EmailSend[]) ?? [];
+}
+
+export async function createEmailReceive(
+  insert: EmailReceiveInsert
+): Promise<EmailReceive> {
+  const supabase = getSupabaseServiceClient();
+  const query = insert.provider_message_id
+    ? supabase
+        .from("email_receives")
+        .upsert(insert, { onConflict: "provider_message_id" })
+    : supabase.from("email_receives").insert(insert);
+  const { data, error } = await query.select().single();
+  if (error) throw error;
+  return data as EmailReceive;
+}
+
+export async function getMatchedEmailReceiveByProviderThread(
+  provider: string,
+  providerThreadId: string
+): Promise<EmailReceive | null> {
+  const supabase = getSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("email_receives")
+    .select("*")
+    .eq("provider", provider)
+    .eq("provider_thread_id", providerThreadId)
+    .not("booking_request_id", "is", null)
+    .order("received_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return (data as EmailReceive) ?? null;
+}
+
+export async function getEmailReceiveById(
+  id: string
+): Promise<EmailReceive | null> {
+  const supabase = getSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("email_receives")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw error;
+  return (data as EmailReceive) ?? null;
+}
+
+export async function getEmailReceivesForProviderThread(
+  provider: string,
+  providerThreadId: string
+): Promise<EmailReceive[]> {
+  const supabase = getSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("email_receives")
+    .select("*")
+    .eq("provider", provider)
+    .eq("provider_thread_id", providerThreadId)
+    .order("received_at", { ascending: true });
+
+  if (error) throw error;
+  return (data as EmailReceive[]) ?? [];
+}
+
+export async function getEmailReceivesForRequest(
+  bookingRequestId: string,
+  guestEmail: string
+): Promise<EmailReceive[]> {
+  const supabase = getSupabaseServiceClient();
+  const normalizedEmail = guestEmail.trim().toLowerCase();
+  const { data, error } = await supabase
+    .from("email_receives")
+    .select("*")
+    .or(
+      `booking_request_id.eq.${bookingRequestId},from_email.ilike.${normalizedEmail}`
+    )
+    .order("received_at", { ascending: false });
+  if (error) throw error;
+  return (data as EmailReceive[]) ?? [];
+}
+
+export async function getEmailReceives(filters?: {
+  matchStatus?: EmailReceive["match_status"];
+  limit?: number;
+}): Promise<EmailReceive[]> {
+  const supabase = getSupabaseServiceClient();
+  let query = supabase
+    .from("email_receives")
+    .select("*")
+    .order("received_at", { ascending: false })
+    .limit(filters?.limit ?? 100);
+
+  if (filters?.matchStatus) {
+    query = query.eq("match_status", filters.matchStatus);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data as EmailReceive[]) ?? [];
 }
 
 // ─── Stats ───

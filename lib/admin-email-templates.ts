@@ -20,6 +20,7 @@ export const AVAILABLE_VARS: TemplateVar[] = [
   { name: "site_email", description: "Star Goshiwon contact email" },
   { name: "response_time", description: "Stated response time (e.g. \"24 hours\")" },
   { name: "payment_url", description: "Booking review + PayPal link (set when approving)" },
+  { name: "payment_deadline", description: "Payment deadline in Korea time" },
 ];
 
 function getPaymentReviewUrlFor(requestId: string) {
@@ -41,7 +42,21 @@ export function buildVarMap(req: BookingRequestWithRoom): Record<string, string>
     site_email: siteConfig.email,
     response_time: siteConfig.responseTime,
     payment_url: getPaymentReviewUrlFor(req.id),
+    payment_deadline: formatPaymentDeadline(req.payment_expires_at),
   };
+}
+
+export function formatPaymentDeadline(value?: string | null): string {
+  if (!value) return "48 hours after approval";
+  return new Date(value).toLocaleString("en-US", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  });
 }
 
 export type TemplateLang = "en" | "ko";

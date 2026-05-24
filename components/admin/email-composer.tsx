@@ -119,8 +119,15 @@ export function EmailComposer({
   }
 
   const previewHtml = useMemo(
-    () => wrapEmailHtml(textToEmailHtml(current.body)),
-    [current.body],
+    () =>
+      wrapEmailHtml(
+        textToEmailHtml(current.body, {
+          ctaUrl: vars.payment_url,
+          ctaLabel:
+            mode === "approve_payment" ? "Review and pay securely" : "Open link",
+        }),
+      ),
+    [current.body, mode, vars.payment_url],
   );
 
   async function handleSend() {

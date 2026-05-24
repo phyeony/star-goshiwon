@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import {
   getBookingRequestById,
+  getEmailReceivesForRequest,
   getEmailSendsForRequest,
   getEmailTemplates,
 } from "@/lib/queries";
@@ -24,6 +25,11 @@ export default async function RequestDetailPage({ params }: Props) {
     getEmailSendsForRequest(id),
   ]);
   if (!request) notFound();
+
+  const emailReceives = await getEmailReceivesForRequest(
+    request.id,
+    request.guest_email
+  );
 
   const checkIn = new Date(request.check_in_date);
   const checkOut = new Date(request.check_out_date);
@@ -224,7 +230,7 @@ export default async function RequestDetailPage({ params }: Props) {
             )}
           </div>
 
-          <EmailHistory sends={emailSends} />
+          <EmailHistory sends={emailSends} receives={emailReceives} />
         </div>
 
         {/* Actions Sidebar */}

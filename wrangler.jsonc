@@ -32,12 +32,16 @@
 	},
 	"vars": {
 		"SUPABASE_URL": "https://sgymiebggwwwfjhwpezl.supabase.co",
+		"SUPABASE_ANON_KEY":"sb_publishable_hAaBw30Q0SOZh1TSSZ69Ig_FqA_qVDd",
 		"ADMIN_EMAIL": "stargoshiwon.seoul@gmail.com",
 		"SMTP_HOST": "smtp.gmail.com",
 		"SMTP_PORT": "465",
 		"SMTP_USER": "stargoshiwon.seoul@gmail.com",
 		"FROM_EMAIL": "Seoul Goshiwon By Star Gositel <stargoshiwon.seoul@gmail.com>",
-		"NEXT_PUBLIC_SITE_URL": "https://goshiwonseoul.com"
+		"NEXT_PUBLIC_SITE_URL": "https://goshiwonseoul.com",
+		"PAYPAL_ENV": "live",
+		"PAYPAL_CLIENT_ID": "AWDFTzwXMN1qkMVcygASeR-9NxdwOri0iydHsSmrmOiKFSN4p1eCxLBjTCLtI-Wgy_fORdE7rx7yx5-F",
+		"PAYPAL_WEBHOOK_ID": "05753515EV4413204"
 	},
 	"observability": {
 		"enabled": true
@@ -55,15 +59,16 @@
 				"STAGING": "true",
 				"SUPABASE_URL": "https://iolngphuzqbrupmemzxm.supabase.co",
 				"SUPABASE_ANON_KEY": "sb_publishable_f48eyv7IksjjftqqaodmYQ_wROE1K9q",
-				"ADMIN_EMAIL": "phyeony@gmail.com",
+				"ADMIN_EMAIL": "hyeonycanada@gmail.com, phyeony@gmail.com",
 				"SMTP_HOST": "smtp.gmail.com",
 				"SMTP_PORT": "465",
-				"SMTP_USER": "phyeony@gmail.com",
-				"DEV_EMAIL_OVERRIDE": "phyeony@gmail.com",
+				"SMTP_USER": "hyeonycanada@gmail.com",
+				"DEV_EMAIL_OVERRIDE": "hyeonycanada@gmail.com",
 				"FROM_EMAIL": "Seoul Goshiwon By Star Gositel <stargoshiwon.seoul@gmail.com>",
 				"NEXT_PUBLIC_SITE_URL": "https://staging.goshiwonseoul.com",
 				"PAYPAL_ENV": "sandbox",
-				"PAYPAL_CLIENT_ID": "AaPq05SkjzXXydR8aR5FOYd3qNHI3BONeXhBd9qsJcsCMwjB4AaQCJ5KBnUCGTBQqSsMof65M2MuQ_3p"
+				"PAYPAL_CLIENT_ID": "AaPq05SkjzXXydR8aR5FOYd3qNHI3BONeXhBd9qsJcsCMwjB4AaQCJ5KBnUCGTBQqSsMof65M2MuQ_3p",
+				"PAYPAL_WEBHOOK_ID": "3Y668234B0081663S"
 			},
 			"assets": {
 				"directory": ".open-next/assets",

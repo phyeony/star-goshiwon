@@ -18,6 +18,15 @@ export type PaymentStatus =
   | "expired"
   | "refunded";
 
+export type PaymentOrderStatus =
+  | "created"
+  | "approved"
+  | "paid"
+  | "failed"
+  | "expired"
+  | "superseded"
+  | "duplicate_paid";
+
 export interface Room {
   id: string;
   name: string;
@@ -72,6 +81,8 @@ export interface BookingRequest {
   payment_created_at: string | null;
   payment_paid_at: string | null;
   payment_expires_at: string | null;
+  payment_token_hash: string | null;
+  payment_token_created_at: string | null;
   payment_error: string;
   notes: string;
   status: BookingStatus;
@@ -83,6 +94,57 @@ export interface BookingRequest {
 export interface BookingRequestWithRoom extends BookingRequest {
   rooms: Pick<Room, "name" | "slug"> | null;
 }
+
+export interface PaymentOrder {
+  id: string;
+  booking_request_id: string;
+  provider: string;
+  provider_order_id: string;
+  status: PaymentOrderStatus;
+  approval_url: string;
+  amount: number;
+  currency: string;
+  capture_id: string | null;
+  is_active: boolean;
+  requires_refund: boolean;
+  raw_status: string;
+  error: string;
+  created_at: string;
+  updated_at: string;
+  paid_at: string | null;
+}
+
+export type PaymentOrderInsert = {
+  booking_request_id: string;
+  provider?: string;
+  provider_order_id: string;
+  status?: PaymentOrderStatus;
+  approval_url: string;
+  amount: number;
+  currency?: string;
+  capture_id?: string | null;
+  is_active?: boolean;
+  requires_refund?: boolean;
+  raw_status?: string;
+  error?: string;
+  paid_at?: string | null;
+};
+
+export type PaymentOrderUpdate = Partial<
+  Pick<
+    PaymentOrder,
+    | "status"
+    | "approval_url"
+    | "amount"
+    | "currency"
+    | "capture_id"
+    | "is_active"
+    | "requires_refund"
+    | "raw_status"
+    | "error"
+    | "paid_at"
+  >
+>;
 
 export interface EmailTemplate {
   id: string;
@@ -144,6 +206,40 @@ export type EmailSendInsert = {
   extra?: Record<string, unknown>;
 };
 
+export interface EmailReceive {
+  id: string;
+  booking_request_id: string | null;
+  provider: string;
+  provider_thread_id: string | null;
+  provider_message_id: string | null;
+  match_status: "matched" | "unmatched" | "ambiguous" | "ignored";
+  subject: string;
+  body_text: string;
+  body_html: string;
+  from_email: string;
+  from_name: string;
+  to_email: string;
+  received_at: string;
+  extra: Record<string, unknown>;
+  created_at: string;
+}
+
+export type EmailReceiveInsert = {
+  booking_request_id?: string | null;
+  provider?: string;
+  provider_thread_id?: string | null;
+  provider_message_id?: string | null;
+  match_status?: "matched" | "unmatched" | "ambiguous" | "ignored";
+  subject: string;
+  body_text: string;
+  body_html: string;
+  from_email: string;
+  from_name?: string;
+  to_email?: string;
+  received_at?: string;
+  extra?: Record<string, unknown>;
+};
+
 // Supabase generated types (simplified for V1)
 export type RoomInsert = {
   name: string;
@@ -190,6 +286,8 @@ export type BookingRequestInsert = {
   payment_created_at?: string | null;
   payment_paid_at?: string | null;
   payment_expires_at?: string | null;
+  payment_token_hash?: string | null;
+  payment_token_created_at?: string | null;
   payment_error?: string;
   notes?: string;
   status?: BookingStatus;
@@ -212,6 +310,8 @@ export type BookingRequestUpdate = Partial<
     | "payment_created_at"
     | "payment_paid_at"
     | "payment_expires_at"
+    | "payment_token_hash"
+    | "payment_token_created_at"
     | "payment_error"
   >
 >;
@@ -234,6 +334,11 @@ export interface Database {
         Insert: BookingRequestInsert;
         Update: BookingRequestUpdate;
       };
+      payment_orders: {
+        Row: PaymentOrder;
+        Insert: PaymentOrderInsert;
+        Update: PaymentOrderUpdate;
+      };
       email_templates: {
         Row: EmailTemplate;
         Insert: EmailTemplateInsert;
@@ -243,6 +348,11 @@ export interface Database {
         Row: EmailSend;
         Insert: EmailSendInsert;
         Update: Partial<EmailSendInsert>;
+      };
+      email_receives: {
+        Row: EmailReceive;
+        Insert: EmailReceiveInsert;
+        Update: Partial<EmailReceiveInsert>;
       };
     };
     Views: {};

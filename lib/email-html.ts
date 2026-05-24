@@ -4,6 +4,13 @@ interface WrapOptions {
   preheader?: string;
 }
 
+interface TextToEmailHtmlOptions {
+  ctaUrl?: string;
+  ctaLabel?: string;
+}
+
+const PAYMENT_REVIEW_URL_RE = /^https?:\/\/[^\s<]+\/booking-payment\/pay\?request_id=[^\s<]+$/;
+
 export function wrapEmailHtml(bodyHtml: string, opts: WrapOptions = {}): string {
   const preheader = opts.preheader
     ? `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#fff;opacity:0;">${escapeHtml(opts.preheader)}</div>`
@@ -50,14 +57,32 @@ ${bodyHtml}
 </div>`.trim();
 }
 
-export function textToEmailHtml(text: string): string {
+export function textToEmailHtml(
+  text: string,
+  opts: TextToEmailHtmlOptions = {}
+): string {
   const paragraphs = text.replace(/\r\n/g, "\n").split(/\n{2,}/);
   return paragraphs
     .map((para) => {
+      const trimmed = para.trim();
+      const buttonUrl = getStandaloneButtonUrl(trimmed, opts.ctaUrl);
+      if (buttonUrl) {
+        return renderButton(buttonUrl, opts.ctaLabel ?? "Review and pay securely");
+      }
       const lines = para.split("\n").map((line) => autolink(escapeHtml(line)));
       return `<p style="margin: 0 0 16px; font-size: 16px; line-height: 1.55;">${lines.join("<br />")}</p>`;
     })
     .join("\n");
+}
+
+function getStandaloneButtonUrl(text: string, ctaUrl?: string) {
+  if (ctaUrl && text === ctaUrl) return ctaUrl;
+  if (PAYMENT_REVIEW_URL_RE.test(text)) return text;
+  return null;
+}
+
+function renderButton(url: string, label: string): string {
+  return `<p style="margin: 24px 0;"><a href="${escapeHtml(url)}" style="display: inline-block; background: #4f46e5; color: #ffffff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 700;">${escapeHtml(label)}</a></p>`;
 }
 
 function escapeHtml(s: string): string {

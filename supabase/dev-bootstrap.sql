@@ -12,6 +12,7 @@
 -- ============================================================================
 -- Clean slate (safe because this script targets a fresh dev project)
 -- ============================================================================
+DROP TABLE IF EXISTS payment_orders CASCADE;
 DROP TABLE IF EXISTS booking_requests CASCADE;
 DROP TABLE IF EXISTS room_images CASCADE;
 DROP TABLE IF EXISTS rooms CASCADE;
@@ -103,6 +104,8 @@ CREATE TABLE booking_requests (
   payment_created_at TIMESTAMPTZ,
   payment_paid_at TIMESTAMPTZ,
   payment_expires_at TIMESTAMPTZ,
+  payment_token_hash TEXT,
+  payment_token_created_at TIMESTAMPTZ,
   payment_error TEXT NOT NULL DEFAULT '',
   notes TEXT NOT NULL DEFAULT '',
   status booking_status NOT NULL DEFAULT 'new',
@@ -115,6 +118,43 @@ CREATE INDEX idx_booking_requests_status ON booking_requests(status);
 CREATE INDEX idx_booking_requests_created_at ON booking_requests(created_at DESC);
 CREATE INDEX idx_booking_requests_payment_order_id ON booking_requests(payment_order_id);
 CREATE INDEX idx_booking_requests_payment_status ON booking_requests(payment_status);
+CREATE INDEX idx_booking_requests_payment_token_hash ON booking_requests(payment_token_hash);
+
+CREATE TABLE payment_orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  booking_request_id UUID NOT NULL REFERENCES booking_requests(id) ON DELETE CASCADE,
+  provider TEXT NOT NULL DEFAULT 'paypal',
+  provider_order_id TEXT NOT NULL UNIQUE,
+  status TEXT NOT NULL DEFAULT 'created' CHECK (
+    status IN (
+      'created',
+      'approved',
+      'paid',
+      'failed',
+      'expired',
+      'superseded',
+      'duplicate_paid'
+    )
+  ),
+  approval_url TEXT NOT NULL DEFAULT '',
+  amount INTEGER NOT NULL,
+  currency TEXT NOT NULL DEFAULT 'USD',
+  capture_id TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT false,
+  requires_refund BOOLEAN NOT NULL DEFAULT false,
+  raw_status TEXT NOT NULL DEFAULT '',
+  error TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  paid_at TIMESTAMPTZ
+);
+
+CREATE INDEX idx_payment_orders_booking_request_id
+  ON payment_orders(booking_request_id, created_at DESC);
+CREATE INDEX idx_payment_orders_status ON payment_orders(status);
+CREATE UNIQUE INDEX idx_payment_orders_one_active_per_request
+  ON payment_orders(booking_request_id)
+  WHERE is_active = true;
 
 CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$
@@ -130,6 +170,10 @@ CREATE TRIGGER rooms_updated_at
 
 CREATE TRIGGER booking_requests_updated_at
   BEFORE UPDATE ON booking_requests
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE TRIGGER payment_orders_updated_at
+  BEFORE UPDATE ON payment_orders
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ============================================================================

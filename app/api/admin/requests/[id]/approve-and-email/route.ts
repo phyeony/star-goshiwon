@@ -3,7 +3,8 @@ import { z } from "zod";
 import { sendEmail, wrapEmailHtml, textToEmailHtml } from "@/lib/email";
 import { createEmailSend } from "@/lib/queries";
 import { approveAndCreatePaymentOrder } from "@/lib/payments";
-import { substitute } from "@/lib/admin-email-templates";
+import { formatPaymentDeadline, substitute } from "@/lib/admin-email-templates";
+import { replacePaymentReviewUrls } from "@/lib/payment-url-utils";
 import { getAdminUserOrNull } from "@/lib/supabase-server";
 
 export const runtime = "nodejs";
@@ -51,14 +52,26 @@ export async function POST(req: NextRequest, ctx: Context) {
     );
   }
 
-  // Substitute any remaining {{payment_url}} placeholders the admin left in
-  // the composed subject/body. The client substitutes on template load, but
-  // re-running here is cheap and makes the route robust to clients that
-  // skipped substitution.
-  const vars = { payment_url: approveResult.paymentUrl };
+  // Substitute payment placeholders again after order creation, because reused
+  // orders may have less than a fresh 48 hours remaining.
+  const vars = {
+    payment_url: approveResult.paymentUrl,
+    payment_deadline: formatPaymentDeadline(
+      approveResult.request.payment_expires_at
+    ),
+  };
   const subject = substitute(parsed.subject, vars);
-  const text = substitute(parsed.text, vars);
-  const html = wrapEmailHtml(textToEmailHtml(text));
+  const text = replacePaymentReviewUrls(
+    substitute(parsed.text, vars),
+    approveResult.request.id,
+    approveResult.paymentUrl
+  );
+  const html = wrapEmailHtml(
+    textToEmailHtml(text, {
+      ctaUrl: approveResult.paymentUrl,
+      ctaLabel: "Review and pay securely",
+    })
+  );
 
   let sendError: string | null = null;
   try {

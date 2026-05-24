@@ -5,12 +5,15 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "verify": "npm test && npm run build && npm run test:e2e",
     "start": "next start",
     "lint": "next lint",
     "seed": "npx tsx scripts/seed.ts",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "deploy": "dotenv -e .env.production -- opennextjs-cloudflare build && opennextjs-cloudflare deploy --env=\"\" -- --keep-vars --secrets-file .env.production.secrets",
-    "deploy:staging": "dotenv -e .env.staging -- opennextjs-cloudflare build && opennextjs-cloudflare deploy --env staging -- --keep-vars --secrets-file .env.staging.secrets",
+    "deploy": "npm run verify && dotenv -e .env.production -- opennextjs-cloudflare build && opennextjs-cloudflare deploy --env=\"\" -- --keep-vars --secrets-file .env.production.secrets",
+    "deploy:staging": "npm run verify && dotenv -e .env.staging -- opennextjs-cloudflare build && opennextjs-cloudflare deploy --env staging -- --keep-vars --secrets-file .env.staging.secrets",
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "postinstall": "patch-package"
@@ -27,6 +30,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@shakystar/memorize": "^1.0.0",
     "@types/node": "^22.10.0",
     "@types/nodemailer": "^8.0.0",
@@ -40,6 +44,7 @@
     "tailwindcss": "^3.4.17",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",
+    "vitest": "^4.1.6",
     "wrangler": "^4.80.0"
   }
 }

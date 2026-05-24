@@ -95,40 +95,72 @@ export default async function AdminRequestsPage({
                 </tr>
               </thead>
               <tbody>
-                {requests.map((req) => (
-                  <tr
-                    key={req.id}
-                    className="border-b border-gray-100 hover:bg-gray-50 transition"
-                  >
-                    <td className="px-6 py-4">
-                      <Link
-                        href={`/admin/requests/${req.id}`}
-                        className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
-                      >
-                        {req.guest_name}
-                      </Link>
-                      <p className="text-xs text-gray-500">{req.guest_email}</p>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {req.rooms?.name || req.room_slug}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                      {req.check_in_date} → {req.check_out_date}
-                    </td>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                      {formatUSD(req.estimated_total)}
-                    </td>
-                    <td className="px-6 py-4">
-                      <BookingStatusBadge status={req.status} />
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {PAYMENT_STATUS_LABELS_KO[req.payment_status]}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                      {new Date(req.created_at).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))}
+	                {requests.map((req) => (
+	                  <tr
+	                    key={req.id}
+	                    className="group border-b border-gray-100 hover:bg-gray-50 transition"
+	                  >
+	                    <td className="p-0">
+	                      <Link
+	                        href={`/admin/requests/${req.id}`}
+	                        className="block px-6 py-4"
+	                      >
+	                        <span className="text-sm font-medium text-indigo-600 group-hover:text-indigo-700">
+	                          {req.guest_name}
+	                        </span>
+	                        <p className="text-xs text-gray-500">{req.guest_email}</p>
+	                      </Link>
+	                    </td>
+	                    <td className="p-0">
+	                      <Link
+	                        href={`/admin/requests/${req.id}`}
+	                        className="block px-6 py-4 text-sm text-gray-900"
+	                      >
+	                        {req.rooms?.name || req.room_slug}
+	                      </Link>
+	                    </td>
+	                    <td className="p-0">
+	                      <Link
+	                        href={`/admin/requests/${req.id}`}
+	                        className="block px-6 py-4 text-sm text-gray-500 whitespace-nowrap"
+	                      >
+	                        {req.check_in_date} → {req.check_out_date}
+	                      </Link>
+	                    </td>
+	                    <td className="p-0">
+	                      <Link
+	                        href={`/admin/requests/${req.id}`}
+	                        className="block px-6 py-4 text-sm font-medium text-gray-900"
+	                      >
+	                        {formatUSD(req.estimated_total)}
+	                      </Link>
+	                    </td>
+	                    <td className="p-0">
+	                      <Link
+	                        href={`/admin/requests/${req.id}`}
+	                        className="block px-6 py-4"
+	                      >
+	                        <BookingStatusBadge status={req.status} />
+	                      </Link>
+	                    </td>
+	                    <td className="p-0">
+	                      <Link
+	                        href={`/admin/requests/${req.id}`}
+	                        className="block px-6 py-4 text-sm text-gray-600"
+	                      >
+	                        {PAYMENT_STATUS_LABELS_KO[req.payment_status]}
+	                      </Link>
+	                    </td>
+	                    <td className="p-0">
+	                      <Link
+	                        href={`/admin/requests/${req.id}`}
+	                        className="block px-6 py-4 text-sm text-gray-500 whitespace-nowrap"
+	                      >
+	                        {new Date(req.created_at).toLocaleDateString()}
+	                      </Link>
+	                    </td>
+	                  </tr>
+	                ))}
               </tbody>
             </table>
           </div>

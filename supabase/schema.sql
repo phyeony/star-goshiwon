@@ -84,6 +84,8 @@ CREATE TABLE booking_requests (
   payment_created_at TIMESTAMPTZ,
   payment_paid_at TIMESTAMPTZ,
   payment_expires_at TIMESTAMPTZ,
+  payment_token_hash TEXT,
+  payment_token_created_at TIMESTAMPTZ,
   payment_error TEXT NOT NULL DEFAULT '',
   notes TEXT NOT NULL DEFAULT '',
   status booking_status NOT NULL DEFAULT 'new',
@@ -96,6 +98,72 @@ CREATE INDEX idx_booking_requests_status ON booking_requests(status);
 CREATE INDEX idx_booking_requests_created_at ON booking_requests(created_at DESC);
 CREATE INDEX idx_booking_requests_payment_order_id ON booking_requests(payment_order_id);
 CREATE INDEX idx_booking_requests_payment_status ON booking_requests(payment_status);
+CREATE INDEX idx_booking_requests_payment_token_hash ON booking_requests(payment_token_hash);
+
+CREATE TABLE payment_orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  booking_request_id UUID NOT NULL REFERENCES booking_requests(id) ON DELETE CASCADE,
+  provider TEXT NOT NULL DEFAULT 'paypal',
+  provider_order_id TEXT NOT NULL UNIQUE,
+  status TEXT NOT NULL DEFAULT 'created' CHECK (
+    status IN (
+      'created',
+      'approved',
+      'paid',
+      'failed',
+      'expired',
+      'superseded',
+      'duplicate_paid'
+    )
+  ),
+  approval_url TEXT NOT NULL DEFAULT '',
+  amount INTEGER NOT NULL,
+  currency TEXT NOT NULL DEFAULT 'USD',
+  capture_id TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT false,
+  requires_refund BOOLEAN NOT NULL DEFAULT false,
+  raw_status TEXT NOT NULL DEFAULT '',
+  error TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  paid_at TIMESTAMPTZ
+);
+
+CREATE INDEX idx_payment_orders_booking_request_id
+  ON payment_orders(booking_request_id, created_at DESC);
+CREATE INDEX idx_payment_orders_status ON payment_orders(status);
+CREATE UNIQUE INDEX idx_payment_orders_one_active_per_request
+  ON payment_orders(booking_request_id)
+  WHERE is_active = true;
+
+CREATE TABLE email_receives (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  booking_request_id UUID REFERENCES booking_requests(id) ON DELETE SET NULL,
+  provider TEXT NOT NULL DEFAULT 'manual',
+  provider_thread_id TEXT,
+  provider_message_id TEXT UNIQUE,
+  match_status TEXT NOT NULL DEFAULT 'unmatched' CHECK (
+    match_status IN ('matched', 'unmatched', 'ambiguous', 'ignored')
+  ),
+  subject TEXT NOT NULL DEFAULT '',
+  body_text TEXT NOT NULL DEFAULT '',
+  body_html TEXT NOT NULL DEFAULT '',
+  from_email TEXT NOT NULL,
+  from_name TEXT NOT NULL DEFAULT '',
+  to_email TEXT NOT NULL DEFAULT '',
+  received_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  extra JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_email_receives_booking_request_id
+  ON email_receives(booking_request_id, received_at DESC);
+CREATE INDEX idx_email_receives_from_email
+  ON email_receives(from_email, received_at DESC);
+CREATE INDEX idx_email_receives_provider_thread_id
+  ON email_receives(provider, provider_thread_id);
+CREATE INDEX idx_email_receives_match_status
+  ON email_receives(match_status, received_at DESC);
 
 -- Auto-update updated_at trigger
 CREATE OR REPLACE FUNCTION update_updated_at()
@@ -112,4 +180,8 @@ CREATE TRIGGER rooms_updated_at
 
 CREATE TRIGGER booking_requests_updated_at
   BEFORE UPDATE ON booking_requests
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE TRIGGER payment_orders_updated_at
+  BEFORE UPDATE ON payment_orders
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();

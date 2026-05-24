@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { PayPalStartButton } from "@/components/booking-payment/paypal-start-button";
 import { getBookingRequestById } from "@/lib/queries";
+import { isValidPaymentToken, markPaymentExpired } from "@/lib/payments";
 import {
   DEPOSIT_USD,
   calculateEstimate,
@@ -19,13 +21,14 @@ export const dynamic = "force-dynamic";
 export default async function BookingPaymentPayPage({
   searchParams,
 }: {
-  searchParams: Promise<{ request_id?: string }>;
+  searchParams: Promise<{ request_id?: string; payment_token?: string }>;
 }) {
-  const { request_id: requestId } = await searchParams;
+  const { request_id: requestId, payment_token: paymentToken } = await searchParams;
   if (!requestId) notFound();
 
-  const request = await getBookingRequestById(requestId);
+  let request = await getBookingRequestById(requestId);
   if (!request) notFound();
+  if (!isValidPaymentToken(request, paymentToken)) notFound();
 
   let breakdown: ReturnType<typeof calculateEstimate> | null = null;
   try {
@@ -43,9 +46,11 @@ export default async function BookingPaymentPayPage({
     ? new Date(request.payment_expires_at)
     : null;
   const isExpired = Boolean(expiresAt && expiresAt.getTime() <= Date.now());
+  if (isExpired && request.payment_status === "pending") {
+    request = await markPaymentExpired(request);
+  }
   const isPayable =
     request.payment_status === "pending" &&
-    request.payment_approval_url &&
     !isExpired;
 
   return (
@@ -173,15 +178,12 @@ export default async function BookingPaymentPayPage({
             </div>
           )}
 
-          {isPayable && (
-            <>
-              <a
-                href={request.payment_approval_url!}
-                className="mt-5 w-full inline-flex items-center justify-center px-5 py-3 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700"
-              >
-                Continue to PayPal
-              </a>
-              <p className="mt-3 text-xs text-gray-500">
+	          {isPayable && (
+	            <>
+	              <PayPalStartButton
+	                href={`/booking-payment/start?request_id=${request.id}&payment_token=${encodeURIComponent(paymentToken!)}`}
+	              />
+	              <p className="mt-3 text-xs text-gray-500">
                 PayPal may offer card checkout without a PayPal account,
                 depending on your location, account settings, and PayPal risk
                 checks.

@@ -6,6 +6,7 @@ import {
   type PricingBreakdown,
 } from "./pricing";
 import { wrapEmailHtml } from "./email-html";
+import { storeTestEmail } from "./test-email-outbox";
 
 export { wrapEmailHtml, textToEmailHtml } from "./email-html";
 
@@ -371,6 +372,11 @@ export async function sendEmail(
   text: string,
   html?: string
 ) {
+  if (process.env.E2E_TEST_MODE === "true") {
+    storeTestEmail({ to, subject, text, html: html ?? "" });
+    return;
+  }
+
   // In local development and on the staging worker, redirect all outgoing
   // email to DEV_EMAIL_OVERRIDE so booking confirmations and admin
   // notifications can be tested without emailing real guests. Also send

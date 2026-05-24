@@ -25,6 +25,35 @@ export interface PayPalWebhookVerificationBody {
   webhook_event: unknown;
 }
 
+type FakePayPalOrder = PayPalOrder & {
+  returnUrl?: string;
+  cancelUrl?: string;
+};
+
+declare global {
+  // eslint-disable-next-line no-var
+  var __goshiwonFakePayPalOrders:
+    | Map<string, FakePayPalOrder>
+    | undefined;
+  // eslint-disable-next-line no-var
+  var __goshiwonFakePayPalNextId: number | undefined;
+}
+
+function isFakePayPalMode() {
+  return process.env.E2E_TEST_MODE === "true" && process.env.PAYPAL_FAKE === "true";
+}
+
+function getFakePayPalOrders() {
+  globalThis.__goshiwonFakePayPalOrders ??= new Map();
+  return globalThis.__goshiwonFakePayPalOrders;
+}
+
+function nextFakePayPalOrderId() {
+  globalThis.__goshiwonFakePayPalNextId ??= 1;
+  const next = globalThis.__goshiwonFakePayPalNextId++;
+  return `FAKE-PAYPAL-${Date.now().toString(36)}-${String(next).padStart(4, "0")}`;
+}
+
 function getPayPalEnv(): PayPalEnv {
   return process.env.PAYPAL_ENV === "live" ? "live" : "sandbox";
 }
@@ -75,7 +104,28 @@ export async function createPayPalOrder(input: {
   amountUsd: number;
   returnUrl: string;
   cancelUrl: string;
+  idempotencyKey: string;
 }): Promise<{ orderId: string; approvalUrl: string; raw: PayPalOrder }> {
+  if (isFakePayPalMode()) {
+    const orderId = nextFakePayPalOrderId();
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+      "http://127.0.0.1:3100";
+    const approvalUrl =
+      `${baseUrl}/test/paypal/approve?token=${encodeURIComponent(orderId)}` +
+      `&return_url=${encodeURIComponent(input.returnUrl)}` +
+      `&cancel_url=${encodeURIComponent(input.cancelUrl)}`;
+    const raw: FakePayPalOrder = {
+      id: orderId,
+      status: "CREATED",
+      returnUrl: input.returnUrl,
+      cancelUrl: input.cancelUrl,
+      links: [{ rel: "payer-action", href: approvalUrl, method: "GET" }],
+    };
+    getFakePayPalOrders().set(orderId, raw);
+    return { orderId, approvalUrl, raw };
+  }
+
   const token = await getAccessToken();
   const amount = input.amountUsd.toFixed(2);
 
@@ -84,7 +134,7 @@ export async function createPayPalOrder(input: {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
-      "PayPal-Request-Id": `create-${input.requestId}-${input.amountUsd}`,
+      "PayPal-Request-Id": input.idempotencyKey,
       Prefer: "return=representation",
     },
     body: JSON.stringify({
@@ -133,6 +183,12 @@ export async function createPayPalOrder(input: {
 }
 
 export async function getPayPalOrder(orderId: string): Promise<PayPalOrder> {
+  if (isFakePayPalMode()) {
+    const order = getFakePayPalOrders().get(orderId);
+    if (!order) throw new Error(`Fake PayPal order not found: ${orderId}`);
+    return order;
+  }
+
   const token = await getAccessToken();
   const res = await fetch(`${getBaseUrl()}/v2/checkout/orders/${orderId}`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -146,13 +202,32 @@ export async function getPayPalOrder(orderId: string): Promise<PayPalOrder> {
 }
 
 export async function capturePayPalOrder(orderId: string, requestId: string): Promise<PayPalOrder> {
+  if (isFakePayPalMode()) {
+    const order = getFakePayPalOrders().get(orderId);
+    if (!order) throw new Error(`Fake PayPal order not found: ${orderId}`);
+    const completed: FakePayPalOrder = {
+      ...order,
+      status: "COMPLETED",
+      purchase_units: [
+        {
+          payments: {
+            captures: [{ id: `FAKE-CAPTURE-${orderId}`, status: "COMPLETED" }],
+          },
+        },
+      ],
+    };
+    getFakePayPalOrders().set(orderId, completed);
+    return completed;
+  }
+
   const token = await getAccessToken();
+  const requestKey = `cap-${requestId.slice(0, 8)}-${orderId.slice(-12)}`;
   const res = await fetch(`${getBaseUrl()}/v2/checkout/orders/${orderId}/capture`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
-      "PayPal-Request-Id": `capture-${requestId}-${orderId}`,
+      "PayPal-Request-Id": requestKey,
       Prefer: "return=representation",
     },
     body: "{}",
@@ -166,6 +241,8 @@ export async function capturePayPalOrder(orderId: string, requestId: string): Pr
 }
 
 export async function verifyPayPalWebhook(body: PayPalWebhookVerificationBody) {
+  if (isFakePayPalMode()) return true;
+
   const webhookId = process.env.PAYPAL_WEBHOOK_ID;
   if (!webhookId) throw new Error("PAYPAL_WEBHOOK_ID is not configured");
 
@@ -195,10 +272,20 @@ export async function verifyPayPalWebhook(body: PayPalWebhookVerificationBody) {
   return data.verification_status === "SUCCESS";
 }
 
+export function approveFakePayPalOrder(orderId: string) {
+  if (!isFakePayPalMode()) {
+    throw new Error("Fake PayPal mode is not enabled");
+  }
+  const orders = getFakePayPalOrders();
+  const order = orders.get(orderId);
+  if (!order) throw new Error(`Fake PayPal order not found: ${orderId}`);
+  orders.set(orderId, { ...order, status: "APPROVED" });
+}
+
 export function getCaptureId(order: PayPalOrder): string | null {
   for (const unit of order.purchase_units ?? []) {
     for (const capture of unit.payments?.captures ?? []) {
-      if (capture.status === "COMPLETED" || capture.status === "PENDING") {
+      if (capture.status === "COMPLETED") {
         return capture.id;
       }
     }
