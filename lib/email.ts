@@ -148,6 +148,7 @@ export function buildGuestConfirmationHtml(data: BookingEmailData) {
   const inner = `
     <p style="font-size: 16px; margin-top: 0;">Hi ${data.guest_name},</p>
     <p style="margin-top: 16px; font-size: 16px;">Thank you for your booking request! We have received it and will review availability shortly.</p>
+    <p style="font-size: 16px;">Please send us a message on our WhatsApp channel so we can help you faster with availability, payment, and any questions about your stay: <a href="${siteConfig.whatsapp}" style="color: #4f46e5;">Message us on WhatsApp</a>.</p>
 
     <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin: 20px 0;">
       <h2 style="font-size: 16px; margin: 0 0 12px; color: #374151;">Request Summary</h2>
@@ -172,7 +173,6 @@ export function buildGuestConfirmationHtml(data: BookingEmailData) {
 
     <p style="margin: 16px 0; font-size: 13px; color: #6b7280;">By submitting this request and completing the PayPal payment, you reaffirm the <a href="${siteConfig.url}/policies" style="color: #4f46e5;">booking &amp; house policies</a>, including the men-only restriction, 7-day minimum stay, and cancellation terms.</p>
 
-    <p style="font-size: 16px;">If you have any questions, reply to this email or reach us on WhatsApp.</p>
 
     <p style="font-size: 16px; margin-top: 24px;">
       Best regards,<br />
@@ -206,7 +206,8 @@ We will review availability and contact you via email within ${siteConfig.respon
 
 By submitting this request and completing the PayPal payment, you reaffirm the booking & house policies (men-only, 7-day minimum, cancellation terms): ${siteConfig.url}/policies
 
-If you have any questions, reply to this email or reach us on WhatsApp.
+Please send us a message on our WhatsApp channel so we can help you faster with availability, payment, and any questions about your stay:
+${siteConfig.whatsapp}
 
 Best regards,
 Seoul Goshiwon by Star Goshiwon

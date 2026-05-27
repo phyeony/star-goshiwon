@@ -15,6 +15,7 @@ export function RoomForm({ room }: RoomFormProps) {
 
   const [form, setForm] = useState({
     name: room?.name || "",
+    name_ko: room?.name_ko || "",
     slug: room?.slug || "",
     description: room?.description || "",
     price_monthly: room?.price_monthly || 0,
@@ -46,6 +47,7 @@ export function RoomForm({ room }: RoomFormProps) {
 
     const payload = {
       ...form,
+      name_ko: form.name_ko.trim() || null,
       size_sqm: form.size_sqm ? Number(form.size_sqm) : null,
       amenities: form.amenities
         .split(",")
@@ -141,6 +143,22 @@ export function RoomForm({ room }: RoomFormProps) {
             onChange={(e) => updateField("slug", e.target.value)}
             className="block w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             required
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="name_ko"
+            className="block text-xs font-bold text-gray-700 uppercase mb-1"
+          >
+            한국어 객실명
+          </label>
+          <input
+            id="name_ko"
+            type="text"
+            value={form.name_ko}
+            onChange={(e) => updateField("name_ko", e.target.value)}
+            className="block w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            placeholder="기본 방"
           />
         </div>
       </div>

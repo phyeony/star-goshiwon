@@ -77,6 +77,7 @@ export function RequestActions({
   }
 
   const isPaid = request.payment_status === "paid";
+  const canApprove = Boolean(request.assigned_room_unit_id);
 
   return (
     <>
@@ -132,11 +133,17 @@ export function RequestActions({
         <hr className="border-gray-200" />
 
         <div className="space-y-3">
+          {!canApprove && !isPaid && (
+            <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-800">
+              Assign an available physical room before approving this request.
+            </div>
+          )}
           {!isPaid && (
             <button
               type="button"
               onClick={() => setComposerMode("approve_payment")}
-              className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 shadow-sm transition duration-150 ease-in-out"
+              disabled={!canApprove}
+              className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 shadow-sm transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
             >
               승인 및 결제 링크 전송
             </button>

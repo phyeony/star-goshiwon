@@ -9,6 +9,14 @@ import type {
   BookingRequestUpdate,
   BookingRequestWithRoom,
   BookingStatus,
+  RoomUnit,
+  RoomUnitInsert,
+  RoomUnitUpdate,
+  RoomUnitWithRoom,
+  RoomUnitWithBlocks,
+  RoomUnitBlock,
+  RoomUnitBlockInsert,
+  RoomUnitBlockUpdate,
   PaymentOrder,
   PaymentOrderInsert,
   PaymentOrderUpdate,
@@ -122,7 +130,7 @@ export async function getBookingRequests(filters?: {
   const supabase = getSupabaseServiceClient();
   let query = supabase
     .from("booking_requests")
-    .select("*, rooms(name, slug)")
+    .select("*, rooms(name, name_ko, slug), room_units(name)")
     .order("created_at", { ascending: false });
 
   if (filters?.status) {
@@ -146,7 +154,7 @@ export async function getBookingRequestById(
   const supabase = getSupabaseServiceClient();
   const { data, error } = await supabase
     .from("booking_requests")
-    .select("*, rooms(name, slug)")
+    .select("*, rooms(name, name_ko, slug), room_units(name)")
     .eq("id", id)
     .single();
 
@@ -187,7 +195,7 @@ export async function getBookingRequestByPaymentOrderId(
   const supabase = getSupabaseServiceClient();
   const { data, error } = await supabase
     .from("booking_requests")
-    .select("*, rooms(name, slug)")
+    .select("*, rooms(name, name_ko, slug), room_units(name)")
     .eq("payment_order_id", orderId)
     .single();
 
@@ -226,6 +234,305 @@ export async function updateBookingRequest(
 
   if (error) throw error;
   return data as BookingRequest;
+}
+
+// Room Units and Availability
+
+const ACTIVE_BLOCK_STATUSES = ["tentative", "confirmed"] as const;
+
+export async function getRoomUnits(roomId?: string): Promise<RoomUnit[]> {
+  const supabase = getSupabaseServiceClient();
+  let query = supabase
+    .from("room_units")
+    .select("*")
+    .order("sort_order", { ascending: true })
+    .order("name", { ascending: true });
+
+  if (roomId) query = query.eq("room_id", roomId);
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data as RoomUnit[]) ?? [];
+}
+
+export async function getRoomUnitsWithRoom(): Promise<RoomUnitWithRoom[]> {
+  const supabase = getSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("room_units")
+    .select("*, rooms(name, name_ko, slug)")
+    .order("sort_order", { ascending: true })
+    .order("name", { ascending: true });
+
+  if (error) throw error;
+  return (data as RoomUnitWithRoom[]) ?? [];
+}
+
+export async function getRoomUnitById(id: string): Promise<RoomUnit | null> {
+  const supabase = getSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("room_units")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw error;
+  return (data as RoomUnit) ?? null;
+}
+
+export async function createRoomUnit(
+  insert: RoomUnitInsert
+): Promise<RoomUnit> {
+  const supabase = getSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("room_units")
+    .insert(insert)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as RoomUnit;
+}
+
+export async function updateRoomUnit(
+  id: string,
+  updates: RoomUnitUpdate
+): Promise<RoomUnit> {
+  const supabase = getSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("room_units")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as RoomUnit;
+}
+
+export async function getRoomUnitAvailability(
+  roomId: string,
+  checkInDate: string,
+  checkOutDate: string
+): Promise<RoomUnitWithBlocks[]> {
+  const supabase = getSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("room_units")
+    .select("*, room_unit_blocks!left(*)")
+    .eq("room_id", roomId)
+    .eq("status", "active")
+    .lt("room_unit_blocks.check_in_date", checkOutDate)
+    .gt("room_unit_blocks.check_out_date", checkInDate)
+    .in("room_unit_blocks.status", [...ACTIVE_BLOCK_STATUSES])
+    .order("sort_order", { ascending: true })
+    .order("name", { ascending: true });
+
+  if (error) throw error;
+  return ((data as RoomUnitWithBlocks[]) ?? []).map((unit) => ({
+    ...unit,
+    room_unit_blocks: unit.room_unit_blocks ?? [],
+  }));
+}
+
+export function isRoomUnitAvailableForBooking(
+  unit: RoomUnitWithBlocks,
+  bookingRequestId?: string
+) {
+  return !unit.room_unit_blocks.some(
+    (block) => block.booking_request_id !== bookingRequestId
+  );
+}
+
+export async function getAvailableRoomUnitsForRequest(
+  request: BookingRequestWithRoom
+): Promise<RoomUnitWithBlocks[]> {
+  if (!request.room_id) return [];
+  const units = await getRoomUnitAvailability(
+    request.room_id,
+    request.check_in_date,
+    request.check_out_date
+  );
+  return units.filter((unit) =>
+    isRoomUnitAvailableForBooking(unit, request.id)
+  );
+}
+
+export async function assertRoomUnitAvailableForRequest(
+  request: BookingRequestWithRoom,
+  roomUnitId: string
+): Promise<RoomUnit> {
+  if (!request.room_id) throw new Error("Booking request has no room type");
+
+  const unit = await getRoomUnitById(roomUnitId);
+  if (!unit) throw new Error("Selected physical room not found");
+  if (unit.room_id !== request.room_id) {
+    throw new Error("Selected physical room does not match the requested room type");
+  }
+  if (unit.status !== "active") {
+    throw new Error("Selected physical room is not active");
+  }
+
+  const availability = await getRoomUnitAvailability(
+    request.room_id,
+    request.check_in_date,
+    request.check_out_date
+  );
+  const selected = availability.find((candidate) => candidate.id === roomUnitId);
+  if (!selected || !isRoomUnitAvailableForBooking(selected, request.id)) {
+    throw new Error("Selected physical room is not available for these dates");
+  }
+
+  return unit;
+}
+
+export async function assignRoomUnitToBookingRequest(
+  bookingRequestId: string,
+  roomUnitId: string
+) {
+  const request = await getBookingRequestById(bookingRequestId);
+  if (!request) throw new Error("Booking request not found");
+  await assertRoomUnitAvailableForRequest(request, roomUnitId);
+  const updated = await updateBookingRequest(bookingRequestId, {
+    assigned_room_unit_id: roomUnitId,
+  });
+  const directBlock = await getDirectRoomUnitBlockForRequest(bookingRequestId);
+  if (directBlock) {
+    await updateRoomUnitBlock(directBlock.id, {
+      room_unit_id: roomUnitId,
+      guest_name: request.guest_name,
+      check_in_date: request.check_in_date,
+      check_out_date: request.check_out_date,
+    });
+  }
+  return updated;
+}
+
+export async function createRoomUnitBlock(
+  insert: RoomUnitBlockInsert
+): Promise<RoomUnitBlock> {
+  const supabase = getSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("room_unit_blocks")
+    .insert(insert)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as RoomUnitBlock;
+}
+
+export async function getRoomUnitBlocks(filters?: {
+  from?: string;
+  to?: string;
+  includeCancelled?: boolean;
+}): Promise<RoomUnitBlock[]> {
+  const supabase = getSupabaseServiceClient();
+  let query = supabase
+    .from("room_unit_blocks")
+    .select("*")
+    .order("check_in_date", { ascending: true });
+
+  if (filters?.from) query = query.gt("check_out_date", filters.from);
+  if (filters?.to) query = query.lt("check_in_date", filters.to);
+  if (!filters?.includeCancelled) query = query.neq("status", "cancelled");
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data as RoomUnitBlock[]) ?? [];
+}
+
+export async function getRoomUnitBlockById(
+  id: string
+): Promise<RoomUnitBlock | null> {
+  const supabase = getSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("room_unit_blocks")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw error;
+  return (data as RoomUnitBlock) ?? null;
+}
+
+export async function updateRoomUnitBlock(
+  id: string,
+  updates: RoomUnitBlockUpdate
+): Promise<RoomUnitBlock> {
+  const supabase = getSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("room_unit_blocks")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as RoomUnitBlock;
+}
+
+export async function getDirectRoomUnitBlockForRequest(
+  bookingRequestId: string
+): Promise<RoomUnitBlock | null> {
+  const supabase = getSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("room_unit_blocks")
+    .select("*")
+    .eq("booking_request_id", bookingRequestId)
+    .eq("source", "direct")
+    .neq("status", "cancelled")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return (data as RoomUnitBlock) ?? null;
+}
+
+export async function ensureTentativeRoomUnitBlockForRequest(
+  request: BookingRequestWithRoom
+): Promise<RoomUnitBlock> {
+  if (!request.assigned_room_unit_id) {
+    throw new Error("Assign an available physical room before approval");
+  }
+
+  await assertRoomUnitAvailableForRequest(request, request.assigned_room_unit_id);
+
+  const existing = await getDirectRoomUnitBlockForRequest(request.id);
+  const block = {
+    room_unit_id: request.assigned_room_unit_id,
+    booking_request_id: request.id,
+    source: "direct" as const,
+    status: "tentative" as const,
+    guest_name: request.guest_name,
+    check_in_date: request.check_in_date,
+    check_out_date: request.check_out_date,
+    notes: "",
+  };
+
+  if (existing) return updateRoomUnitBlock(existing.id, block);
+  return createRoomUnitBlock(block);
+}
+
+export async function confirmDirectRoomUnitBlockForRequest(
+  bookingRequestId: string
+): Promise<void> {
+  const existing = await getDirectRoomUnitBlockForRequest(bookingRequestId);
+  if (!existing) return;
+  await updateRoomUnitBlock(existing.id, { status: "confirmed" });
+}
+
+export async function cancelDirectRoomUnitBlocksForRequest(
+  bookingRequestId: string
+): Promise<void> {
+  const supabase = getSupabaseServiceClient();
+  const { error } = await supabase
+    .from("room_unit_blocks")
+    .update({ status: "cancelled" })
+    .eq("booking_request_id", bookingRequestId)
+    .eq("source", "direct")
+    .in("status", [...ACTIVE_BLOCK_STATUSES]);
+
+  if (error) throw error;
 }
 
 // ─── Payment Orders ───

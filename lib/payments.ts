@@ -2,6 +2,9 @@ import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { siteConfig } from "./site-data";
 import {
   createPaymentOrder,
+  cancelDirectRoomUnitBlocksForRequest,
+  confirmDirectRoomUnitBlockForRequest,
+  ensureTentativeRoomUnitBlockForRequest,
   getActivePaymentOrderForRequest,
   getBookingRequestById,
   getBookingRequestByPaymentOrderId,
@@ -124,6 +127,7 @@ export async function markPaymentExpired(request: BookingRequestWithRoom) {
     payment_status: "expired",
     payment_error: "Payment link expired",
   });
+  await cancelDirectRoomUnitBlocksForRequest(request.id);
 
   const updated = await getBookingRequestById(request.id);
   if (!updated) throw new Error("Updated booking request not found");
@@ -257,6 +261,7 @@ export async function approveAndCreatePaymentOrder(
   if (request.payment_status === "paid") {
     throw new Error("This booking has already been paid");
   }
+  await ensureTentativeRoomUnitBlockForRequest(request);
 
   const now = new Date();
   const existingLinkIsActive =
@@ -320,6 +325,7 @@ export async function approveAndSendPaymentLink(
   if (request.payment_status === "paid") {
     throw new Error("This booking has already been paid");
   }
+  await ensureTentativeRoomUnitBlockForRequest(request);
 
   const now = new Date();
   const existingLinkIsActive =
@@ -442,6 +448,7 @@ async function markPaymentPaid(
     payment_paid_at: new Date().toISOString(),
     payment_error: "",
   });
+  await confirmDirectRoomUnitBlockForRequest(request.id);
 
   if (paymentOrder) {
     await updatePaymentOrder(paymentOrder.id, {

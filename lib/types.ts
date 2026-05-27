@@ -27,9 +27,16 @@ export type PaymentOrderStatus =
   | "superseded"
   | "duplicate_paid";
 
+export type RoomUnitStatus = "active" | "inactive" | "maintenance";
+
+export type RoomUnitBlockSource = "direct" | "external";
+
+export type RoomUnitBlockStatus = "tentative" | "confirmed" | "cancelled";
+
 export interface Room {
   id: string;
   name: string;
+  name_ko?: string | null;
   slug: string;
   description: string;
   price_monthly: number;
@@ -65,6 +72,7 @@ export interface BookingRequest {
   guest_email: string;
   guest_count: number;
   room_id: string | null;
+  assigned_room_unit_id: string | null;
   room_slug: string;
   check_in_date: string;
   check_out_date: string;
@@ -92,8 +100,77 @@ export interface BookingRequest {
 }
 
 export interface BookingRequestWithRoom extends BookingRequest {
-  rooms: Pick<Room, "name" | "slug"> | null;
+  rooms: Pick<Room, "name" | "name_ko" | "slug"> | null;
+  room_units?: Pick<RoomUnit, "name"> | null;
 }
+
+export interface RoomUnit {
+  id: string;
+  room_id: string;
+  name: string;
+  status: RoomUnitStatus;
+  notes: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RoomUnitWithRoom extends RoomUnit {
+  rooms: Pick<Room, "name" | "name_ko" | "slug"> | null;
+}
+
+export interface RoomUnitBlock {
+  id: string;
+  room_unit_id: string;
+  booking_request_id: string | null;
+  source: RoomUnitBlockSource;
+  status: RoomUnitBlockStatus;
+  guest_name: string;
+  check_in_date: string;
+  check_out_date: string;
+  notes: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RoomUnitWithBlocks extends RoomUnit {
+  room_unit_blocks: RoomUnitBlock[];
+}
+
+export type RoomUnitInsert = {
+  room_id: string;
+  name: string;
+  status?: RoomUnitStatus;
+  notes?: string;
+  sort_order?: number;
+};
+
+export type RoomUnitUpdate = Partial<RoomUnitInsert>;
+
+export type RoomUnitBlockInsert = {
+  room_unit_id: string;
+  booking_request_id?: string | null;
+  source?: RoomUnitBlockSource;
+  status?: RoomUnitBlockStatus;
+  guest_name?: string;
+  check_in_date: string;
+  check_out_date: string;
+  notes?: string;
+};
+
+export type RoomUnitBlockUpdate = Partial<
+  Pick<
+    RoomUnitBlock,
+    | "room_unit_id"
+    | "booking_request_id"
+    | "source"
+    | "status"
+    | "guest_name"
+    | "check_in_date"
+    | "check_out_date"
+    | "notes"
+  >
+>;
 
 export interface PaymentOrder {
   id: string;
@@ -243,6 +320,7 @@ export type EmailReceiveInsert = {
 // Supabase generated types (simplified for V1)
 export type RoomInsert = {
   name: string;
+  name_ko?: string | null;
   slug: string;
   description?: string;
   price_monthly: number;
@@ -271,6 +349,7 @@ export type BookingRequestInsert = {
   guest_email: string;
   guest_count?: number;
   room_id?: string | null;
+  assigned_room_unit_id?: string | null;
   room_slug: string;
   check_in_date: string;
   check_out_date: string;
@@ -297,6 +376,7 @@ export type BookingRequestInsert = {
 export type BookingRequestUpdate = Partial<
   Pick<
     BookingRequest,
+    | "assigned_room_unit_id"
     | "status"
     | "admin_notes"
     | "estimated_total"
@@ -333,6 +413,16 @@ export interface Database {
         Row: BookingRequest;
         Insert: BookingRequestInsert;
         Update: BookingRequestUpdate;
+      };
+      room_units: {
+        Row: RoomUnit;
+        Insert: RoomUnitInsert;
+        Update: RoomUnitUpdate;
+      };
+      room_unit_blocks: {
+        Row: RoomUnitBlock;
+        Insert: RoomUnitBlockInsert;
+        Update: RoomUnitBlockUpdate;
       };
       payment_orders: {
         Row: PaymentOrder;

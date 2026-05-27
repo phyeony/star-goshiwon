@@ -114,7 +114,7 @@ export function HeroSlideshow() {
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/30" />
 
       {/* Content */}
-      <div className="relative z-10 h-full flex items-center">
+      <div className="relative z-30 h-full flex items-center">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className="max-w-3xl">
             <h1 className="text-sm sm:text-base font-semibold uppercase tracking-widest text-white/90 mb-4 hero-text-shadow-heavy">
@@ -201,9 +201,9 @@ export function HeroSlideshow() {
         </svg>
       </button>
 
-      <div className="absolute bottom-0 left-0 right-0 z-20 pb-6 pt-12 bg-gradient-to-t from-black/60 to-transparent">
+      <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-20 pb-6 pt-12 bg-gradient-to-t from-black/60 to-transparent">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          <div className="flex gap-2">
+          <div className="pointer-events-auto flex gap-2">
             {slides.map((s, i) => (
               <button
                 key={i}

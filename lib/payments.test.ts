@@ -13,6 +13,8 @@ const state = vi.hoisted(() => ({
   paypalOrders: new Map<string, any>(),
   nextPayPalId: 1,
   sentConfirmedEmails: 0,
+  cancelledRoomBlocks: [] as string[],
+  confirmedRoomBlocks: [] as string[],
 }));
 
 vi.mock("./queries", () => ({
@@ -90,6 +92,12 @@ vi.mock("./queries", () => ({
       }
     }
   }),
+  cancelDirectRoomUnitBlocksForRequest: vi.fn(async (bookingRequestId: string) => {
+    state.cancelledRoomBlocks.push(bookingRequestId);
+  }),
+  confirmDirectRoomUnitBlockForRequest: vi.fn(async (bookingRequestId: string) => {
+    state.confirmedRoomBlocks.push(bookingRequestId);
+  }),
 }));
 
 vi.mock("./paypal", () => ({
@@ -139,6 +147,8 @@ describe("PayPal payment flow", () => {
     state.paypalOrders = new Map();
     state.nextPayPalId = 1;
     state.sentConfirmedEmails = 0;
+    state.cancelledRoomBlocks = [];
+    state.confirmedRoomBlocks = [];
     vi.clearAllMocks();
   });
 
@@ -167,6 +177,7 @@ describe("PayPal payment flow", () => {
     expect(createPayPalOrder).not.toHaveBeenCalled();
     expect(state.booking?.payment_status).toBe("expired");
     expect(state.booking?.status).toBe("expired");
+    expect(state.cancelledRoomBlocks).toEqual(["request-1"]);
   });
 
   it("creates a replacement only when the active PayPal order is unusable", async () => {
@@ -205,6 +216,7 @@ describe("PayPal payment flow", () => {
     expect(state.booking?.payment_capture_id).toBe("CAPTURE-OLD");
     expect(state.paymentOrders[0].status).toBe("paid");
     expect(state.sentConfirmedEmails).toBe(1);
+    expect(state.confirmedRoomBlocks).toEqual(["request-1"]);
   });
 
   it("does not capture another order from the return path after the booking is already paid", async () => {
@@ -246,6 +258,7 @@ function makeBooking(
     guest_email: "guest@example.com",
     guest_count: 1,
     room_id: "room-1",
+    assigned_room_unit_id: null,
     room_slug: "room-with-private-shower",
     check_in_date: "2026-06-01",
     check_out_date: "2026-06-08",

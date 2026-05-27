@@ -96,7 +96,7 @@ Seoul Goshiwon by Star Goshiwon
   (
     'follow_up',
     'Generic follow-up',
-    'Empty draft prefilled with greeting and booking reference.',
+    'Polite follow-up for guests who have not messaged WhatsApp after the booking request confirmation email.',
     'Re: Your booking request — {{room_name}}',
     'Hi {{guest_name}},
 

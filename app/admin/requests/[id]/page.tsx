@@ -4,11 +4,13 @@ import {
   getEmailReceivesForRequest,
   getEmailSendsForRequest,
   getEmailTemplates,
+  getRoomUnitAvailability,
 } from "@/lib/queries";
 import { formatUSD, formatApproxKRW } from "@/lib/pricing";
 import { BookingStatusBadge } from "@/components/status-badge";
 import { RequestActions } from "@/components/admin/request-actions";
 import { EmailHistory } from "@/components/admin/email-history";
+import { RoomUnitAssignment } from "@/components/admin/room-unit-assignment";
 import { PAYMENT_STATUS_LABELS_KO } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -30,6 +32,13 @@ export default async function RequestDetailPage({ params }: Props) {
     request.id,
     request.guest_email
   );
+  const roomUnitAvailability = request.room_id
+    ? await getRoomUnitAvailability(
+        request.room_id,
+        request.check_in_date,
+        request.check_out_date
+      )
+    : [];
 
   const checkIn = new Date(request.check_in_date);
   const checkOut = new Date(request.check_out_date);
@@ -234,7 +243,11 @@ export default async function RequestDetailPage({ params }: Props) {
         </div>
 
         {/* Actions Sidebar */}
-        <div>
+        <div className="space-y-6">
+          <RoomUnitAssignment
+            request={request}
+            units={roomUnitAvailability}
+          />
           <RequestActions request={request} templates={templates} />
         </div>
       </div>

@@ -55,6 +55,7 @@ CREATE TYPE payment_status AS ENUM (
 CREATE TABLE rooms (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
+  name_ko TEXT,
   slug TEXT UNIQUE NOT NULL,
   description TEXT NOT NULL DEFAULT '',
   price_monthly INTEGER NOT NULL,
@@ -180,10 +181,10 @@ CREATE TRIGGER payment_orders_updated_at
 -- Seed data (snapshot from prod as of dev bootstrap)
 -- ============================================================================
 
-INSERT INTO rooms (id, name, slug, description, price_monthly, price_weekly, price_daily, capacity, size_sqm, amenities, status, available_from, featured, sort_order) VALUES
-('ad3eaa2a-0e8e-47c3-819a-7016bd9290a5', 'Economy Room', 'economy-room', 'Our most affordable private room with shared shower and toilet facilities. Perfect for short stays, students, and budget-conscious guests. All rooms include an outside-facing window, fast Wi-Fi, AC/heating, a desk, and a mini fridge.', 340000, 100000, 15000, 1, 5.5, ARRAY['Shared Showers','Shared Toilets','AC / Heat','Fast WiFi','Desk & Chair','Mini Fridge','Shelf & Cabinet','Outside-Facing Window'], 'available', NULL, false, 1),
-('5044b1be-9895-48d3-a323-2b15760ebe23', 'Private Shower Room', 'room-with-private-shower', 'A private room with your own shower and access to a shared toilet. With no toilet taking up space, the shower area is larger than in our Private Shower & Toilet Room. A smart choice for guests who want extra convenience at a reasonable price. Includes an outside-facing window, fast Wi-Fi, AC/heating, a desk, and a mini fridge.', 408000, 120000, 18000, 1, 6.5, ARRAY['Private Shower','Bigger Shower Space','Shared Toilet','AC / Heat','Fast WiFi','Desk & Chair','Mini Fridge','Shelf & Cabinet','Outside-Facing Window'], 'available', NULL, true, 2),
-('c3e320d5-291f-49b7-84a5-73537bfb95cd', 'Private Shower & Toilet Room', 'room-with-private-shower-and-toilet', 'Our most private room with both your own shower and toilet. Ideal for guests who want the most convenience and privacy during their stay. Includes an outside-facing window, fast Wi-Fi, AC/heating, a desk, and a mini fridge.', 408000, 120000, 18000, 1, 6.5, ARRAY['Private Shower','Private Toilet','AC / Heat','Fast WiFi','Desk & Chair','Mini-fridge','Shelf & Cabinet','Outside-Facing Window'], 'available', NULL, true, 3);
+INSERT INTO rooms (id, name, name_ko, slug, description, price_monthly, price_weekly, price_daily, capacity, size_sqm, amenities, status, available_from, featured, sort_order) VALUES
+('ad3eaa2a-0e8e-47c3-819a-7016bd9290a5', 'Economy Room', '기본 방', 'economy-room', 'Our most affordable private room with shared shower and toilet facilities. Perfect for short stays, students, and budget-conscious guests. All rooms include an outside-facing window, fast Wi-Fi, AC/heating, a desk, and a mini fridge.', 340000, 100000, 15000, 1, 5.5, ARRAY['Shared Showers','Shared Toilets','AC / Heat','Fast WiFi','Desk & Chair','Mini Fridge','Shelf & Cabinet','Outside-Facing Window'], 'available', NULL, false, 1),
+('5044b1be-9895-48d3-a323-2b15760ebe23', 'Private Shower Room', '원룸(샤워)', 'room-with-private-shower', 'A private room with your own shower and access to a shared toilet. With no toilet taking up space, the shower area is larger than in our Private Shower & Toilet Room. A smart choice for guests who want extra convenience at a reasonable price. Includes an outside-facing window, fast Wi-Fi, AC/heating, a desk, and a mini fridge.', 408000, 120000, 18000, 1, 6.5, ARRAY['Private Shower','Bigger Shower Space','Shared Toilet','AC / Heat','Fast WiFi','Desk & Chair','Mini Fridge','Shelf & Cabinet','Outside-Facing Window'], 'available', NULL, true, 2),
+('c3e320d5-291f-49b7-84a5-73537bfb95cd', 'Private Shower & Toilet Room', '원룸(샤워&화장실)', 'room-with-private-shower-and-toilet', 'Our most private room with both your own shower and toilet. Ideal for guests who want the most convenience and privacy during their stay. Includes an outside-facing window, fast Wi-Fi, AC/heating, a desk, and a mini fridge.', 408000, 120000, 18000, 1, 6.5, ARRAY['Private Shower','Private Toilet','AC / Heat','Fast WiFi','Desk & Chair','Mini-fridge','Shelf & Cabinet','Outside-Facing Window'], 'available', NULL, true, 3);
 
 INSERT INTO room_images (id, room_id, url, alt, sort_order) VALUES
 -- Economy Room

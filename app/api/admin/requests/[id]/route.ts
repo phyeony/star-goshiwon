@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { updateBookingRequest } from "@/lib/queries";
+import {
+  cancelDirectRoomUnitBlocksForRequest,
+  updateBookingRequest,
+} from "@/lib/queries";
 import type { BookingStatus } from "@/lib/types";
 
 const validStatuses: BookingStatus[] = [
@@ -39,6 +42,13 @@ export async function PATCH(req: NextRequest, context: Context) {
     }
 
     const updated = await updateBookingRequest(id, updates);
+    if (
+      updates.status &&
+      (["declined", "expired"].includes(updates.status) ||
+        (updates.status === "closed" && updated.payment_status !== "paid"))
+    ) {
+      await cancelDirectRoomUnitBlocksForRequest(id);
+    }
     return NextResponse.json(updated);
   } catch (error) {
     console.error("Update request error:", error);

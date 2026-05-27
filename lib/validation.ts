@@ -66,6 +66,7 @@ export type BookingFormData = z.infer<typeof bookingRequestSchema>;
 
 export const roomSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
+  name_ko: z.string().max(100).nullable().default(null),
   slug: z
     .string()
     .min(1, "Slug is required")
@@ -85,3 +86,41 @@ export const roomSchema = z.object({
 });
 
 export type RoomFormData = z.infer<typeof roomSchema>;
+
+export const roomUnitSchema = z.object({
+  room_id: z.string().uuid("Room type is required"),
+  name: z.string().trim().min(1, "Room name is required").max(100),
+  status: z.enum(["active", "inactive", "maintenance"]).default("active"),
+  notes: z.string().max(1000).default(""),
+  sort_order: z.number().int().default(0),
+});
+
+export type RoomUnitFormData = z.infer<typeof roomUnitSchema>;
+
+export const roomUnitBlockBaseSchema = z.object({
+    room_unit_id: z.string().uuid("Physical room is required"),
+    booking_request_id: z.string().uuid().nullable().optional(),
+    source: z.enum(["direct", "external"]).default("external"),
+    status: z.enum(["tentative", "confirmed", "cancelled"]).default("confirmed"),
+    guest_name: z.string().trim().max(100).default(""),
+    check_in_date: z.string().refine((d) => !isNaN(Date.parse(d)), {
+      message: "Invalid check-in date",
+    }),
+    check_out_date: z.string().refine((d) => !isNaN(Date.parse(d)), {
+      message: "Invalid check-out date",
+    }),
+    notes: z.string().max(1000).default(""),
+  });
+
+export const roomUnitBlockSchema = roomUnitBlockBaseSchema
+  .refine(
+    (data) => new Date(data.check_out_date) > new Date(data.check_in_date),
+    {
+      message: "Check-out date must be after check-in date",
+      path: ["check_out_date"],
+    }
+  );
+
+export type RoomUnitBlockFormData = z.infer<typeof roomUnitBlockSchema>;
+
+export const roomUnitBlockUpdateSchema = roomUnitBlockBaseSchema.partial();
