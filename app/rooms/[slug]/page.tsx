@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { StatusBadge } from "@/components/status-badge";
 import { ImageGallery } from "@/components/image-lightbox";
+import { GuestReviews } from "@/components/guest-reviews";
 import { RequestForm } from "@/components/request-form";
 import { getRoomBySlug } from "@/lib/queries";
 import { formatUSD, formatApproxKRW, getUsdPrices } from "@/lib/pricing";
@@ -259,6 +260,8 @@ export default async function RoomDetailPage({ params }: Props) {
           </div>
         </div>
       </div>
+
+      <GuestReviews variant="bottom" />
     </div>
   );
 }

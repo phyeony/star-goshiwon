@@ -26,6 +26,12 @@ export const bookingRequestSchema = z
         message: "Please review and accept the booking policies to continue",
       }),
     }),
+    men_only_acknowledged: z.literal(true, {
+      errorMap: () => ({
+        message:
+          "Please confirm you understand this goshiwon accepts male guests only",
+      }),
+    }),
   })
   .refine(
     (data) => {

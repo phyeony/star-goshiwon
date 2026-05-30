@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { RoomCardVariantSplit } from "@/components/room-card-variants-client";
 import { SectionTitle } from "@/components/section-title";
+import { GuestReviews } from "@/components/guest-reviews";
 import { HeroSlideshow } from "@/components/hero-slideshow";
 import { SharedFacilities } from "@/components/shared-facilities";
 import { getPublicRooms } from "@/lib/queries";
@@ -143,6 +144,8 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      <GuestReviews />
 
       {/* Shared Facilities */}
       <section className="bg-white py-16 border-t border-gray-100">

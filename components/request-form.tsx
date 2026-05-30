@@ -22,7 +22,11 @@ interface RequestFormProps {
   singleRoom?: boolean;
 }
 
-export function RequestForm({ rooms, preselectedSlug, singleRoom }: RequestFormProps) {
+export function RequestForm({
+  rooms,
+  preselectedSlug,
+  singleRoom,
+}: RequestFormProps) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -36,6 +40,7 @@ export function RequestForm({ rooms, preselectedSlug, singleRoom }: RequestFormP
     notes: "",
     bedding_prepaid: false,
     policies_accepted: false,
+    men_only_acknowledged: false,
   });
 
   const selectedRoom = rooms.find((r) => r.slug === form.room_slug);
@@ -48,13 +53,18 @@ export function RequestForm({ rooms, preselectedSlug, singleRoom }: RequestFormP
           getUsdPrices(selectedRoom.slug),
           form.check_in_date,
           form.check_out_date,
-          { beddingPrepaid: form.bedding_prepaid }
-        )
+          { beddingPrepaid: form.bedding_prepaid },
+        ),
       );
     } else {
       setEstimate(null);
     }
-  }, [selectedRoom, form.check_in_date, form.check_out_date, form.bedding_prepaid]);
+  }, [
+    selectedRoom,
+    form.check_in_date,
+    form.check_out_date,
+    form.bedding_prepaid,
+  ]);
 
   function updateField(field: string, value: string | number | boolean) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -145,9 +155,7 @@ export function RequestForm({ rooms, preselectedSlug, singleRoom }: RequestFormP
             required
           />
           {errors.check_out_date && (
-            <p className="text-xs text-red-600 mt-1">
-              {errors.check_out_date}
-            </p>
+            <p className="text-xs text-red-600 mt-1">{errors.check_out_date}</p>
           )}
         </div>
       </div>
@@ -310,17 +318,36 @@ export function RequestForm({ rooms, preselectedSlug, singleRoom }: RequestFormP
         </p>
         <ul className="list-disc pl-5 space-y-1 text-sm text-gray-700">
           <li>Up-front payment via PayPal (USD).</li>
-          <li><strong className="font-semibold">Men-only</strong> property.</li>
-                    <li><strong className="font-semibold">Minimum 7 days</strong> stay.</li>
+          <li>
+            <strong className="font-semibold">Minimum 7 days</strong> stay.
+          </li>
         </ul>
         <label className="flex items-start gap-2.5 cursor-pointer mt-3 pt-3 border-t border-gray-200">
           <input
             type="checkbox"
-            checked={form.policies_accepted}
+            checked={form.men_only_acknowledged}
             onChange={(e) =>
-              updateField("policies_accepted", e.target.checked)
+              updateField("men_only_acknowledged", e.target.checked)
             }
             className="mt-0.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+            required
+          />
+          <span className="text-sm text-gray-900">
+            I understand this goshiwon is for men only.
+          </span>
+        </label>
+        {errors.men_only_acknowledged && (
+          <p className="text-sm text-red-600 mt-2">
+            {errors.men_only_acknowledged}
+          </p>
+        )}
+        <label className="flex items-start gap-2.5 cursor-pointer mt-3 pt-3 border-t border-gray-200">
+          <input
+            type="checkbox"
+            checked={form.policies_accepted}
+            onChange={(e) => updateField("policies_accepted", e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+            required
           />
           <span className="text-sm text-gray-900">
             I have read and agree to the{" "}
