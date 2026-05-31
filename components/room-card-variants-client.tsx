@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { StatusBadge } from "./status-badge";
+import { OptimizedPhoto } from "./optimized-photo";
 import { formatUSD, formatApproxKRW, getUsdPrices } from "@/lib/pricing";
 import type { RoomWithImages } from "@/lib/types";
 
@@ -134,11 +134,10 @@ export function RoomCardVariantSplit({ room }: { room: RoomWithImages }) {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden transition hover:shadow-md flex flex-col w-full">
         {mainImage && (
           <div className="relative h-64 w-full overflow-hidden flex-shrink-0">
-            <Image
+            <OptimizedPhoto
               src={mainImage.url}
               alt={mainImage.alt || room.name}
-              fill
-              className="object-cover group-hover:scale-105 transition duration-300"
+              className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition duration-300"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
             <div className="absolute top-3 right-3">
@@ -204,11 +203,10 @@ export function RoomCardVariantDescription({ room }: { room: RoomWithImages }) {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden transition hover:shadow-md flex flex-col w-full">
         {mainImage && (
           <div className="relative h-64 w-full overflow-hidden flex-shrink-0">
-            <Image
+            <OptimizedPhoto
               src={mainImage.url}
               alt={mainImage.alt || room.name}
-              fill
-              className="object-cover group-hover:scale-105 transition duration-300"
+              className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition duration-300"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
             <div className="absolute top-3 right-3">

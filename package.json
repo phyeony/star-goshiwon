@@ -11,6 +11,7 @@
     "start": "next start",
     "lint": "next lint",
     "seed": "npx tsx scripts/seed.ts",
+    "optimize-images": "node scripts/optimize-public-images.mjs",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "npm run verify && dotenv -e .env.production -- opennextjs-cloudflare build && opennextjs-cloudflare deploy --env=\"\" -- --keep-vars --secrets-file .env.production.secrets",
     "deploy:staging": "npm run verify && dotenv -e .env.staging -- opennextjs-cloudflare build && opennextjs-cloudflare deploy --env staging -- --keep-vars --secrets-file .env.staging.secrets",

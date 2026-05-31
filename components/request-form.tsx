@@ -245,7 +245,7 @@ export function RequestForm({
             type="checkbox"
             checked={form.bedding_prepaid}
             onChange={(e) => updateField("bedding_prepaid", e.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+            className="mt-0.5 h-4 w-4 min-h-4 min-w-4 flex-none rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
           />
           <span className="text-sm">
             <span className="font-semibold text-gray-900">
@@ -329,7 +329,7 @@ export function RequestForm({
             onChange={(e) =>
               updateField("men_only_acknowledged", e.target.checked)
             }
-            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
             required
           />
           <span className="text-sm text-gray-900">
@@ -346,7 +346,7 @@ export function RequestForm({
             type="checkbox"
             checked={form.policies_accepted}
             onChange={(e) => updateField("policies_accepted", e.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+            className="mt-0.5 h-4 w-4 min-h-4 min-w-4 flex-none rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
             required
           />
           <span className="text-sm text-gray-900">

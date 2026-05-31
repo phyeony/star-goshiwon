@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Image from "next/image";
+import { OptimizedPhoto } from "./optimized-photo";
 
 const facilities = [
   { src: "/images/guides/shared-kitchen/kitchen.jpg", label: "Shared Kitchen" },
@@ -59,12 +59,11 @@ export function SharedFacilities() {
             className="relative aspect-square overflow-hidden rounded-2xl border border-gray-200 group cursor-pointer"
             aria-label={`View ${item.label} photo`}
           >
-            <Image
+            <OptimizedPhoto
               src={item.src}
               alt={item.label}
-              fill
               sizes="(min-width: 768px) 25vw, 50vw"
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0" />
             <div className="absolute bottom-0 left-0 right-0 p-3 text-left">
@@ -117,13 +116,13 @@ export function SharedFacilities() {
           </button>
 
           <div className="relative w-full h-full p-16" onClick={(e) => e.stopPropagation()}>
-            <Image
+            <OptimizedPhoto
               src={facilities[lightboxIndex!].src}
               alt={facilities[lightboxIndex!].label}
-              fill
-              className="object-contain"
+              className="absolute inset-0 h-full w-full object-contain"
               sizes="100vw"
-              priority
+              loading="eager"
+              fetchPriority="high"
             />
           </div>
 

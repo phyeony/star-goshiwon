@@ -3,9 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 
-type Slide =
-  | { type: "image"; base: string }
-  | { type: "video"; src: string };
+type Slide = { type: "image"; base: string } | { type: "video"; src: string };
 
 const HERO_WIDTHS = [640, 1280, 1920, 2560] as const;
 
@@ -32,12 +30,14 @@ const variant = {
   subline: "Your life in the Heart of Seoul.",
   headlineOnly: false,
   description:
-    "Central Seoul. Private room. Men Only.\nThe cheapest way to experience Korea.",
+    "Central Seoul. Private room. Men\u00a0Only.\nThe cheapest way to experience Korea.",
 };
 
 export function HeroSlideshow() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [pricingMode, setPricingMode] = useState<"weekly" | "monthly">("monthly");
+  const [pricingMode, setPricingMode] = useState<"weekly" | "monthly">(
+    "monthly",
+  );
   const heroRef = useRef<HTMLDivElement>(null);
 
   const nextSlide = useCallback(() => {
@@ -148,7 +148,9 @@ export function HeroSlideshow() {
             <p
               className={`${variant.font} text-6xl sm:text-7xl lg:text-8xl leading-[1.05] text-white mb-2 hero-text-shadow-heavy`}
             >
-              {pricingMode === "weekly" ? variant.headlineWeekly : variant.headlineMonthly}
+              {pricingMode === "weekly"
+                ? variant.headlineWeekly
+                : variant.headlineMonthly}
             </p>
             <h2
               className={`${variant.font} ${
@@ -187,8 +189,18 @@ export function HeroSlideshow() {
         className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 hidden xl:flex items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-white backdrop-blur-sm border border-white/10 transition"
         aria-label="Previous image"
       >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15 19l-7-7 7-7"
+          />
         </svg>
       </button>
       <button
@@ -196,8 +208,18 @@ export function HeroSlideshow() {
         className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 hidden xl:flex items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-white backdrop-blur-sm border border-white/10 transition"
         aria-label="Next image"
       >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 5l7 7-7 7"
+          />
         </svg>
       </button>
 

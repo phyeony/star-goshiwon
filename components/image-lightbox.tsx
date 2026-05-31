@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Image from "next/image";
+import { OptimizedPhoto } from "./optimized-photo";
 import type { RoomImage } from "@/lib/types";
 
 interface ImageLightboxProps {
@@ -56,13 +56,13 @@ export function ImageGallery({ images, roomName }: ImageLightboxProps) {
           onClick={() => setLightboxIndex(0)}
           className="relative h-80 sm:h-96 w-full rounded-2xl overflow-hidden cursor-pointer group"
         >
-          <Image
+          <OptimizedPhoto
             src={images[0].url}
             alt={images[0].alt || roomName}
-            fill
-            className="object-cover group-hover:scale-105 transition duration-300"
+            className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition duration-300"
             sizes="(max-width: 1024px) 100vw, 66vw"
-            priority
+            loading="eager"
+            fetchPriority="high"
           />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition duration-300" />
           {images.length > 1 && (
@@ -81,11 +81,10 @@ export function ImageGallery({ images, roomName }: ImageLightboxProps) {
                 onClick={() => setLightboxIndex(i + 1)}
                 className="relative h-32 rounded-lg overflow-hidden cursor-pointer group"
               >
-                <Image
+                <OptimizedPhoto
                   src={img.url}
                   alt={img.alt || roomName}
-                  fill
-                  className="object-cover group-hover:scale-105 transition duration-300"
+                  className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition duration-300"
                   sizes="(max-width: 1024px) 33vw, 22vw"
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition duration-300" />
@@ -158,13 +157,13 @@ export function ImageGallery({ images, roomName }: ImageLightboxProps) {
 
           {/* Image */}
           <div className="relative w-full h-full p-16">
-            <Image
+            <OptimizedPhoto
               src={images[lightboxIndex!].url}
               alt={images[lightboxIndex!].alt || roomName}
-              fill
-              className="object-contain"
+              className="absolute inset-0 h-full w-full object-contain"
               sizes="100vw"
-              priority
+              loading="eager"
+              fetchPriority="high"
             />
           </div>
 
