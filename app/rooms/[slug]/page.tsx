@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { StatusBadge } from "@/components/status-badge";
+import { TrackEvent } from "@/components/analytics/track-event";
+import { GaEvent } from "@/components/analytics/ga-event";
+import { TrackLink } from "@/components/analytics/track-link";
 import { ImageGallery } from "@/components/image-lightbox";
 import { GuestReviews } from "@/components/guest-reviews";
 import { RequestForm } from "@/components/request-form";
@@ -95,6 +98,30 @@ export default async function RoomDetailPage({ params }: Props) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <TrackEvent
+        event="room_viewed"
+        properties={{
+          room_slug: room.slug,
+          room_name: room.name,
+          room_status: room.status,
+          weekly_price_usd: usd.weekly,
+        }}
+      />
+      <GaEvent
+        event="view_item"
+        params={{
+          currency: "USD",
+          value: usd.weekly,
+          items: [
+            {
+              item_id: room.slug,
+              item_name: room.name,
+              item_category: "room",
+              price: usd.weekly,
+            },
+          ],
+        }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(accommodationJsonLd) }}
@@ -217,7 +244,7 @@ export default async function RoomDetailPage({ params }: Props) {
               </table>
             </div>
             <p className="text-sm text-gray-500 mt-2">
-              Rates charged in USD via PayPal. A $70 refundable deposit (≈ ₩100,000) is prepaid with your booking and refunded via PayPal at the end of your stay. Bedding set: $15 USD, optional, prepaid with your booking. Towels included for stays of 4+ weeks.
+              Rates charged in USD via PayPal. A $70 refundable deposit (≈ ₩100,000) is prepaid with your booking and refunded via PayPal at the end of your stay. Bedding set: $15 USD, optional, prepaid with your booking — includes a pillow, blanket, towels, and shampoo.
             </p>
           </div>
         </div>
@@ -242,20 +269,24 @@ export default async function RoomDetailPage({ params }: Props) {
             />
 
             <div className="mt-6 pt-6 border-t border-gray-200 space-y-3">
-              <a
+              <TrackLink
+                event="contact_clicked"
+                properties={{ channel: "whatsapp", location: "room_sidebar", room_slug: room.slug }}
                 href={siteConfig.whatsapp}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition duration-150 ease-in-out"
               >
                 Ask on WhatsApp
-              </a>
-              <a
+              </TrackLink>
+              <TrackLink
+                event="contact_clicked"
+                properties={{ channel: "email", location: "room_sidebar", room_slug: room.slug }}
                 href={`mailto:${siteConfig.email}`}
                 className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition duration-150 ease-in-out"
               >
                 Email Us
-              </a>
+              </TrackLink>
             </div>
           </div>
         </div>

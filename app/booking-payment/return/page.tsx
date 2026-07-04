@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { GaEvent } from "@/components/analytics/ga-event";
 import { captureApprovedBookingPayment } from "@/lib/payments";
 import { formatUSD, formatApproxKRW } from "@/lib/pricing";
 
@@ -59,6 +60,23 @@ export default async function BookingPaymentReturnPage({
 
   return (
     <PaymentShell title="Payment received" tone="success">
+      <GaEvent
+        event="purchase"
+        params={{
+          transaction_id: token,
+          currency: "USD",
+          value: request.estimated_total,
+          items: [
+            {
+              item_id: request.room_slug,
+              item_name: request.rooms?.name || request.room_slug,
+              item_category: "room",
+              price: request.estimated_total,
+              quantity: 1,
+            },
+          ],
+        }}
+      />
       <p className="text-sm text-gray-600">
         Your booking is confirmed. We sent a confirmation email to{" "}
         <strong>{request.guest_email}</strong>.

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { TrackEvent } from "@/components/analytics/track-event";
 import { getGuide, guides } from "@/lib/guides-data";
 
 interface Props {
@@ -222,6 +223,10 @@ export default async function GuidePage({ params }: Props) {
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <TrackEvent
+        event="guide_viewed"
+        properties={{ guide_slug: guide.slug, guide_title: guide.title }}
+      />
       <nav className="mb-8 text-sm text-gray-500">
         <Link href="/guides" className="hover:text-indigo-600 transition">
           Guides

@@ -5,6 +5,7 @@ import {
   markPaymentFailedByOrderId,
   markPaymentPaidByOrderId,
 } from "@/lib/payments";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 type PayPalWebhookEvent = {
   event_type?: string;
@@ -51,16 +52,40 @@ export async function POST(req: NextRequest) {
       case "CHECKOUT.ORDER.APPROVED":
         await captureApprovedBookingPayment({ orderId });
         break;
-      case "PAYMENT.CAPTURE.COMPLETED":
-        await markPaymentPaidByOrderId(orderId);
+      case "PAYMENT.CAPTURE.COMPLETED": {
+        const paidRequest = await markPaymentPaidByOrderId(orderId);
+        if (paidRequest) {
+          const posthog = getPostHogClient();
+          posthog.capture({
+            distinctId: paidRequest.guest_email,
+            event: "payment_completed",
+            properties: {
+              payment_order_id: orderId,
+              room_slug: paidRequest.room_slug,
+              amount_usd: paidRequest.estimated_total,
+              check_in_date: paidRequest.check_in_date,
+              check_out_date: paidRequest.check_out_date,
+              request_id: paidRequest.id,
+            },
+          });
+          await posthog.shutdown();
+        }
         break;
+      }
       case "PAYMENT.CAPTURE.DENIED":
-      case "CHECKOUT.PAYMENT-APPROVAL.REVERSED":
-        await markPaymentFailedByOrderId(
-          orderId,
-          event.resource?.status || event.event_type || "PayPal payment failed"
-        );
+      case "CHECKOUT.PAYMENT-APPROVAL.REVERSED": {
+        const reason =
+          event.resource?.status || event.event_type || "PayPal payment failed";
+        await markPaymentFailedByOrderId(orderId, reason);
+        const posthog = getPostHogClient();
+        posthog.capture({
+          distinctId: orderId,
+          event: "payment_failed",
+          properties: { payment_order_id: orderId, reason },
+        });
+        await posthog.shutdown();
         break;
+      }
       case "PAYMENT.CAPTURE.PENDING":
         break;
       default:

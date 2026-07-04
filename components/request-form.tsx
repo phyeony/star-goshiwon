@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import posthog from "posthog-js";
+import { trackGaEvent } from "@/lib/ga";
 import type { Room } from "@/lib/types";
 import {
   calculateEstimate,
@@ -45,17 +47,29 @@ export function RequestForm({
 
   const selectedRoom = rooms.find((r) => r.slug === form.room_slug);
   const [estimate, setEstimate] = useState<PricingBreakdown | null>(null);
+  // Once-per-form-session funnel markers (started / saw a price)
+  const formStarted = useRef(false);
+  const estimateViewed = useRef(false);
 
   useEffect(() => {
     if (selectedRoom && form.check_in_date && form.check_out_date) {
-      setEstimate(
-        calculateEstimate(
-          getUsdPrices(selectedRoom.slug),
-          form.check_in_date,
-          form.check_out_date,
-          { beddingPrepaid: form.bedding_prepaid },
-        ),
+      const breakdown = calculateEstimate(
+        getUsdPrices(selectedRoom.slug),
+        form.check_in_date,
+        form.check_out_date,
+        { beddingPrepaid: form.bedding_prepaid },
       );
+      setEstimate(breakdown);
+      if (!estimateViewed.current && breakdown.total > 0) {
+        estimateViewed.current = true;
+        posthog.capture("price_estimate_viewed", {
+          room_slug: selectedRoom.slug,
+          check_in_date: form.check_in_date,
+          check_out_date: form.check_out_date,
+          nights: breakdown.weeks * 7 + breakdown.days,
+          estimated_total: breakdown.total,
+        });
+      }
     } else {
       setEstimate(null);
     }
@@ -67,6 +81,14 @@ export function RequestForm({
   ]);
 
   function updateField(field: string, value: string | number | boolean) {
+    if (!formStarted.current) {
+      formStarted.current = true;
+      posthog.capture("booking_form_started", {
+        room_slug: form.room_slug,
+        embedded_on_room_page: Boolean(singleRoom),
+        first_field: field,
+      });
+    }
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => {
       const next = { ...prev };
@@ -90,6 +112,10 @@ export function RequestForm({
       const data = await res.json();
 
       if (!res.ok) {
+        posthog.capture("booking_request_failed", {
+          room_slug: form.room_slug,
+          error: data.error || "validation_error",
+        });
         if (data.errors) {
           const fieldErrors: Record<string, string> = {};
           for (const err of data.errors) {
@@ -97,6 +123,10 @@ export function RequestForm({
               fieldErrors[err.path[0]] = err.message;
             }
           }
+          posthog.capture("booking_form_validation_error", {
+            room_slug: form.room_slug,
+            fields: Object.keys(fieldErrors),
+          });
           setErrors(fieldErrors);
         } else {
           setErrors({ _form: data.error || "Something went wrong" });
@@ -104,8 +134,26 @@ export function RequestForm({
         return;
       }
 
+      posthog.identify(form.guest_email, { name: form.guest_name });
+      posthog.capture("booking_request_submitted", {
+        room_slug: form.room_slug,
+        check_in_date: form.check_in_date,
+        check_out_date: form.check_out_date,
+        bedding_prepaid: form.bedding_prepaid,
+        estimated_total: estimate?.total,
+        request_id: data.id,
+      });
+      // GA4 recommended lead event — mark as a Key Event in the GA UI
+      trackGaEvent("generate_lead", {
+        currency: "USD",
+        value: estimate?.total,
+      });
       router.push(`/request-to-book/success?id=${data.id}`);
     } catch {
+      posthog.capture("booking_request_failed", {
+        room_slug: form.room_slug,
+        error: "network_error",
+      });
       setErrors({ _form: "Network error. Please try again." });
     } finally {
       setSubmitting(false);
@@ -252,7 +300,8 @@ export function RequestForm({
               Add bedding set — {formatUSD(BEDDING_FEE_USD)} prepaid
             </span>
             <span className="block text-xs text-gray-500 mt-0.5">
-              Optional. If you don&rsquo;t add it, bedding is not provided.
+              Optional. Includes a pillow, blanket, towels, and shampoo. If you
+              don&rsquo;t add it, bedding is not provided.
             </span>
           </span>
         </label>

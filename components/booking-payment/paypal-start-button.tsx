@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import posthog from "posthog-js";
+import { trackGaEvent } from "@/lib/ga";
 
 interface PayPalStartButtonProps {
   href: string;
@@ -29,13 +31,19 @@ export function PayPalStartButton({ href }: PayPalStartButtonProps) {
         error?: string;
       };
       if (res.ok && data.redirectUrl) {
+        posthog.capture("paypal_checkout_started");
+        trackGaEvent("begin_checkout", { currency: "USD" });
         window.location.assign(data.redirectUrl);
         return;
       }
 
+      posthog.capture("paypal_checkout_failed", {
+        error: data.error || "redirect_failed",
+      });
       setError(data.error || "We could not open PayPal. Please try again or contact us.");
       setLoading(false);
     } catch {
+      posthog.capture("paypal_checkout_failed", { error: "network_error" });
       setError("We could not open PayPal. Please check your connection and try again.");
       setLoading(false);
     }

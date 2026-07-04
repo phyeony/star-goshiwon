@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { TrackEvent } from "@/components/analytics/track-event";
 import {
   ReviewControlsAndList,
   ReviewScoreBreakdown,
@@ -16,6 +17,7 @@ export const metadata: Metadata = {
 export default function ReviewsPage() {
   return (
     <>
+      <TrackEvent event="reviews_viewed" />
       <section className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <nav className="mb-6 text-sm text-gray-500">

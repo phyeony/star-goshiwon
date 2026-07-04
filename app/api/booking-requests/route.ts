@@ -3,6 +3,7 @@ import { bookingRequestSchema } from "@/lib/validation";
 import { getRoomBySlug, createBookingRequest } from "@/lib/queries";
 import { calculateEstimate, getUsdPrices } from "@/lib/pricing";
 import { sendGuestConfirmation, sendAdminNotification } from "@/lib/email";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function POST(req: NextRequest) {
   try {
@@ -66,9 +67,23 @@ export async function POST(req: NextRequest) {
       breakdown: estimate,
     };
 
+    const posthog = getPostHogClient();
+    posthog.capture({
+      distinctId: data.guest_email,
+      event: "booking_request_created",
+      properties: {
+        room_slug: data.room_slug,
+        check_in_date: data.check_in_date,
+        check_out_date: data.check_out_date,
+        estimated_total: estimate.total,
+        bedding_prepaid: data.bedding_prepaid,
+        request_id: bookingRequest.id,
+      },
+    });
     const results = await Promise.allSettled([
       sendGuestConfirmation(emailData),
       sendAdminNotification(emailData),
+      posthog.shutdown(),
     ]);
     for (const r of results) {
       if (r.status === "rejected") console.error("Email send failed:", r.reason);

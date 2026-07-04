@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import posthog from "posthog-js";
+import { posthogEnabled } from "@/lib/analytics";
 import { OptimizedPhoto } from "./optimized-photo";
 import type { RoomImage } from "@/lib/types";
 
@@ -12,6 +14,18 @@ interface ImageLightboxProps {
 export function ImageGallery({ images, roomName }: ImageLightboxProps) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const isOpen = lightboxIndex !== null;
+  // Photo engagement is a strong booking-intent signal; fire once per visit
+  const galleryTracked = useRef(false);
+
+  useEffect(() => {
+    if (isOpen && !galleryTracked.current && posthogEnabled) {
+      galleryTracked.current = true;
+      posthog.capture("room_photos_viewed", {
+        room_name: roomName,
+        photo_count: images.length,
+      });
+    }
+  }, [isOpen, roomName, images.length]);
 
   const close = useCallback(() => setLightboxIndex(null), []);
 

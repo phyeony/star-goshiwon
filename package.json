@@ -31,6 +31,8 @@
     "@supabase/supabase-js": "^2.49.1",
     "next": "^15.1.0",
     "nodemailer": "^8.0.4",
+    "posthog-js": "^1.383.2",
+    "posthog-node": "^5.36.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "worker-mailer": "^1.2.1",

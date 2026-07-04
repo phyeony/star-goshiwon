@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SectionTitle } from "@/components/section-title";
+import { TrackLink } from "@/components/analytics/track-link";
 import { siteConfig } from "@/lib/site-data";
 
 export const metadata: Metadata = {
@@ -35,8 +36,13 @@ export default function ContactPage() {
 
       <div className="space-y-4">
         {contactMethods.map((method) => (
-          <a
+          <TrackLink
             key={method.title}
+            event="contact_clicked"
+            properties={{
+              channel: method.title.toLowerCase(),
+              location: "contact_page",
+            }}
             href={method.href}
             target={method.href.startsWith("http") ? "_blank" : undefined}
             rel={
@@ -64,7 +70,7 @@ export default function ContactPage() {
                 </span>
               )}
             </div>
-          </a>
+          </TrackLink>
         ))}
       </div>
 

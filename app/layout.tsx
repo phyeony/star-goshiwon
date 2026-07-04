@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import { PostHogProvider } from "@/components/analytics/posthog-provider";
+import { PostHogPageview } from "@/components/analytics/posthog-pageview";
+import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { siteConfig } from "@/lib/site-data";
 import "./globals.css";
 
@@ -119,9 +123,15 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(lodgingJsonLd) }}
         />
-        <Header />
-        <main className="min-h-screen">{children}</main>
-        <Footer />
+        <PostHogProvider>
+          <Suspense fallback={null}>
+            <PostHogPageview />
+          </Suspense>
+          <Header />
+          <main className="min-h-screen">{children}</main>
+          <Footer />
+          <GoogleAnalytics />
+        </PostHogProvider>
       </body>
     </html>
   );
