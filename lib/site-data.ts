@@ -53,12 +53,12 @@ export const faqs = [
   {
     question: "What is included in the rent?",
     answer:
-      "Rent includes utilities (electricity, water, gas, internet), basic food supplies (rice, kimchi, ramen), access to shared kitchen and laundry facilities. Every room comes with a bed, desk & chair, WiFi, mini fridge, AC/Heating, shelf & cabinet, and an outside-facing window. A bedding set is available for $15 USD, prepaid via PayPal with your booking.",
+      "Rent includes utilities (electricity, water, gas, internet), basic food supplies (rice, kimchi), access to shared kitchen and laundry facilities. Every room comes with a bed, desk & chair, WiFi, mini fridge, AC/Heating, shelf & cabinet, and an outside-facing window. A bedding set is available for $15 USD, prepaid via PayPal with your booking, and includes a pillow, blanket, towels, and shampoo.",
   },
   {
     question: "What is the minimum stay?",
     answer:
-      "The minimum stay is 7 days (1 week). If you stay 4 weeks or longer, you get a 15% discount automatically applied to your rate. Towels are provided for monthly stays only.",
+      "The minimum stay is 7 days (1 week). If you stay 4 weeks or longer, you get a 15% discount automatically applied to your rate.",
   },
   {
     question: "Can I see the room before booking?",

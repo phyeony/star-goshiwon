@@ -34,7 +34,6 @@ Our shared kitchen is equipped with:
 - Water purifier
 - Microwave
 - Rice cooker
-- Instant noodles
 - Kimchi
 
 ## Rice Cooker
@@ -44,10 +43,6 @@ Our shared kitchen is equipped with:
 The picture above shows the rice cooker. You can use the ladle provided to scoop rice from the rice cooker.
 
 Please return the rice cooker handle to its original position after use. If it is left in the wrong position, it may cause an unpleasant odor and affect the quality of the rice.
-
-## Instant Noodles
-
-Instant noodles are located in the drawer below. Please feel free to enjoy them.
 
 ## Kimchi
 

@@ -23,7 +23,7 @@ Shared facilities usually include:
 
 Monthly rent typically ranges from ₩250,000 to ₩600,000 depending on the room size, location, and whether it has a private bathroom. This usually includes:
 - All utilities (electricity, water, gas, internet)
-- Basic food supplies (rice, kimchi, ramen, eggs)
+- Basic food supplies (rice, kimchi, eggs)
 - Building maintenance
 
 Compared to a studio apartment (원룸) that requires a deposit of ₩5,000,000 or more plus monthly rent, a goshiwon is significantly more accessible — especially for short-term stays.

@@ -144,7 +144,8 @@ export default function PoliciesPage() {
             </li>
             <li>
               The optional <strong>$15 bedding set</strong> (≈ ₩20,000) if you choose to add
-              it. If you don&rsquo;t add it, bedding is not provided.
+              it — it includes a pillow, blanket, towels, and shampoo. If you
+              don&rsquo;t add it, bedding is not provided.
             </li>
             <li>
               A refundable <strong>$70 security deposit</strong>{" "}
