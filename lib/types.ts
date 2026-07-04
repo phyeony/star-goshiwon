@@ -92,6 +92,9 @@ export interface BookingRequest {
   payment_token_hash: string | null;
   payment_token_created_at: string | null;
   payment_error: string;
+  refund_amount: number;
+  refunded_at: string | null;
+  refund_id: string | null;
   notes: string;
   status: BookingStatus;
   admin_notes: string;
@@ -393,6 +396,9 @@ export type BookingRequestUpdate = Partial<
     | "payment_token_hash"
     | "payment_token_created_at"
     | "payment_error"
+    | "refund_amount"
+    | "refunded_at"
+    | "refund_id"
   >
 >;
 

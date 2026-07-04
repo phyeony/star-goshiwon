@@ -89,6 +89,10 @@ CREATE TABLE booking_requests (
   payment_token_hash TEXT,
   payment_token_created_at TIMESTAMPTZ,
   payment_error TEXT NOT NULL DEFAULT '',
+  -- Refunds (e.g. the security deposit returned at end of stay). Whole USD.
+  refund_amount INTEGER NOT NULL DEFAULT 0,
+  refunded_at TIMESTAMPTZ,
+  refund_id TEXT,
   notes TEXT NOT NULL DEFAULT '',
   status booking_status NOT NULL DEFAULT 'new',
   admin_notes TEXT NOT NULL DEFAULT '',

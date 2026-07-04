@@ -282,6 +282,63 @@ export function approveFakePayPalOrder(orderId: string) {
   orders.set(orderId, { ...order, status: "APPROVED" });
 }
 
+export interface PayPalRefund {
+  id: string;
+  status: string;
+}
+
+/**
+ * Refund a captured PayPal payment, in full or in part. Omit amountUsd for a
+ * full refund. Note: per PayPal's post-2019 policy, the original seller fee is
+ * not returned, and a pro-rated share of the fixed fee is retained on partial
+ * refunds — the guest still receives the full refunded amount.
+ */
+export async function refundPayPalCapture(
+  captureId: string,
+  input: {
+    amountUsd?: number;
+    currency?: string;
+    noteToPayer?: string;
+    invoiceId?: string;
+    idempotencyKey: string;
+  }
+): Promise<PayPalRefund> {
+  if (isFakePayPalMode()) {
+    return { id: `FAKE-REFUND-${captureId}`, status: "COMPLETED" };
+  }
+
+  const token = await getAccessToken();
+  const body: Record<string, unknown> = {};
+  if (typeof input.amountUsd === "number") {
+    body.amount = {
+      value: input.amountUsd.toFixed(2),
+      currency_code: input.currency ?? "USD",
+    };
+  }
+  if (input.noteToPayer) body.note_to_payer = input.noteToPayer;
+  if (input.invoiceId) body.invoice_id = input.invoiceId;
+
+  const res = await fetch(
+    `${getBaseUrl()}/v2/payments/captures/${captureId}/refund`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        "PayPal-Request-Id": input.idempotencyKey,
+        Prefer: "return=representation",
+      },
+      body: JSON.stringify(body),
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error(`PayPal refund failed: ${res.status} ${await res.text()}`);
+  }
+
+  return (await res.json()) as PayPalRefund;
+}
+
 export function getCaptureId(order: PayPalOrder): string | null {
   for (const unit of order.purchase_units ?? []) {
     for (const capture of unit.payments?.captures ?? []) {

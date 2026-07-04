@@ -14,16 +14,21 @@ import {
   updatePaymentOrder,
   updatePaymentOrderByProviderOrderId,
 } from "./queries";
-import { calculateEstimate, getUsdPrices } from "./pricing";
+import { calculateEstimate, getUsdPrices, DEPOSIT_USD } from "./pricing";
 import type { BookingRequestWithRoom, PaymentOrder } from "./types";
 import {
   capturePayPalOrder,
   createPayPalOrder,
   getCaptureId,
   getPayPalOrder,
+  refundPayPalCapture,
   type PayPalOrder,
 } from "./paypal";
-import { sendPaymentConfirmedEmail, sendPaymentLinkEmail } from "./email";
+import {
+  sendDepositRefundEmail,
+  sendPaymentConfirmedEmail,
+  sendPaymentLinkEmail,
+} from "./email";
 
 export const PAYMENT_LINK_TTL_HOURS = 48;
 const PAYMENT_TOKEN_BYTES = 32;
@@ -577,4 +582,71 @@ export async function markPaymentPaidByOrderId(orderId: string) {
     });
   }
   return markPaymentPaid(request, order, getCaptureId(order), paymentOrder);
+}
+
+export const DEFAULT_DEPOSIT_REFUND_USD = DEPOSIT_USD;
+
+/**
+ * Refund all or part of a paid booking via PayPal — defaults to the security
+ * deposit. A partial refund keeps the booking 'paid'; once the cumulative
+ * refunded amount reaches the amount paid, payment_status flips to 'refunded'.
+ */
+export async function refundBookingDeposit(input: {
+  requestId: string;
+  amountUsd?: number;
+}) {
+  const request = await getBookingRequestById(input.requestId);
+  if (!request) throw new Error("Booking request not found");
+  if (request.payment_status !== "paid") {
+    throw new Error("Only a paid booking can be refunded");
+  }
+
+  const captureId = request.payment_capture_id;
+  if (!captureId) {
+    throw new Error("No PayPal capture is on file for this booking");
+  }
+
+  const amount = Math.round(input.amountUsd ?? DEPOSIT_USD);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    throw new Error("Refund amount must be greater than 0");
+  }
+
+  const paidAmount = request.payment_amount ?? request.estimated_total;
+  const alreadyRefunded = request.refund_amount ?? 0;
+  if (alreadyRefunded + amount > paidAmount) {
+    throw new Error(
+      `Refund of $${amount} exceeds the remaining balance ($${paidAmount - alreadyRefunded})`
+    );
+  }
+
+  const newRefundTotal = alreadyRefunded + amount;
+  const refund = await refundPayPalCapture(captureId, {
+    amountUsd: amount,
+    currency: request.payment_currency ?? "USD",
+    noteToPayer: "Security deposit refund — Seoul Goshiwon",
+    // Stable per (booking, cumulative amount) so an accidental retry is
+    // idempotent rather than double-refunding.
+    idempotencyKey: `ref-${request.id.slice(0, 8)}-${newRefundTotal}`,
+    invoiceId: `refund-${request.id.slice(0, 8)}-${newRefundTotal}`,
+  });
+
+  const fullyRefunded = newRefundTotal >= paidAmount;
+  await updateBookingRequest(request.id, {
+    refund_amount: newRefundTotal,
+    refunded_at: new Date().toISOString(),
+    refund_id: refund.id,
+    ...(fullyRefunded ? { payment_status: "refunded" as const } : {}),
+  });
+
+  await sendDepositRefundEmail({
+    guest_name: request.guest_name,
+    guest_email: request.guest_email,
+    room_name: getRoomName(request),
+    refund_amount: amount,
+    is_deposit_refund: !fullyRefunded,
+  });
+
+  const updated = await getBookingRequestById(request.id);
+  if (!updated) throw new Error("Updated booking request not found");
+  return { request: updated, refundId: refund.id, fullyRefunded };
 }

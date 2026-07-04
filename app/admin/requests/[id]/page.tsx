@@ -205,6 +205,21 @@ export default async function RequestDetailPage({ params }: Props) {
                   </dd>
                 </div>
               )}
+              {request.refund_amount > 0 && (
+                <div>
+                  <dt className="text-xs font-bold text-gray-500 uppercase">
+                    환불 금액
+                  </dt>
+                  <dd className="text-base text-gray-900 mt-1">
+                    {formatUSD(request.refund_amount)}
+                    {request.refunded_at && (
+                      <span className="ml-2 text-sm text-gray-500">
+                        {new Date(request.refunded_at).toLocaleString("ko-KR")}
+                      </span>
+                    )}
+                  </dd>
+                </div>
+              )}
               {request.payment_expires_at && request.payment_status !== "paid" && (
                 <div>
                   <dt className="text-xs font-bold text-gray-500 uppercase">

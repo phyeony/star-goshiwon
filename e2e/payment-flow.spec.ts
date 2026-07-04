@@ -84,6 +84,64 @@ test("guest can cancel fake PayPal and retry from the site link", async ({
   await expect(page.getByRole("heading", { name: "Review and pay securely" })).toBeVisible();
 });
 
+test("admin can refund the deposit on a paid booking", async ({
+  page,
+  request,
+}) => {
+  const fixture = await createPaymentFixture(request);
+
+  // Drive a real fake-PayPal payment so a capture id is stored on the booking.
+  await page.goto(fixture.payUrl);
+  await page.getByRole("button", { name: "Continue to PayPal" }).click();
+  await expect(page.getByRole("heading", { name: "Fake PayPal" })).toBeVisible();
+  await page.getByRole("link", { name: "Approve payment" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Payment received" })
+  ).toBeVisible();
+
+  // Refund only the $70 deposit — booking stays paid.
+  await clearEmailOutbox(request);
+  const partial = await refund(request, fixture.id, 70);
+  expect(partial.fully_refunded).toBe(false);
+  expect(partial.refund_amount).toBe(70);
+  expect(partial.payment_status).toBe("paid");
+
+  const refundEmail = await findEmail(request, "has been refunded");
+  expect(refundEmail.html).toContain("security deposit");
+  expect(refundEmail.html).toContain("$70");
+
+  // Refunding more than the remaining balance is rejected.
+  const overRes = await request.post("/api/test/refund", {
+    data: { requestId: fixture.id, amountUsd: 10_000 },
+  });
+  expect(overRes.ok()).toBeFalsy();
+  expect((await overRes.json()).error).toContain("exceeds the remaining balance");
+
+  // Refunding the remaining balance flips the booking to refunded.
+  const remaining = 158 - 70; // private-shower 1 week ($88) + deposit ($70)
+  const full = await refund(request, fixture.id, remaining);
+  expect(full.fully_refunded).toBe(true);
+  expect(full.payment_status).toBe("refunded");
+  expect(full.refund_amount).toBe(158);
+});
+
+async function refund(
+  request: APIRequestContext,
+  requestId: string,
+  amountUsd: number
+) {
+  const response = await request.post("/api/test/refund", {
+    data: { requestId, amountUsd },
+  });
+  expect(response.ok()).toBeTruthy();
+  return (await response.json()) as {
+    refund_id: string;
+    fully_refunded: boolean;
+    refund_amount: number;
+    payment_status: string;
+  };
+}
+
 async function createPaymentFixture(
   request: APIRequestContext,
   body: { expired?: boolean; paid?: boolean; sendEmail?: boolean } = {}

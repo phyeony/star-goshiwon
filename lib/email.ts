@@ -367,6 +367,63 @@ Seoul Goshiwon by Star Goshiwon`;
   ]);
 }
 
+interface RefundEmailData {
+  guest_name: string;
+  guest_email: string;
+  room_name: string;
+  refund_amount: number;
+  is_deposit_refund: boolean;
+}
+
+export async function sendDepositRefundEmail(data: RefundEmailData) {
+  const label = data.is_deposit_refund
+    ? "security deposit"
+    : "booking payment";
+  const subject = `Your ${label} has been refunded — Seoul Goshiwon by Star Goshiwon`;
+  const html = wrapEmailHtml(`
+    <h1 style="font-size: 22px; margin: 0 0 16px;">Your refund is on its way</h1>
+    <p>Hi ${data.guest_name},</p>
+    <p>We have refunded your ${label} of <strong>${formatTotal(data.refund_amount)}</strong> to the PayPal account used for your booking.</p>
+    <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin: 20px 0;">
+      <p style="margin: 0 0 8px;"><strong>Room:</strong> ${data.room_name}</p>
+      <p style="margin: 0;"><strong>Refunded:</strong> ${formatTotal(data.refund_amount)}</p>
+    </div>
+    <p style="font-size: 13px; color: #6b7280;">PayPal will send its own refund receipt separately. Depending on your bank, it may take a few business days to appear, and the credited amount may differ slightly due to exchange-rate movement.</p>
+    <p>Thank you for staying with us.</p>
+    <p>Best regards,<br /><strong>Seoul Goshiwon by Star Goshiwon</strong></p>
+  `);
+
+  const text = `Hi ${data.guest_name},
+
+We have refunded your ${label} of ${formatTotal(data.refund_amount)} to the PayPal account used for your booking.
+
+Room: ${data.room_name}
+Refunded: ${formatTotal(data.refund_amount)}
+
+PayPal will send its own refund receipt separately. Depending on your bank, it may take a few business days to appear, and the credited amount may differ slightly due to exchange-rate movement.
+
+Thank you for staying with us.
+
+Best regards,
+Seoul Goshiwon by Star Goshiwon`;
+
+  await Promise.all([
+    sendEmail(data.guest_email, subject, text, html),
+    sendEmail(
+      adminEmail,
+      `환불 처리됨 - ${data.guest_name}님`,
+      `${data.is_deposit_refund ? "보증금" : "결제 금액"} 환불이 처리되었습니다.
+
+고객명: ${data.guest_name}
+이메일: ${data.guest_email}
+객실: ${data.room_name}
+환불 금액: ${formatTotal(data.refund_amount)}
+
+확인하기: ${siteConfig.url}/admin/requests`
+    ),
+  ]);
+}
+
 export async function sendEmail(
   to: string,
   subject: string,

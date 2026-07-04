@@ -15,6 +15,8 @@ const state = vi.hoisted(() => ({
   sentConfirmedEmails: 0,
   cancelledRoomBlocks: [] as string[],
   confirmedRoomBlocks: [] as string[],
+  refundCalls: [] as { captureId: string; amountUsd?: number }[],
+  sentRefundEmails: [] as { refund_amount: number; is_deposit_refund: boolean }[],
 }));
 
 vi.mock("./queries", () => ({
@@ -123,6 +125,15 @@ vi.mock("./paypal", () => ({
       (capture: any) => capture.status === "COMPLETED"
     )?.id ?? null
   ),
+  refundPayPalCapture: vi.fn(
+    async (captureId: string, input: { amountUsd?: number }) => {
+      state.refundCalls.push({ captureId, amountUsd: input.amountUsd });
+      return {
+        id: `REFUND-${captureId}-${state.refundCalls.length}`,
+        status: "COMPLETED",
+      };
+    }
+  ),
 }));
 
 vi.mock("./email", () => ({
@@ -130,12 +141,21 @@ vi.mock("./email", () => ({
     state.sentConfirmedEmails += 1;
   }),
   sendPaymentLinkEmail: vi.fn(async () => undefined),
+  sendDepositRefundEmail: vi.fn(
+    async (data: { refund_amount: number; is_deposit_refund: boolean }) => {
+      state.sentRefundEmails.push({
+        refund_amount: data.refund_amount,
+        is_deposit_refund: data.is_deposit_refund,
+      });
+    }
+  ),
 }));
 
 import {
   captureApprovedBookingPayment,
   issuePaymentTokenForRequest,
   markPaymentPaidByOrderId,
+  refundBookingDeposit,
   startBookingPayment,
 } from "./payments";
 import { createPayPalOrder, capturePayPalOrder } from "./paypal";
@@ -249,6 +269,97 @@ describe("PayPal payment flow", () => {
   });
 });
 
+describe("deposit refund", () => {
+  beforeEach(() => {
+    state.booking = makeBooking({
+      status: "confirmed",
+      payment_status: "paid",
+      payment_order_id: "ORDER-1",
+      payment_capture_id: "CAPTURE-1",
+      payment_amount: 205,
+    });
+    state.paymentOrders = [];
+    state.refundCalls = [];
+    state.sentRefundEmails = [];
+    vi.clearAllMocks();
+  });
+
+  it("refunds the $70 deposit by default, keeps the booking paid, and records the refund", async () => {
+    const result = await refundBookingDeposit({ requestId: "request-1" });
+
+    expect(state.refundCalls).toEqual([
+      { captureId: "CAPTURE-1", amountUsd: 70 },
+    ]);
+    expect(result.fullyRefunded).toBe(false);
+    expect(state.booking?.payment_status).toBe("paid");
+    expect(state.booking?.refund_amount).toBe(70);
+    expect(state.booking?.refund_id).toBe("REFUND-CAPTURE-1-1");
+    expect(state.booking?.refunded_at).toBeTruthy();
+    expect(state.sentRefundEmails).toEqual([
+      { refund_amount: 70, is_deposit_refund: true },
+    ]);
+  });
+
+  it("honors an explicit partial amount", async () => {
+    await refundBookingDeposit({ requestId: "request-1", amountUsd: 30 });
+
+    expect(state.refundCalls[0].amountUsd).toBe(30);
+    expect(state.booking?.refund_amount).toBe(30);
+    expect(state.booking?.payment_status).toBe("paid");
+  });
+
+  it("flips payment_status to refunded once the full amount is returned", async () => {
+    const result = await refundBookingDeposit({
+      requestId: "request-1",
+      amountUsd: 205,
+    });
+
+    expect(result.fullyRefunded).toBe(true);
+    expect(state.booking?.payment_status).toBe("refunded");
+    expect(state.booking?.refund_amount).toBe(205);
+    expect(state.sentRefundEmails).toEqual([
+      { refund_amount: 205, is_deposit_refund: false },
+    ]);
+  });
+
+  it("accumulates across multiple partial refunds and flips at the total", async () => {
+    await refundBookingDeposit({ requestId: "request-1", amountUsd: 70 });
+    await refundBookingDeposit({ requestId: "request-1", amountUsd: 135 });
+
+    expect(state.booking?.refund_amount).toBe(205);
+    expect(state.booking?.payment_status).toBe("refunded");
+    expect(state.refundCalls).toHaveLength(2);
+  });
+
+  it("rejects a refund that exceeds the remaining balance", async () => {
+    await expect(
+      refundBookingDeposit({ requestId: "request-1", amountUsd: 300 })
+    ).rejects.toThrow(/exceeds the remaining balance/);
+    expect(state.refundCalls).toHaveLength(0);
+  });
+
+  it("rejects refunding a booking that is not paid", async () => {
+    state.booking = makeBooking({ payment_status: "pending" });
+
+    await expect(
+      refundBookingDeposit({ requestId: "request-1" })
+    ).rejects.toThrow(/Only a paid booking/);
+    expect(state.refundCalls).toHaveLength(0);
+  });
+
+  it("rejects refunding when no PayPal capture is on file", async () => {
+    state.booking = makeBooking({
+      payment_status: "paid",
+      payment_capture_id: null,
+    });
+
+    await expect(
+      refundBookingDeposit({ requestId: "request-1" })
+    ).rejects.toThrow(/No PayPal capture/);
+    expect(state.refundCalls).toHaveLength(0);
+  });
+});
+
 function makeBooking(
   overrides: Partial<BookingRequestWithRoom> = {}
 ): BookingRequestWithRoom {
@@ -277,6 +388,9 @@ function makeBooking(
     payment_token_hash: null,
     payment_token_created_at: null,
     payment_error: "",
+    refund_amount: 0,
+    refunded_at: null,
+    refund_id: null,
     notes: "",
     status: "approved",
     admin_notes: "",

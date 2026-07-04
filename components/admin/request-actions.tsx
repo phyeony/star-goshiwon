@@ -8,6 +8,7 @@ import type {
   EmailTemplate,
 } from "@/lib/types";
 import { BOOKING_STATUS_LABELS, PAYMENT_STATUS_LABELS_KO } from "@/lib/types";
+import { DEPOSIT_USD, formatUSD } from "@/lib/pricing";
 import {
   EmailComposer,
   type EmailComposerMode,
@@ -39,6 +40,57 @@ export function RequestActions({
   const [composerMode, setComposerMode] = useState<EmailComposerMode | null>(
     null,
   );
+
+  const paidAmount = request.payment_amount ?? request.estimated_total;
+  const refundedSoFar = request.refund_amount ?? 0;
+  const remainingRefundable = Math.max(0, paidAmount - refundedSoFar);
+  const [showRefund, setShowRefund] = useState(false);
+  const [refundAmount, setRefundAmount] = useState(
+    String(Math.min(DEPOSIT_USD, remainingRefundable)),
+  );
+  const [refunding, setRefunding] = useState(false);
+  const [refundError, setRefundError] = useState("");
+
+  async function handleRefund() {
+    const amount = Number(refundAmount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setRefundError("Enter an amount greater than 0.");
+      return;
+    }
+    if (amount > remainingRefundable) {
+      setRefundError(
+        `Amount exceeds the refundable balance (${formatUSD(remainingRefundable)}).`,
+      );
+      return;
+    }
+    if (
+      !window.confirm(
+        `Refund ${formatUSD(amount)} to ${request.guest_name} via PayPal? This cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+
+    setRefunding(true);
+    setRefundError("");
+    try {
+      const res = await fetch(`/api/admin/requests/${request.id}/refund`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount_usd: amount }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || "Refund failed");
+      }
+      setShowRefund(false);
+      router.refresh();
+    } catch (err) {
+      setRefundError(err instanceof Error ? err.message : "Refund failed");
+    } finally {
+      setRefunding(false);
+    }
+  }
 
   useEffect(() => {
     if (!composerMode) return;
@@ -156,6 +208,91 @@ export function RequestActions({
             이메일 보내기
           </button>
         </div>
+
+        {(isPaid || refundedSoFar > 0) && (
+          <>
+            <hr className="border-gray-200" />
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-semibold text-gray-900">환불</h4>
+                {refundedSoFar > 0 && (
+                  <span className="text-xs text-gray-500">
+                    환불됨: {formatUSD(refundedSoFar)} / {formatUSD(paidAmount)}
+                  </span>
+                )}
+              </div>
+
+              {isPaid && remainingRefundable > 0 && !showRefund && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRefundError("");
+                    setRefundAmount(
+                      String(Math.min(DEPOSIT_USD, remainingRefundable)),
+                    );
+                    setShowRefund(true);
+                  }}
+                  className="w-full flex items-center justify-center px-4 py-2 border border-amber-300 rounded-lg text-sm font-medium text-amber-800 bg-amber-50 hover:bg-amber-100 transition duration-150 ease-in-out"
+                >
+                  보증금 환불
+                </button>
+              )}
+
+              {isPaid && showRefund && (
+                <div className="space-y-2 rounded-lg border border-gray-200 p-3">
+                  <label
+                    htmlFor="refund_amount"
+                    className="block text-xs font-bold text-gray-700 uppercase"
+                  >
+                    환불 금액 (USD)
+                  </label>
+                  <div className="flex items-center gap-1">
+                    <span className="text-gray-500">$</span>
+                    <input
+                      id="refund_amount"
+                      type="number"
+                      min={1}
+                      max={remainingRefundable}
+                      step={1}
+                      value={refundAmount}
+                      onChange={(e) => setRefundAmount(e.target.value)}
+                      className="block w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    환불 가능 잔액: {formatUSD(remainingRefundable)} (보증금{" "}
+                    {formatUSD(DEPOSIT_USD)})
+                  </p>
+                  {refundError && (
+                    <p className="text-xs text-red-700">{refundError}</p>
+                  )}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleRefund}
+                      disabled={refunding}
+                      className="flex-1 flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-amber-600 hover:bg-amber-700 shadow-sm transition duration-150 ease-in-out disabled:opacity-50"
+                    >
+                      {refunding ? "환불 처리 중..." : "PayPal로 환불"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowRefund(false)}
+                      disabled={refunding}
+                      className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      취소
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {refundError && !showRefund && (
+                <p className="text-xs text-red-700">{refundError}</p>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       {composerMode && (
