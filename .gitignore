@@ -27,3 +27,8 @@ next-env.d.ts
 
 # OpenNext
 .open-next
+.env.local
+
+# Enforce pnpm — no npm lockfile
+package-lock.json
+yarn.lock

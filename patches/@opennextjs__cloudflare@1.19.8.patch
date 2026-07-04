@@ -1,0 +1,14 @@
+diff --git a/dist/cli/build/bundle-server.js b/dist/cli/build/bundle-server.js
+index be3f893561dab6ad635e71a9cbb49603bfa44534..5e9a51cb53c5cee4ad8f63754a6132c137284f20 100644
+--- a/dist/cli/build/bundle-server.js
++++ b/dist/cli/build/bundle-server.js
+@@ -100,7 +100,8 @@ export async function bundleServer(buildOpts, projectOpts) {
+             // Apply updater updates, must be the last plugin
+             updater.plugin,
+         ],
+-        external: ["./middleware/handler.mjs"],
++        // Cloudflare runtime built-ins (used by worker-mailer) must stay external, not bundled
++        external: ["./middleware/handler.mjs", "cloudflare:sockets", "cloudflare:workers"],
+         alias: {
+             // When @vercel/og is not used, alias the edge entry to a throwing shim so the
+             // dynamic `import("next/dist/compiled/@vercel/og/index.edge.js")` call site

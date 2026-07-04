@@ -1,0 +1,2 @@
+patchedDependencies:
+  '@opennextjs/cloudflare@1.19.8': patches/@opennextjs__cloudflare@1.19.8.patch
