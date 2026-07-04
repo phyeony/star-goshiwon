@@ -320,8 +320,12 @@ export async function getRoomUnitAvailability(
     .select("*, room_unit_blocks!left(*)")
     .eq("room_id", roomId)
     .eq("status", "active")
-    .lt("room_unit_blocks.check_in_date", checkOutDate)
-    .gt("room_unit_blocks.check_out_date", checkInDate)
+    // The checkout day itself is reserved for cleaning/turnover, so a stay
+    // blocks the room through (and including) its check_out_date. Using
+    // inclusive bounds (lte/gte) means a request that checks in on an existing
+    // booking's checkout day — or out on its check-in day — counts as a clash.
+    .lte("room_unit_blocks.check_in_date", checkOutDate)
+    .gte("room_unit_blocks.check_out_date", checkInDate)
     .in("room_unit_blocks.status", [...ACTIVE_BLOCK_STATUSES])
     .order("sort_order", { ascending: true })
     .order("name", { ascending: true });

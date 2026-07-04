@@ -67,8 +67,14 @@ function daysBetween(start: string, end: string) {
   );
 }
 
+// The checkout day is reserved for cleaning/turnover, so the room stays
+// blocked through and including check_out_date.
+function occupancyEnd(block: RoomUnitBlock) {
+  return formatDate(addDays(parseDate(block.check_out_date), 1));
+}
+
 function containsDate(block: RoomUnitBlock, date: string) {
-  return block.check_in_date <= date && block.check_out_date > date;
+  return block.check_in_date <= date && date < occupancyEnd(block);
 }
 
 function overlaps(startA: string, endA: string, startB: string, endB: string) {
@@ -148,7 +154,7 @@ function buildWeekSegments(blocks: RoomUnitBlock[], week: CalendarWeek) {
 
   const weekBlocks = blocks
     .filter((block) =>
-      overlaps(block.check_in_date, block.check_out_date, week.start, week.end)
+      overlaps(block.check_in_date, occupancyEnd(block), week.start, week.end)
     )
     .sort(
       (a, b) =>
@@ -157,8 +163,9 @@ function buildWeekSegments(blocks: RoomUnitBlock[], week: CalendarWeek) {
     );
 
   for (const block of weekBlocks) {
+    const blockEnd = occupancyEnd(block);
     const segmentStart = block.check_in_date > week.start ? block.check_in_date : week.start;
-    const segmentEnd = block.check_out_date < week.end ? block.check_out_date : week.end;
+    const segmentEnd = blockEnd < week.end ? blockEnd : week.end;
     const lane = laneEnds.findIndex((end) => end <= segmentStart);
     const assignedLane = lane === -1 ? laneEnds.length : lane;
 
@@ -180,7 +187,7 @@ function buildWeekSegments(blocks: RoomUnitBlock[], week: CalendarWeek) {
       span: Math.max(1, daysBetween(segmentStart, segmentEnd)),
       lane: assignedLane,
       startsHere: block.check_in_date >= week.start,
-      endsHere: block.check_out_date <= week.end,
+      endsHere: blockEnd <= week.end,
     });
   }
 
@@ -559,6 +566,11 @@ export function AvailabilityManager({
                   {blockLabel(block)}
                 </span>
                 <span className="ml-2 text-xs">{blockKindLabel(block)}</span>
+                {block.check_out_date === selectedDate && (
+                  <span className="ml-2 rounded-full bg-white/70 px-2 py-0.5 text-xs font-medium">
+                    청소일 (퇴실)
+                  </span>
+                )}
                 <span className="mt-1 block text-xs">
                   입실일 {block.check_in_date} · 퇴실일 {block.check_out_date}
                 </span>
@@ -741,24 +753,24 @@ function BlockModal({
             </select>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <DateInput
-              label="입실일"
-              value={form.check_in_date}
-              disabled={!canEditDetails}
-              onChange={(value) =>
-                setForm((prev) => ({ ...prev, check_in_date: value }))
+          {canEditDetails ? (
+            <RangeCalendar
+              checkIn={form.check_in_date}
+              checkOut={form.check_out_date}
+              onChange={(checkIn, checkOut) =>
+                setForm((prev) => ({
+                  ...prev,
+                  check_in_date: checkIn,
+                  check_out_date: checkOut,
+                }))
               }
             />
-            <DateInput
-              label="퇴실일"
-              value={form.check_out_date}
-              disabled={!canEditDetails}
-              onChange={(value) =>
-                setForm((prev) => ({ ...prev, check_out_date: value }))
-              }
-            />
-          </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <DateInput label="입실일" value={form.check_in_date} disabled />
+              <DateInput label="퇴실일" value={form.check_out_date} disabled />
+            </div>
+          )}
 
           <div>
             <label className="mb-1 block text-xs font-bold uppercase text-gray-700">
@@ -843,7 +855,7 @@ function DateInput({
   label: string;
   value: string;
   disabled?: boolean;
-  onChange: (value: string) => void;
+  onChange?: (value: string) => void;
 }) {
   return (
     <div>
@@ -854,10 +866,130 @@ function DateInput({
         type="date"
         value={value}
         disabled={disabled}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => onChange?.(e.target.value)}
         className="block w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100"
         required
       />
+    </div>
+  );
+}
+
+function RangeCalendar({
+  checkIn,
+  checkOut,
+  onChange,
+}: {
+  checkIn: string;
+  checkOut: string;
+  onChange: (checkIn: string, checkOut: string) => void;
+}) {
+  const [anchor, setAnchor] = useState(() =>
+    startOfMonth(parseDate(checkIn || formatDate(new Date())))
+  );
+  const [pendingStart, setPendingStart] = useState<string | null>(null);
+  const calendar = useMemo(() => getWeeks(startOfMonth(anchor)), [anchor]);
+
+  function moveMonth(direction: -1 | 1) {
+    setAnchor((current) =>
+      startOfMonth(
+        new Date(
+          Date.UTC(current.getUTCFullYear(), current.getUTCMonth() + direction, 1)
+        )
+      )
+    );
+  }
+
+  function selectDate(date: string) {
+    // First click (or a click at/before the pending start) begins a new range
+    // with a provisional one-night stay; the next later click sets check-out.
+    if (pendingStart === null || date <= pendingStart) {
+      setPendingStart(date);
+      onChange(date, formatDate(addDays(parseDate(date), 1)));
+      return;
+    }
+    onChange(pendingStart, date);
+    setPendingStart(null);
+  }
+
+  const title = anchor.toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  });
+  const nights = daysBetween(checkIn, checkOut);
+
+  return (
+    <div className="rounded-xl border border-gray-200 p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-sm font-semibold text-gray-900">{title}</span>
+        <div className="flex gap-1">
+          <button
+            type="button"
+            onClick={() => moveMonth(-1)}
+            className="rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+          >
+            이전
+          </button>
+          <button
+            type="button"
+            onClick={() => moveMonth(1)}
+            className="rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+          >
+            다음
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-7 text-center text-[11px] font-bold text-gray-500">
+        {WEEKDAY_LABELS.map((day) => (
+          <div key={day} className="py-1">
+            {day}
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-7">
+        {calendar.weeks.flatMap((week) =>
+          week.days.map((date) => {
+            const day = parseDate(date);
+            const isCurrentMonth =
+              calendar.monthStart <= date && date < calendar.monthEnd;
+            const isStart = date === checkIn;
+            const isEnd = date === checkOut;
+            const isMiddle = checkIn < date && date < checkOut;
+
+            const tone = [
+              "relative h-9 text-sm transition",
+              isCurrentMonth ? "text-gray-900" : "text-gray-300",
+            ];
+            if (isStart || isEnd) {
+              tone.push("bg-indigo-600 font-semibold text-white");
+              tone.push(isStart ? "rounded-l-lg" : "rounded-r-lg");
+            } else if (isMiddle) {
+              tone.push("bg-indigo-100 text-indigo-900");
+            } else {
+              tone.push("hover:bg-gray-100");
+            }
+
+            return (
+              <button
+                key={date}
+                type="button"
+                onClick={() => selectDate(date)}
+                className={tone.join(" ")}
+              >
+                {day.getUTCDate()}
+              </button>
+            );
+          })
+        )}
+      </div>
+
+      <p className="mt-2 text-xs text-gray-600">
+        {checkIn && checkOut
+          ? `입실 ${checkIn} · 퇴실 ${checkOut} · ${nights}박`
+          : "입실일을 선택하세요"}
+      </p>
     </div>
   );
 }
