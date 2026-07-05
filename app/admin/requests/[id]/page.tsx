@@ -9,6 +9,7 @@ import {
 import { formatUSD, formatApproxKRW } from "@/lib/pricing";
 import { BookingStatusBadge } from "@/components/status-badge";
 import { RequestActions } from "@/components/admin/request-actions";
+import { ReviewInviteButton } from "@/components/admin/review-invite-button";
 import { EmailHistory } from "@/components/admin/email-history";
 import { RoomUnitAssignment } from "@/components/admin/room-unit-assignment";
 import { PAYMENT_STATUS_LABELS_KO } from "@/lib/types";
@@ -264,6 +265,14 @@ export default async function RequestDetailPage({ params }: Props) {
             units={roomUnitAvailability}
           />
           <RequestActions request={request} templates={templates} />
+          {request.payment_status === "paid" && (
+            <ReviewInviteButton
+              requestId={request.id}
+              guestName={request.guest_name}
+              guestEmail={request.guest_email}
+              roomTypeName={request.rooms?.name ?? request.room_slug}
+            />
+          )}
         </div>
       </div>
     </div>
