@@ -407,6 +407,41 @@ Seoul Goshiwon by Star Goshiwon`;
   ]);
 }
 
+export interface ReviewRequestEmailData {
+  guest_name: string;
+  guest_email: string;
+  review_url: string;
+}
+
+export async function sendReviewRequestEmail(data: ReviewRequestEmailData) {
+  const subject = "How was your stay? — Seoul Goshiwon by Star Goshiwon";
+  const html = wrapEmailHtml(`
+    <h1 style="font-size: 22px; margin: 0 0 16px;">How was your stay?</h1>
+    <p>Hi ${data.guest_name},</p>
+    <p>Thank you for staying at Star Goshiwon. We would love to hear how it went — your review helps future guests know what to expect.</p>
+    <p>It takes about two minutes, and only the overall score is required.</p>
+    <p style="margin: 24px 0;">
+      <a href="${data.review_url}" style="display: inline-block; background: #4f46e5; color: #ffffff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 700;">Write a review</a>
+    </p>
+    <p style="font-size: 13px; color: #6b7280;">This personal link can be used once and is valid for 90 days.</p>
+    <p>Best regards,<br /><strong>Seoul Goshiwon by Star Goshiwon</strong></p>
+  `);
+
+  const text = `Hi ${data.guest_name},
+
+Thank you for staying at Star Goshiwon. We would love to hear how it went — your review helps future guests know what to expect.
+
+It takes about two minutes, and only the overall score is required:
+${data.review_url}
+
+This personal link can be used once and is valid for 90 days.
+
+Best regards,
+Seoul Goshiwon by Star Goshiwon`;
+
+  await sendEmail(data.guest_email, subject, text, html);
+}
+
 export async function sendEmail(
   to: string,
   subject: string,
