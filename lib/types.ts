@@ -500,3 +500,62 @@ export const PAYMENT_STATUS_LABELS_KO: Record<PaymentStatus, string> = {
   expired: "만료됨",
   refunded: "환불됨",
 };
+
+// ─── Guest Reviews ───
+
+export type ReviewStatus = "pending" | "approved" | "rejected";
+
+export interface ReviewCategoryScoreRow {
+  label: string;
+  score: number;
+}
+
+export interface ReviewInvite {
+  id: string;
+  token: string;
+  guest_name: string;
+  guest_email: string | null;
+  room_type: string;
+  booking_request_id: string | null;
+  created_at: string;
+  expires_at: string;
+  used_at: string | null;
+}
+
+export interface ReviewInviteInsert {
+  token: string;
+  guest_name: string;
+  guest_email?: string | null;
+  room_type: string;
+  booking_request_id?: string | null;
+}
+
+export interface Review {
+  id: string;
+  invite_id: string;
+  guest_name: string;
+  country: string | null;
+  room_type: string;
+  score: number;
+  title: string | null;
+  positive: string | null;
+  negative: string | null;
+  basic_categories: ReviewCategoryScoreRow[];
+  additional_categories: ReviewCategoryScoreRow[];
+  status: ReviewStatus;
+  submitted_at: string;
+  reviewed_at: string | null;
+}
+
+export interface ReviewInsert {
+  invite_id: string;
+  guest_name: string;
+  country: string | null;
+  room_type: string;
+  score: number;
+  title: string | null;
+  positive: string | null;
+  negative: string | null;
+  basic_categories: ReviewCategoryScoreRow[];
+  additional_categories: ReviewCategoryScoreRow[];
+}
