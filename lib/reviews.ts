@@ -1,3 +1,5 @@
+import type { Review } from "./types";
+
 export type GuestReview = {
   id: string;
   date: string;
@@ -6,11 +8,12 @@ export type GuestReview = {
   guest: string;
   country: string;
   roomType: string;
-  basicCategories: ReviewCategoryScore[];
+  basicCategories?: ReviewCategoryScore[];
   additionalCategories?: ReviewCategoryScore[];
   positive?: string;
   negative?: string;
   language?: "en" | "ja" | "de";
+  source?: "booking" | "direct";
 };
 
 export type ReviewCategoryScore = {
@@ -177,3 +180,28 @@ export const guestReviews: GuestReview[] = [
 export const highlightedGuestReviews = guestReviews.filter((review) =>
   ["booking-2026-04-22", "booking-2026-01-22"].includes(review.id),
 );
+
+// Maps an approved DB review (submitted via an admin-minted invite link) onto
+// the display shape the legacy hardcoded Booking.com reviews use. The date
+// format matches the legacy strings so parseReviewDate sorting keeps working.
+export function dbReviewToGuestReview(review: Review): GuestReview {
+  return {
+    id: review.id,
+    date: new Date(review.submitted_at).toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      timeZone: "Asia/Seoul",
+    }),
+    score: review.score,
+    title: review.title ?? "Review from a verified direct stay",
+    guest: review.guest_name,
+    country: review.country ?? "",
+    roomType: review.room_type,
+    basicCategories: review.basic_categories,
+    additionalCategories: review.additional_categories,
+    positive: review.positive ?? undefined,
+    negative: review.negative ?? undefined,
+    source: "direct",
+  };
+}

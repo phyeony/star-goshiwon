@@ -5,7 +5,14 @@ import {
   ReviewControlsAndList,
   ReviewScoreBreakdown,
 } from "@/components/guest-reviews";
-import { bookingReviewSummary } from "@/lib/reviews";
+import {
+  bookingReviewSummary,
+  dbReviewToGuestReview,
+  guestReviews,
+} from "@/lib/reviews";
+import { getApprovedReviews } from "@/lib/review-queries";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Guest Reviews",
@@ -14,7 +21,16 @@ export const metadata: Metadata = {
   alternates: { canonical: "/reviews" },
 };
 
-export default function ReviewsPage() {
+export default async function ReviewsPage() {
+  const approved = await getApprovedReviews();
+  const directReviews = approved.map(dbReviewToGuestReview);
+  const allReviews = [...directReviews, ...guestReviews];
+  const directAverage =
+    directReviews.length > 0
+      ? directReviews.reduce((sum, r) => sum + r.score, 0) /
+        directReviews.length
+      : null;
+
   return (
     <>
       <TrackEvent event="reviews_viewed" />
@@ -47,17 +63,38 @@ export default function ReviewsPage() {
               </p>
             </div>
 
-            <div className="rounded-lg border border-gray-200 bg-gray-50 p-6">
-              <p className="text-sm font-medium text-gray-500">
-                {bookingReviewSummary.scoreLabel}
-              </p>
-              <p className="mt-2 text-5xl font-extrabold text-gray-900">
-                {bookingReviewSummary.averageScore.toFixed(1)}
-                <span className="text-xl font-semibold text-gray-500">/10</span>
-              </p>
-              <p className="mt-2 text-sm text-gray-500">
-                Based on {bookingReviewSummary.scoredStayCount} reviews.
-              </p>
+            <div className="space-y-4">
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-6">
+                <p className="text-sm font-medium text-gray-500">
+                  {bookingReviewSummary.scoreLabel}
+                </p>
+                <p className="mt-2 text-5xl font-extrabold text-gray-900">
+                  {bookingReviewSummary.averageScore.toFixed(1)}
+                  <span className="text-xl font-semibold text-gray-500">
+                    /10
+                  </span>
+                </p>
+                <p className="mt-2 text-sm text-gray-500">
+                  Based on {bookingReviewSummary.scoredStayCount} reviews.
+                </p>
+              </div>
+              {directAverage !== null && (
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-6">
+                  <p className="text-sm font-medium text-gray-500">
+                    Direct guest reviews
+                  </p>
+                  <p className="mt-2 text-5xl font-extrabold text-gray-900">
+                    {directAverage.toFixed(1)}
+                    <span className="text-xl font-semibold text-gray-500">
+                      /10
+                    </span>
+                  </p>
+                  <p className="mt-2 text-sm text-gray-500">
+                    Based on {directReviews.length} verified direct{" "}
+                    {directReviews.length === 1 ? "stay" : "stays"}.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -68,7 +105,7 @@ export default function ReviewsPage() {
           <ReviewScoreBreakdown />
 
           <div className="mt-6">
-            <ReviewControlsAndList />
+            <ReviewControlsAndList reviews={allReviews} />
           </div>
         </div>
       </div>

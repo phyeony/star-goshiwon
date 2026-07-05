@@ -353,16 +353,20 @@ function parseReviewDate(date: string) {
   return new Date(date).getTime();
 }
 
-export function ReviewControlsAndList() {
+export function ReviewControlsAndList({
+  reviews = guestReviews,
+}: {
+  reviews?: GuestReview[];
+}) {
   const [sortOption, setSortOption] = useState<SortOption>("newest");
 
   const sortedReviews = useMemo(() => {
-    return guestReviews.slice().sort((a, b) => {
+    return reviews.slice().sort((a, b) => {
       if (sortOption === "highest") return b.score - a.score;
       if (sortOption === "lowest") return a.score - b.score;
       return parseReviewDate(b.date) - parseReviewDate(a.date);
     });
-  }, [sortOption]);
+  }, [reviews, sortOption]);
 
   return (
     <div>
@@ -412,6 +416,11 @@ export function ReviewList({
               <p className="mt-2 text-base font-semibold text-[#6b6b6b]">
                 {review.roomType}
               </p>
+              <p className="mt-2 text-sm font-medium text-blue-700">
+                {review.source === "direct"
+                  ? "Verified direct stay"
+                  : "Verified stay · Booking.com"}
+              </p>
             </div>
             <time className="text-base text-[#6b6b6b]" dateTime={review.date}>
               {review.date}
@@ -419,10 +428,12 @@ export function ReviewList({
           </div>
 
           <div className="mt-7 space-y-7">
-            <InlineCategoryScores
-              title="Basic categories"
-              categories={review.basicCategories}
-            />
+            {review.basicCategories && review.basicCategories.length > 0 && (
+              <InlineCategoryScores
+                title="Basic categories"
+                categories={review.basicCategories}
+              />
+            )}
             {review.additionalCategories &&
               review.additionalCategories.length > 0 && (
                 <InlineCategoryScores
