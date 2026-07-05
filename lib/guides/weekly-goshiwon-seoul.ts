@@ -38,7 +38,7 @@ If those don't matter to you for a week, the savings are huge.
 Standard inclusions for a 7-night stay:
 
 - **Private room** — bed, desk, chair, closet, mini-fridge, AC/heating, Wi-Fi
-- **Shared kitchen** — induction, microwave, fridge, basic pantry (rice, kimchi, ramen)
+- **Shared kitchen** — induction, microwave, fridge, basic pantry (rice, kimchi)
 - **Shared bathroom** with hot showers (some rooms have private bathrooms for an upgrade)
 - **Shared laundry** — washing machine and rooftop drying racks at most goshiwons
 - **All utilities** — electricity, water, gas, internet
@@ -95,7 +95,7 @@ Pick by what you actually want to do:
 
 The room is the same. What changes:
 
-- **No or smaller monthly discount** (Star Goshiwon's 15% discount kicks in at 4 weeks)
+- **No or smaller monthly discount** (Star Goshiwon's {{DISCOUNT_PCT}}% discount kicks in at 4 weeks)
 - **Bedding/towels often charged separately** — sometimes free for monthly guests
 - **No need for ARC** — your passport is enough
 

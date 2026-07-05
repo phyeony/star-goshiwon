@@ -14,7 +14,7 @@ import {
   updatePaymentOrder,
   updatePaymentOrderByProviderOrderId,
 } from "./queries";
-import { calculateEstimate, getUsdPrices, DEPOSIT_USD } from "./pricing";
+import { calculateEstimate, roomTier, DEPOSIT_USD } from "./pricing";
 import type { BookingRequestWithRoom, PaymentOrder } from "./types";
 import {
   capturePayPalOrder,
@@ -245,7 +245,7 @@ function getConfirmedEmailData(request: BookingRequestWithRoom) {
 
 export function recalculateStoredEstimate(request: BookingRequestWithRoom) {
   return calculateEstimate(
-    getUsdPrices(request.room_slug),
+    request.rooms ? roomTier(request.rooms) : { nightly: 0 },
     request.check_in_date,
     request.check_out_date,
     { beddingPrepaid: request.bedding_prepaid }

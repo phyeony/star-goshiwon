@@ -9,7 +9,7 @@ import { ImageGallery } from "@/components/image-lightbox";
 import { GuestReviews } from "@/components/guest-reviews";
 import { RequestForm } from "@/components/request-form";
 import { getRoomBySlug } from "@/lib/queries";
-import { formatUSD, formatApproxKRW, getUsdPrices } from "@/lib/pricing";
+import { formatUSD, formatApproxKRW, roomTier } from "@/lib/pricing";
 import { siteConfig } from "@/lib/site-data";
 
 interface Props {
@@ -21,8 +21,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const room = await getRoomBySlug(slug);
   if (!room) return { title: "Room Not Found" };
 
-  const usd = getUsdPrices(room.slug);
-  const description = `${room.name} in Seoul — from ${formatUSD(usd.weekly)}/week. ${room.description ?? "Foreigner-friendly goshiwon room with utilities included."}`;
+  const usd = roomTier(room);
+  const description = `${room.name} in Seoul — from ${formatUSD(usd.nightly)}/night. ${room.description ?? "Foreigner-friendly goshiwon room with utilities included."}`;
   const firstImage = room.room_images?.sort(
     (a, b) => a.sort_order - b.sort_order
   )[0]?.url;
@@ -51,11 +51,13 @@ export default async function RoomDetailPage({ params }: Props) {
     (a, b) => a.sort_order - b.sort_order
   );
 
-  const usd = getUsdPrices(room.slug);
+  const usd = roomTier(room);
 
   const roomOption = {
     name: room.name,
     slug: room.slug,
+    nightly_rate_usd: room.nightly_rate_usd,
+    long_stay_discount: room.long_stay_discount,
   };
 
   const accommodationJsonLd = {
@@ -94,7 +96,7 @@ export default async function RoomDetailPage({ params }: Props) {
     },
   };
 
-  const discountedWeeklyUsd = Math.round(usd.weekly * 0.85);
+  const discountedNightlyUsd = Math.round(usd.nightly * (1 - usd.discount));
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -209,34 +211,23 @@ export default async function RoomDetailPage({ params }: Props) {
                 <tbody>
                   <tr className="border-b border-gray-100">
                     <td className="px-6 py-4 text-base text-gray-900 font-medium">
-                      Weekly (min. 7 days)
+                      Per night (min. 7 nights)
                     </td>
                     <td className="px-6 py-4 text-right text-base font-semibold text-gray-900">
-                      {formatUSD(usd.weekly)} / week
+                      {formatUSD(usd.nightly)} / night
                       <div className="text-xs text-gray-500 font-normal">
-                        {formatApproxKRW(usd.weekly)}
+                        {formatApproxKRW(usd.nightly)}
                       </div>
                     </td>
                   </tr>
-                  <tr className="border-b border-gray-100 bg-green-50">
+                  <tr className="bg-green-50">
                     <td className="px-6 py-4 text-base text-green-800 font-medium">
-                      4+ weeks (15% off)
+                      4+ weeks (28+ nights) · {Math.round(usd.discount * 100)}% off
                     </td>
                     <td className="px-6 py-4 text-right text-base font-semibold text-green-800">
-                      {formatUSD(discountedWeeklyUsd)} / week
+                      ~{formatUSD(discountedNightlyUsd)} / night
                       <div className="text-xs text-green-700/80 font-normal">
-                        {formatApproxKRW(discountedWeeklyUsd)}
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="px-6 py-4 text-base text-gray-900">
-                      Extra days
-                    </td>
-                    <td className="px-6 py-4 text-right text-base font-semibold text-gray-900">
-                      {formatUSD(usd.daily)} / day
-                      <div className="text-xs text-gray-500 font-normal">
-                        {formatApproxKRW(usd.daily)}
+                        {formatApproxKRW(discountedNightlyUsd)}
                       </div>
                     </td>
                   </tr>

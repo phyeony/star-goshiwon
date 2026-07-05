@@ -39,9 +39,8 @@ export interface Room {
   name_ko?: string | null;
   slug: string;
   description: string;
-  price_monthly: number;
-  price_weekly: number;
-  price_daily: number;
+  nightly_rate_usd: number; // flat per-night rate in USD (source of truth)
+  long_stay_discount: number; // discount fraction at 28+ nights, e.g. 0.15
   capacity: number;
   size_sqm: number | null;
   amenities: string[];
@@ -103,7 +102,10 @@ export interface BookingRequest {
 }
 
 export interface BookingRequestWithRoom extends BookingRequest {
-  rooms: Pick<Room, "name" | "name_ko" | "slug"> | null;
+  rooms: Pick<
+    Room,
+    "name" | "name_ko" | "slug" | "nightly_rate_usd" | "long_stay_discount"
+  > | null;
   room_units?: Pick<RoomUnit, "name"> | null;
 }
 
@@ -326,9 +328,8 @@ export type RoomInsert = {
   name_ko?: string | null;
   slug: string;
   description?: string;
-  price_monthly: number;
-  price_weekly: number;
-  price_daily: number;
+  nightly_rate_usd: number;
+  long_stay_discount?: number;
   capacity?: number;
   size_sqm?: number | null;
   amenities?: string[];

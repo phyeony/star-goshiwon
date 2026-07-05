@@ -5,17 +5,22 @@ import { useRouter } from "next/navigation";
 import posthog from "posthog-js";
 import { trackGaEvent } from "@/lib/ga";
 import type { Room } from "@/lib/types";
+import { DateRangePicker } from "@/components/date-range-picker";
+import { MIN_STAY_NIGHTS } from "@/lib/validation";
 import {
   calculateEstimate,
   formatUSD,
   formatApproxKRW,
-  getUsdPrices,
+  roomTier,
   BEDDING_FEE_USD,
   DEPOSIT_USD,
   type PricingBreakdown,
 } from "@/lib/pricing";
 
-type RoomOption = Pick<Room, "name" | "slug">;
+type RoomOption = Pick<
+  Room,
+  "name" | "slug" | "nightly_rate_usd" | "long_stay_discount"
+>;
 
 interface RequestFormProps {
   rooms: RoomOption[];
@@ -54,7 +59,7 @@ export function RequestForm({
   useEffect(() => {
     if (selectedRoom && form.check_in_date && form.check_out_date) {
       const breakdown = calculateEstimate(
-        getUsdPrices(selectedRoom.slug),
+        roomTier(selectedRoom),
         form.check_in_date,
         form.check_out_date,
         { beddingPrepaid: form.bedding_prepaid },
@@ -66,7 +71,7 @@ export function RequestForm({
           room_slug: selectedRoom.slug,
           check_in_date: form.check_in_date,
           check_out_date: form.check_out_date,
-          nights: breakdown.weeks * 7 + breakdown.days,
+          nights: breakdown.nights,
           estimated_total: breakdown.total,
         });
       }
@@ -93,6 +98,31 @@ export function RequestForm({
     setErrors((prev) => {
       const next = { ...prev };
       delete next[field];
+      return next;
+    });
+  }
+
+  // The date-range picker sets both dates together (check-out is cleared to ""
+  // while a new range is mid-selection). Mirror updateField's funnel marker and
+  // clear both date errors at once.
+  function handleDateChange(checkIn: string, checkOut: string) {
+    if (!formStarted.current) {
+      formStarted.current = true;
+      posthog.capture("booking_form_started", {
+        room_slug: form.room_slug,
+        embedded_on_room_page: Boolean(singleRoom),
+        first_field: "check_in_date",
+      });
+    }
+    setForm((prev) => ({
+      ...prev,
+      check_in_date: checkIn,
+      check_out_date: checkOut,
+    }));
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next.check_in_date;
+      delete next.check_out_date;
       return next;
     });
   }
@@ -160,53 +190,17 @@ export function RequestForm({
     }
   }
 
-  const today = new Date().toISOString().split("T")[0];
-  const selectedUsd = selectedRoom ? getUsdPrices(selectedRoom.slug) : null;
+  const selectedUsd = selectedRoom ? roomTier(selectedRoom) : null;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-      <div className="flex border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500">
-        <div className="w-1/2 border-r border-gray-300 p-3 bg-white">
-          <label
-            htmlFor="check_in_date"
-            className="block text-xs font-bold text-gray-700 uppercase"
-          >
-            Check-in
-          </label>
-          <input
-            type="date"
-            id="check_in_date"
-            min={today}
-            value={form.check_in_date}
-            onChange={(e) => updateField("check_in_date", e.target.value)}
-            className="w-full mt-1 border-none bg-transparent text-sm focus:ring-0 p-0 text-gray-900 outline-none"
-            required
-          />
-          {errors.check_in_date && (
-            <p className="text-xs text-red-600 mt-1">{errors.check_in_date}</p>
-          )}
-        </div>
-        <div className="w-1/2 p-3 bg-white">
-          <label
-            htmlFor="check_out_date"
-            className="block text-xs font-bold text-gray-700 uppercase"
-          >
-            Check-out
-          </label>
-          <input
-            type="date"
-            id="check_out_date"
-            min={form.check_in_date || today}
-            value={form.check_out_date}
-            onChange={(e) => updateField("check_out_date", e.target.value)}
-            className="w-full mt-1 border-none bg-transparent text-sm focus:ring-0 p-0 text-gray-900 outline-none"
-            required
-          />
-          {errors.check_out_date && (
-            <p className="text-xs text-red-600 mt-1">{errors.check_out_date}</p>
-          )}
-        </div>
-      </div>
+      <DateRangePicker
+        checkIn={form.check_in_date}
+        checkOut={form.check_out_date}
+        minNights={MIN_STAY_NIGHTS}
+        onChange={handleDateChange}
+        error={errors.check_in_date || errors.check_out_date}
+      />
 
       {!singleRoom && (
         <div className="block w-full border border-gray-300 rounded-lg p-3 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 bg-white">
@@ -224,10 +218,10 @@ export function RequestForm({
             required
           >
             {rooms.map((room) => {
-              const usd = getUsdPrices(room.slug);
+              const usd = roomTier(room);
               return (
                 <option key={room.slug} value={room.slug}>
-                  {room.name} ({formatUSD(usd.weekly)}/week)
+                  {room.name} ({formatUSD(usd.nightly)}/night)
                 </option>
               );
             })}
@@ -309,28 +303,19 @@ export function RequestForm({
 
       {estimate && estimate.total > 0 && selectedUsd && (
         <div className="bg-gray-50 rounded-lg p-4 mt-4 border border-gray-200">
-          {estimate.weeks > 0 && (
+          {estimate.nights > 0 && (
             <div className="flex justify-between text-base text-gray-600 mb-2">
               <span>
-                {formatUSD(selectedUsd.weekly)} x {estimate.weeks} week
-                {estimate.weeks > 1 ? "s" : ""}
+                {estimate.nights} night{estimate.nights > 1 ? "s" : ""} ×{" "}
+                {formatUSD(estimate.nightlyRate)}
               </span>
-              <span>{formatUSD(estimate.weeklySubtotal)}</span>
+              <span>{formatUSD(estimate.nightsSubtotal)}</span>
             </div>
           )}
-          {estimate.days > 0 && (
-            <div className="flex justify-between text-base text-gray-600 mb-2">
-              <span>
-                {formatUSD(selectedUsd.daily)} x {estimate.days} day
-                {estimate.days > 1 ? "s" : ""}
-              </span>
-              <span>{formatUSD(estimate.dailySubtotal)}</span>
-            </div>
-          )}
-          {estimate.discountApplied && (
+          {estimate.totalSaving > 0 && (
             <div className="flex justify-between text-base text-green-600 mb-2">
-              <span>Monthly discount (15%)</span>
-              <span>-{formatUSD(estimate.discount)}</span>
+              <span>{estimate.savingLabel}</span>
+              <span>-{formatUSD(estimate.totalSaving)}</span>
             </div>
           )}
           {estimate.beddingFee > 0 && (
@@ -355,6 +340,9 @@ export function RequestForm({
             </span>
           </div>
           <p className="text-xs text-gray-500 mt-2">
+            Billed per night. 28+ nights stays get a better nightly rate.
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
             Includes a {formatUSD(DEPOSIT_USD)} refundable deposit, returned via
             PayPal at the end of your stay if the room is left undamaged.
           </p>
@@ -367,9 +355,6 @@ export function RequestForm({
         </p>
         <ul className="list-disc pl-5 space-y-1 text-sm text-gray-700">
           <li>Up-front payment via PayPal (USD).</li>
-          <li>
-            <strong className="font-semibold">Minimum 7 days</strong> stay.
-          </li>
         </ul>
         <label className="flex items-start gap-2.5 cursor-pointer mt-3 pt-3 border-t border-gray-200">
           <input

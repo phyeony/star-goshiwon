@@ -6,9 +6,9 @@ import { GuestReviews } from "@/components/guest-reviews";
 import { HeroSlideshow } from "@/components/hero-slideshow";
 import { SharedFacilities } from "@/components/shared-facilities";
 import { getPublicRooms } from "@/lib/queries";
-import { siteConfig, amenities, faqs } from "@/lib/site-data";
+import { siteConfig, amenities, buildFaqs } from "@/lib/site-data";
 import { guides } from "@/lib/guides-data";
-import { formatApproxKRW } from "@/lib/pricing";
+import { formatApproxKRW, formatUSD, roomTier, deriveTier } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
 
@@ -74,10 +74,17 @@ function AmenityIcon({ name }: { name: string }) {
 export default async function HomePage() {
   const rooms = await getPublicRooms();
 
+  // Landing-page headline pricing is quoted from the cheapest room (economy),
+  // derived from its stored nightly rate so it tracks what we actually charge.
+  const economyRoom = rooms.find((r) => r.slug === "economy-room");
+  const ECONOMY = economyRoom ? roomTier(economyRoom) : deriveTier(15);
+  const FOUR_WEEK_SAVE = ECONOMY.weekly * 4 - ECONOMY.monthly;
+  const faqs = buildFaqs(Math.round(ECONOMY.discount * 100));
+
   return (
     <>
       {/* Hero */}
-      <HeroSlideshow />
+      <HeroSlideshow economy={ECONOMY} />
 
       {/* Key Info */}
       <section className="bg-white py-14 border-b border-gray-200">
@@ -98,12 +105,12 @@ export default async function HomePage() {
             </span>
             <div>
               <h3 className="text-xl font-bold text-gray-900">
-                Save $45 when you stay 4+ weeks
+                Save {formatUSD(FOUR_WEEK_SAVE)} when you stay 4+ weeks
               </h3>
               <p className="text-gray-500 mt-1">
-                From $75({formatApproxKRW(75)})/week, or{" "}
-                <span className="font-semibold text-gray-900">$255({formatApproxKRW(255)})</span> for 4 weeks (15% off).
-                Minimum stay 7 days. $70(≈ ₩100,000) refundable deposit · Optional $15 bedding set.
+                From {formatUSD(ECONOMY.weekly)}({formatApproxKRW(ECONOMY.weekly)})/week, or{" "}
+                <span className="font-semibold text-gray-900">{formatUSD(ECONOMY.monthly)}({formatApproxKRW(ECONOMY.monthly)})</span> for 4 weeks ({Math.round(ECONOMY.discount * 100)}% off).
+                Minimum stay 7 nights. $70(≈ ₩100,000) refundable deposit · Optional $15 bedding set.
               </p>
             </div>
           </div>
@@ -136,7 +143,7 @@ export default async function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <SectionTitle
           title="Our Rooms"
-          subtitle="3 room types to fit your budget. All rooms include a bed, desk & chair, WiFi, mini fridge, AC/Heating, shelf & cabinet, and an outside-facing window. Stay 4+ weeks and save 15%."
+          subtitle={`3 room types to fit your budget. All rooms include a bed, desk & chair, WiFi, mini fridge, AC/Heating, shelf & cabinet, and an outside-facing window. Stay 4+ weeks and save ${Math.round(ECONOMY.discount * 100)}%.`}
         />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {rooms.slice(0, 3).map((room) => (
@@ -203,8 +210,8 @@ export default async function HomePage() {
           <p className="text-base text-gray-600 mb-4 leading-relaxed">
             A typical goshiwon room in Seoul is small but practical: a single
             bed, a desk, a wardrobe, mini-fridge, AC/heating, and a window. Rent
-            includes utilities, Wi-Fi, and basic pantry staples like rice, kimchi,
-            and ramen. There&rsquo;s no key money (보증금) like in a Korean apartment
+            includes utilities, Wi-Fi, and basic pantry staples like rice and
+            kimchi. There&rsquo;s no key money (보증금) like in a Korean apartment
             lease — usually just a small refundable deposit, often ₩100,000 or
             less.
           </p>
@@ -244,8 +251,8 @@ export default async function HomePage() {
             ₩390,000 in Mapo-gu (Hongdae), and ₩410,000 in Jongno-gu. In
             well-connected outer districts like Dongjak-gu — where Star Goshiwon
             is located — rents top out around ₩340,000/month. Our standard
-            4-week rate is $255 (~₩340,000) at 15% off, or $75/week
-            (~{formatApproxKRW(75)}). Rooms are charged in USD via PayPal.
+            4-week rate is {formatUSD(ECONOMY.monthly)} ({formatApproxKRW(ECONOMY.monthly)}) at {Math.round(ECONOMY.discount * 100)}% off, or {formatUSD(ECONOMY.nightly)}/night
+            ({formatApproxKRW(ECONOMY.nightly)}). Rooms are charged in USD via PayPal.
           </p>
 
           <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">

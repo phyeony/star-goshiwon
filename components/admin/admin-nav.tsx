@@ -7,6 +7,7 @@ import { useState } from "react";
 const navItems = [
   { href: "/admin/availability", label: "예약 현황" },
   { href: "/admin/dashboard", label: "대시보드" },
+  { href: "/admin/pricing", label: "요금 분석" },
   { href: "/admin/inbox", label: "받은 메일" },
   { href: "/admin/requests", label: "예약 요청" },
   { href: "/admin/rooms", label: "객실 타입" },

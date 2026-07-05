@@ -2,15 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { TrackEvent } from "@/components/analytics/track-event";
-import { getGuide, guides } from "@/lib/guides-data";
+import { getGuide } from "@/lib/guides-data";
+import { fillPricingTokens } from "@/lib/pricing";
+import { getEconomyTier } from "@/lib/queries";
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
-export async function generateStaticParams() {
-  return guides.map((guide) => ({ slug: guide.slug }));
-}
+// Guide copy embeds live pricing (via {{...}} tokens filled from the rooms
+// table), so guides render at request time instead of being prebuilt.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -221,6 +223,9 @@ export default async function GuidePage({ params }: Props) {
 
   if (!guide) notFound();
 
+  const tier = await getEconomyTier();
+  const content = fillPricingTokens(guide.content, tier);
+
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <TrackEvent
@@ -253,7 +258,7 @@ export default async function GuidePage({ params }: Props) {
           </div>
         </header>
 
-        <div>{renderContent(guide.content)}</div>
+        <div>{renderContent(content)}</div>
       </article>
 
       <div className="mt-12 pt-8 border-t border-gray-200">

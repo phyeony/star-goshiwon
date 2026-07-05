@@ -1,8 +1,11 @@
 export const siteConfig = {
   name: "Seoul Goshiwon by Star Goshiwon",
   tagline: "Your Comfortable Basecamp in Seoul",
+  // Kept price-free on purpose: the global default metadata is a static module
+  // const, but room rates now live in the DB. Pages that want a live price
+  // (home, room detail) set their own metadata from the room's nightly rate.
   description:
-    "Cheap, foreigner-friendly men's goshiwon in Seoul. Private rooms from $75/week (~₩110,000) with no big deposits and flexible stays. Easy access to Hongdae, Gangnam, and major universities.",
+    "Cheap, foreigner-friendly men's goshiwon in Seoul. Private rooms billed per night with no big deposits and flexible stays. Easy access to Hongdae, Gangnam, and major universities.",
   email: "stargoshiwon.seoul@gmail.com",
   phone: "+82-10-1234-5678",
   whatsapp: "https://wa.me/message/7FRHDMTCDZPPF1",
@@ -16,12 +19,6 @@ export const siteConfig = {
   url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
 };
 
-export const highlights = [
-  { value: "$0", label: "Key Money Deposit" },
-  { value: "$75", label: "From / Week" },
-  { value: "15% Off", label: "Monthly Stay Discount" },
-  { value: "English", label: "Speaking Management" },
-];
 
 export const amenities = [
   { icon: "wifi", label: "High-Speed WiFi" },
@@ -34,7 +31,10 @@ export const amenities = [
   { icon: "zap", label: "Utilities Included" },
 ];
 
-export const faqs = [
+// FAQ copy references the long-stay discount, which lives in the DB
+// (rooms.long_stay_discount) — so the list is built with the live percentage
+// instead of hardcoding it. Callers pass e.g. Math.round(tier.discount * 100).
+export const buildFaqs = (longStayDiscountPct: number) => [
   {
     question: "What is a goshiwon?",
     answer:
@@ -57,8 +57,7 @@ export const faqs = [
   },
   {
     question: "What is the minimum stay?",
-    answer:
-      "The minimum stay is 7 days (1 week). If you stay 4 weeks or longer, you get a 15% discount automatically applied to your rate.",
+    answer: `The minimum stay is 7 days (1 week). If you stay 4 weeks or longer, you get a ${longStayDiscountPct}% discount automatically applied to your rate.`,
   },
   {
     question: "Can I see the room before booking?",

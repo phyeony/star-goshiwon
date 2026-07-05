@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { siteConfig } from "@/lib/site-data";
+import { getEconomyTier } from "@/lib/queries";
 import {
   CURRENT_POLICY_VERSION,
   ARCHIVED_POLICY_VERSIONS,
   formatPolicyDate,
 } from "@/lib/policy-versions";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "이용 약관 (Policies)",
@@ -38,7 +41,9 @@ const sections = [
   { id: "updates", label: "약관 변경" },
 ];
 
-export default function PoliciesKoPage() {
+export default async function PoliciesKoPage() {
+  const tier = await getEconomyTier();
+  const discountPct = Math.round(tier.discount * 100);
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <div className="mb-8">
@@ -143,7 +148,7 @@ export default function PoliciesKoPage() {
             항목이 모두 처리됩니다:
           </p>
           <ul className="list-disc pl-6 space-y-1.5">
-            <li>전체 숙박 객실료 (4주 이상 숙박 시 15% 할인 적용 후 금액).</li>
+            <li>전체 숙박 객실료 (4주 이상 숙박 시 {discountPct}% 할인 적용 후 금액).</li>
             <li>
               <strong>침구 세트 (선택, $15)</strong> — 추가하지 않을 경우
               침구는 제공되지 않습니다.
@@ -347,8 +352,8 @@ export default function PoliciesKoPage() {
               결정됩니다.
             </li>
             <li>
-              연장으로 인해 총 숙박 기간이 4주 이상이 되는 경우, 15% 장기
-              할인이 전체 숙박에 소급 적용됩니다.
+              연장으로 인해 총 숙박 기간이 4주 이상이 되는 경우, {discountPct}%
+              장기 할인이 전체 숙박에 소급 적용됩니다.
             </li>
           </ul>
         </Section>

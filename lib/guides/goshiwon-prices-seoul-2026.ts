@@ -131,7 +131,7 @@ For a typical ₩400,000/month goshiwon in Seoul, here's roughly where the money
 - Building rent and depreciation: ~40%
 - Utilities (electricity, gas, water, internet): ~20%
 - Building maintenance and cleaning staff: ~15%
-- Pantry food (rice, kimchi, ramen): ~5%
+- Pantry food (rice, kimchi): ~5%
 - Operator profit margin: ~20%
 
 In other words, even the cheapest goshiwon is a real operating business with thin margins — not a stripped-down room someone is dumping at a discount. The price is mostly fixed costs.
@@ -140,8 +140,8 @@ In other words, even the cheapest goshiwon is a real operating business with thi
 
 For comparison, our pricing in Dongjak-gu (Noryangjin / Sangdo area):
 
-- **Weekly:** from ₩110,000
-- **Monthly (4 weeks):** from ₩370,000 (15% off)
+- **Weekly:** from {{WEEKLY_KRW}}
+- **Monthly (4 weeks):** from {{MONTHLY_KRW}} ({{DISCOUNT_PCT}}% off)
 - **Refundable deposit:** ₩100,000
 - **Bedding set (optional):** ₩20,000 one-time
 

@@ -5,18 +5,21 @@ import { useRouter } from "next/navigation";
 import type { Dispatch, FormEvent, SetStateAction } from "react";
 import { roomNameKo } from "@/lib/room-names";
 import type { Room, RoomUnitBlock, RoomUnitWithRoom } from "@/lib/types";
+import {
+  type CalendarWeek,
+  parseDate,
+  formatDate,
+  addDays,
+  startOfMonth,
+  daysBetween,
+  getWeeks,
+} from "@/lib/dates";
 
 type RoomOption = Pick<Room, "id" | "name" | "name_ko" | "slug">;
 type ModalState =
   | { kind: "create" }
   | { kind: "block"; block: RoomUnitBlock }
   | null;
-
-type CalendarWeek = {
-  start: string;
-  end: string;
-  days: string[];
-};
 
 type WeekSegment = {
   block: RoomUnitBlock;
@@ -27,45 +30,8 @@ type WeekSegment = {
   endsHere: boolean;
 };
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 const WEEKDAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 const MAX_VISIBLE_LANES = 2;
-
-function parseDate(value: string) {
-  return new Date(`${value}T00:00:00.000Z`);
-}
-
-function formatDate(date: Date) {
-  return date.toISOString().slice(0, 10);
-}
-
-function addDays(date: Date, days: number) {
-  return new Date(date.getTime() + days * DAY_MS);
-}
-
-function startOfMonth(date: Date) {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1));
-}
-
-function startOfNextMonth(date: Date) {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 1));
-}
-
-function startOfCalendarGrid(monthStart: Date) {
-  return addDays(monthStart, -monthStart.getUTCDay());
-}
-
-function endOfCalendarGrid(monthEnd: Date) {
-  const lastVisible = addDays(monthEnd, -1);
-  return addDays(monthEnd, 6 - lastVisible.getUTCDay());
-}
-
-function daysBetween(start: string, end: string) {
-  return Math.max(
-    0,
-    Math.round((parseDate(end).getTime() - parseDate(start).getTime()) / DAY_MS)
-  );
-}
 
 // The checkout day is reserved for cleaning/turnover, so the room stays
 // blocked through and including check_out_date.
@@ -121,30 +87,6 @@ function statusLabel(status: RoomUnitWithRoom["status"]) {
   if (status === "active") return "운영 중";
   if (status === "maintenance") return "점검";
   return "비활성";
-}
-
-function getWeeks(monthStart: Date) {
-  const monthEnd = startOfNextMonth(monthStart);
-  const gridStart = startOfCalendarGrid(monthStart);
-  const gridEnd = endOfCalendarGrid(monthEnd);
-  const weeks: CalendarWeek[] = [];
-
-  for (let start = gridStart; start <= gridEnd; start = addDays(start, 7)) {
-    const days = Array.from({ length: 7 }, (_, index) =>
-      formatDate(addDays(start, index))
-    );
-    weeks.push({
-      start: formatDate(start),
-      end: formatDate(addDays(start, 7)),
-      days,
-    });
-  }
-
-  return {
-    monthStart: formatDate(monthStart),
-    monthEnd: formatDate(monthEnd),
-    weeks,
-  };
 }
 
 function buildWeekSegments(blocks: RoomUnitBlock[], week: CalendarWeek) {

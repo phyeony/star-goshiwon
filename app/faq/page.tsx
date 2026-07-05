@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { SectionTitle } from "@/components/section-title";
 import { FaqAccordion } from "@/components/faq-accordion";
 import { TrackLink } from "@/components/analytics/track-link";
-import { faqs, siteConfig } from "@/lib/site-data";
+import { buildFaqs, siteConfig } from "@/lib/site-data";
+import { getEconomyTier } from "@/lib/queries";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "FAQ",
@@ -10,7 +13,9 @@ export const metadata: Metadata = {
     "Frequently asked questions about goshiwon living in Seoul. Learn about deposits, documents, house rules, and more.",
 };
 
-export default function FAQPage() {
+export default async function FAQPage() {
+  const tier = await getEconomyTier();
+  const faqs = buildFaqs(Math.round(tier.discount * 100));
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <SectionTitle

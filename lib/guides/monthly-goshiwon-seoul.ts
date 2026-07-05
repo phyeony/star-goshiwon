@@ -28,7 +28,7 @@ A monthly goshiwon stay in Seoul typically includes:
 - The room (bed, desk, chair, closet, AC/heating, mini-fridge, Wi-Fi)
 - All utilities — electricity, water, gas, internet
 - Use of shared kitchen, laundry, and bathroom
-- Basic pantry — rice, kimchi, ramen, eggs in many places
+- Basic pantry — rice, kimchi, eggs in many places
 - Trash removal and building maintenance
 
 You typically only pay extra for:
@@ -75,7 +75,7 @@ Cheaper districts like Gwanak-gu, Dongjak-gu, and Yeongdeungpo-gu often have bet
 
 Many goshiwons offer discounts for stays of 4+ weeks (the standard "monthly" pricing). Examples:
 
-- **Star Goshiwon:** 15% off for 4+ week stays. ₩100,000/week becomes ₩340,000/month.
+- **Star Goshiwon:** {{DISCOUNT_PCT}}% off for 4+ week stays. {{WEEKLY_KRW}}/week becomes {{MONTHLY_KRW}} for 4 weeks.
 - Some operators cap the discount at 3 months
 - Negotiating directly often yields a better rate than the listed price, especially in low season
 

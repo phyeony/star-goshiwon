@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+/** Minimum booking length in nights (1 week). Shared by the API validator and
+ * the date-range picker so the calendar disables anything shorter. */
+export const MIN_STAY_NIGHTS = 7;
+
 export const bookingRequestSchema = z
   .object({
     guest_name: z
@@ -60,10 +64,10 @@ export const bookingRequestSchema = z
       const days = Math.ceil(
         (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
       );
-      return days >= 7;
+      return days >= MIN_STAY_NIGHTS;
     },
     {
-      message: "Minimum stay is 7 days",
+      message: `Minimum stay is ${MIN_STAY_NIGHTS} days`,
       path: ["check_out_date"],
     }
   );
@@ -79,9 +83,8 @@ export const roomSchema = z.object({
     .max(100)
     .regex(/^[a-z0-9-]+$/, "Slug must be lowercase with hyphens only"),
   description: z.string().max(2000).default(""),
-  price_monthly: z.number().int().min(0),
-  price_weekly: z.number().int().min(0),
-  price_daily: z.number().int().min(0),
+  nightly_rate_usd: z.number().min(0),
+  long_stay_discount: z.number().min(0).max(1).default(0.4),
   capacity: z.number().int().min(1).max(10),
   size_sqm: z.number().min(0).nullable().default(null),
   amenities: z.array(z.string()).default([]),

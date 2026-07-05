@@ -1,8 +1,8 @@
 import { buildGuestConfirmationHtml, buildGuestConfirmationText } from "@/lib/email";
-import { calculateEstimate, getUsdPrices } from "@/lib/pricing";
+import { calculateEstimate, deriveTier } from "@/lib/pricing";
 
 const sampleBreakdown = calculateEstimate(
-  getUsdPrices("room-with-private-shower"),
+  deriveTier(13, 0.4),
   "2026-05-01",
   "2026-05-29",
   { beddingPrepaid: true }

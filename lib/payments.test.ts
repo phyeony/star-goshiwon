@@ -396,7 +396,13 @@ function makeBooking(
     admin_notes: "",
     created_at: "2026-05-17T00:00:00.000Z",
     updated_at: "2026-05-17T00:00:00.000Z",
-    rooms: { name: "Private Shower Room", slug: "room-with-private-shower" },
+    rooms: {
+      name: "Private Shower Room",
+      name_ko: null,
+      slug: "room-with-private-shower",
+      nightly_rate_usd: 13,
+      long_stay_discount: 0.15,
+    },
     ...overrides,
   };
 }

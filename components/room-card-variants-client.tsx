@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { StatusBadge } from "./status-badge";
 import { OptimizedPhoto } from "./optimized-photo";
-import { formatUSD, formatApproxKRW, getUsdPrices } from "@/lib/pricing";
+import { formatUSD, formatApproxKRW, roomTier } from "@/lib/pricing";
 import type { RoomWithImages } from "@/lib/types";
 
 function getMainImage(room: RoomWithImages) {
@@ -89,7 +89,7 @@ function PricingBlock({
   mode: PricingMode;
   onChange: (mode: PricingMode) => void;
 }) {
-  const usd = getUsdPrices(room.slug);
+  const usd = roomTier(room);
   const isMonthly = mode === "monthly";
   const price = isMonthly ? usd.monthly : usd.weekly;
   const unit = isMonthly ? "/ 4 weeks" : "/ week";
@@ -114,7 +114,7 @@ function PricingBlock({
       )}
       {!isMonthly && usd.monthly > 0 && (
         <div className="mt-1 text-sm text-gray-500">
-          Stay 4+ weeks for {formatUSD(usd.monthly)} (save 15%)
+          Stay 4+ weeks for {formatUSD(usd.monthly)} (save {Math.round(usd.discount * 100)}%)
         </div>
       )}
     </div>

@@ -28,6 +28,7 @@ import type {
   EmailReceive,
   EmailReceiveInsert,
 } from "./types";
+import { deriveTier, roomTier, type UsdPriceTier } from "./pricing";
 
 // ─── Rooms ───
 
@@ -52,6 +53,16 @@ export async function getPublicRooms(): Promise<RoomWithImages[]> {
 
   if (error) throw error;
   return (data as RoomWithImages[]) ?? [];
+}
+
+// Canonical "from" pricing for site-wide copy (homepage stats, FAQ, guides,
+// policies): the economy room's tier, read live from the DB so rate/discount
+// changes show up without a code change. Falls back to the code defaults if
+// the room row is ever missing.
+export async function getEconomyTier(): Promise<UsdPriceTier> {
+  const rooms = await getPublicRooms();
+  const economy = rooms.find((r) => r.slug === "economy-room");
+  return economy ? roomTier(economy) : deriveTier(15);
 }
 
 export async function getRoomBySlug(
@@ -130,7 +141,7 @@ export async function getBookingRequests(filters?: {
   const supabase = getSupabaseServiceClient();
   let query = supabase
     .from("booking_requests")
-    .select("*, rooms(name, name_ko, slug), room_units(name)")
+    .select("*, rooms(name, name_ko, slug, nightly_rate_usd, long_stay_discount), room_units(name)")
     .order("created_at", { ascending: false });
 
   if (filters?.status) {
@@ -154,7 +165,7 @@ export async function getBookingRequestById(
   const supabase = getSupabaseServiceClient();
   const { data, error } = await supabase
     .from("booking_requests")
-    .select("*, rooms(name, name_ko, slug), room_units(name)")
+    .select("*, rooms(name, name_ko, slug, nightly_rate_usd, long_stay_discount), room_units(name)")
     .eq("id", id)
     .single();
 
@@ -195,7 +206,7 @@ export async function getBookingRequestByPaymentOrderId(
   const supabase = getSupabaseServiceClient();
   const { data, error } = await supabase
     .from("booking_requests")
-    .select("*, rooms(name, name_ko, slug), room_units(name)")
+    .select("*, rooms(name, name_ko, slug, nightly_rate_usd, long_stay_discount), room_units(name)")
     .eq("payment_order_id", orderId)
     .single();
 

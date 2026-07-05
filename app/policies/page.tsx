@@ -2,11 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SectionTitle } from "@/components/section-title";
 import { siteConfig } from "@/lib/site-data";
+import { getEconomyTier } from "@/lib/queries";
 import {
   CURRENT_POLICY_VERSION,
   ARCHIVED_POLICY_VERSIONS,
   formatPolicyDate,
 } from "@/lib/policy-versions";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Policies",
@@ -39,7 +42,9 @@ const sections = [
   { id: "updates", label: "Updates to These Policies" },
 ];
 
-export default function PoliciesPage() {
+export default async function PoliciesPage() {
+  const tier = await getEconomyTier();
+  const discountPct = Math.round(tier.discount * 100);
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <SectionTitle
@@ -139,8 +144,8 @@ export default function PoliciesPage() {
           </p>
           <ul className="list-disc pl-6 space-y-1.5">
             <li>
-              The full room rate for your booked stay (after any 15% long-stay
-              discount).
+              The full room rate for your booked stay (after any {discountPct}%
+              long-stay discount).
             </li>
             <li>
               The optional <strong>$15 bedding set</strong> (≈ ₩20,000) if you choose to add
@@ -358,7 +363,7 @@ export default function PoliciesPage() {
             </li>
             <li>
               If your extension brings the total stay to 4 weeks or longer, the
-              15% long-stay discount is applied retroactively across the full
+              {discountPct}% long-stay discount is applied retroactively across the full
               stay.
             </li>
           </ul>

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createBookingRequest, updateBookingRequest } from "@/lib/queries";
-import { calculateEstimate, getUsdPrices } from "@/lib/pricing";
+import {
+  createBookingRequest,
+  getRoomBySlug,
+  updateBookingRequest,
+} from "@/lib/queries";
+import { calculateEstimate, roomTier } from "@/lib/pricing";
 import { sendPaymentLinkEmail } from "@/lib/email";
 import { getPaymentReviewUrl, issuePaymentTokenForRequest } from "@/lib/payments";
 
@@ -22,7 +26,15 @@ export async function POST(req: NextRequest) {
     const roomSlug = "room-with-private-shower";
     const checkIn = "2026-06-01";
     const checkOut = "2026-06-08";
-    const estimate = calculateEstimate(getUsdPrices(roomSlug), checkIn, checkOut, {
+
+    // Link the real room so the payment flow's price recalculation
+    // (recalculateStoredEstimate) can resolve the nightly rate from the joined
+    // room. With room_id null it falls back to $0/night and the paid amount
+    // collapses to just the deposit.
+    const room = await getRoomBySlug(roomSlug);
+    if (!room) throw new Error(`Fixture room not found: ${roomSlug}`);
+
+    const estimate = calculateEstimate(roomTier(room), checkIn, checkOut, {
       beddingPrepaid: false,
     });
 
@@ -30,7 +42,7 @@ export async function POST(req: NextRequest) {
       guest_name: "Playwright Guest",
       guest_email: `playwright-${now.getTime()}@example.com`,
       guest_count: 1,
-      room_id: null,
+      room_id: room.id,
       room_slug: roomSlug,
       check_in_date: checkIn,
       check_out_date: checkOut,
@@ -75,6 +87,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       id: booking.id,
+      // Actual charged total derived from the room's live DB pricing, so
+      // tests can assert refund math without hardcoding rates.
+      amountUsd: estimate.total,
       payUrl: paymentUrl,
       unsafePayUrl: `/booking-payment/pay?request_id=${booking.id}`,
       startUrl: `/booking-payment/start?request_id=${booking.id}&payment_token=${encodeURIComponent(paymentToken)}`,

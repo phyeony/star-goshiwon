@@ -117,12 +117,14 @@ test("admin can refund the deposit on a paid booking", async ({
   expect(overRes.ok()).toBeFalsy();
   expect((await overRes.json()).error).toContain("exceeds the remaining balance");
 
-  // Refunding the remaining balance flips the booking to refunded.
-  const remaining = 158 - 70; // private-shower 1 week ($88) + deposit ($70)
+  // Refunding the remaining balance flips the booking to refunded. The total
+  // comes from the fixture (room's live DB rate × 7 nights + $70 deposit) so
+  // the test survives rate changes.
+  const remaining = fixture.amountUsd - 70;
   const full = await refund(request, fixture.id, remaining);
   expect(full.fully_refunded).toBe(true);
   expect(full.payment_status).toBe("refunded");
-  expect(full.refund_amount).toBe(158);
+  expect(full.refund_amount).toBe(fixture.amountUsd);
 });
 
 async function refund(
@@ -152,6 +154,7 @@ async function createPaymentFixture(
   expect(response.ok()).toBeTruthy();
   return (await response.json()) as {
     id: string;
+    amountUsd: number;
     payUrl: string;
     unsafePayUrl: string;
     startUrl: string;

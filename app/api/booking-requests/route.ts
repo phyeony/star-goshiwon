@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { bookingRequestSchema } from "@/lib/validation";
 import { getRoomBySlug, createBookingRequest } from "@/lib/queries";
-import { calculateEstimate, getUsdPrices } from "@/lib/pricing";
+import { calculateEstimate, roomTier } from "@/lib/pricing";
 import { sendGuestConfirmation, sendAdminNotification } from "@/lib/email";
 import { getPostHogClient } from "@/lib/posthog-server";
 
@@ -30,9 +30,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Server-side price calculation in USD. Never trust the client total —
-    // we recompute from the slug-keyed USD prices and the bedding flag.
+    // we recompute from the room's stored nightly rate + discount and the
+    // bedding flag.
     const estimate = calculateEstimate(
-      getUsdPrices(room.slug),
+      roomTier(room),
       data.check_in_date,
       data.check_out_date,
       { beddingPrepaid: data.bedding_prepaid }

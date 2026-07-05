@@ -9,7 +9,7 @@ import {
   calculateEstimate,
   formatApproxKRW,
   formatUSD,
-  getUsdPrices,
+  roomTier,
 } from "@/lib/pricing";
 
 export const metadata: Metadata = {
@@ -23,7 +23,8 @@ export default async function BookingPaymentPayPage({
 }: {
   searchParams: Promise<{ request_id?: string; payment_token?: string }>;
 }) {
-  const { request_id: requestId, payment_token: paymentToken } = await searchParams;
+  const { request_id: requestId, payment_token: paymentToken } =
+    await searchParams;
   if (!requestId) notFound();
 
   let request = await getBookingRequestById(requestId);
@@ -32,12 +33,14 @@ export default async function BookingPaymentPayPage({
 
   let breakdown: ReturnType<typeof calculateEstimate> | null = null;
   try {
-    breakdown = calculateEstimate(
-      getUsdPrices(request.room_slug),
-      request.check_in_date,
-      request.check_out_date,
-      { beddingPrepaid: request.bedding_prepaid },
-    );
+    if (request.rooms) {
+      breakdown = calculateEstimate(
+        roomTier(request.rooms),
+        request.check_in_date,
+        request.check_out_date,
+        { beddingPrepaid: request.bedding_prepaid },
+      );
+    }
   } catch {
     breakdown = null;
   }
@@ -49,9 +52,7 @@ export default async function BookingPaymentPayPage({
   if (isExpired && request.payment_status === "pending") {
     request = await markPaymentExpired(request);
   }
-  const isPayable =
-    request.payment_status === "pending" &&
-    !isExpired;
+  const isPayable = request.payment_status === "pending" && !isExpired;
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -86,22 +87,16 @@ export default async function BookingPaymentPayPage({
               Payment details
             </h3>
             <dl className="space-y-3">
-              {breakdown && breakdown.weeks > 0 && (
+              {breakdown && breakdown.nights > 0 && (
                 <SummaryRow
-                  label={`${formatUSD(breakdown.weeklyRate)} x ${breakdown.weeks} week${breakdown.weeks > 1 ? "s" : ""}`}
-                  value={formatUSD(breakdown.weeklySubtotal)}
+                  label={`${breakdown.nights} night${breakdown.nights > 1 ? "s" : ""} × ${formatUSD(breakdown.nightlyRate)}`}
+                  value={formatUSD(breakdown.nightsSubtotal)}
                 />
               )}
-              {breakdown && breakdown.days > 0 && (
+              {breakdown && breakdown.totalSaving > 0 && (
                 <SummaryRow
-                  label={`${formatUSD(breakdown.dailyRate)} x ${breakdown.days} day${breakdown.days > 1 ? "s" : ""}`}
-                  value={formatUSD(breakdown.dailySubtotal)}
-                />
-              )}
-              {breakdown?.discountApplied && (
-                <SummaryRow
-                  label="Long-stay discount (15%)"
-                  value={`-${formatUSD(breakdown.discount)}`}
+                  label={breakdown.savingLabel}
+                  value={`-${formatUSD(breakdown.totalSaving)}`}
                   valueClassName="text-green-700"
                 />
               )}
@@ -178,12 +173,12 @@ export default async function BookingPaymentPayPage({
             </div>
           )}
 
-	          {isPayable && (
-	            <>
-	              <PayPalStartButton
-	                href={`/booking-payment/start?request_id=${request.id}&payment_token=${encodeURIComponent(paymentToken!)}`}
-	              />
-	              <p className="mt-3 text-xs text-gray-500">
+          {isPayable && (
+            <>
+              <PayPalStartButton
+                href={`/booking-payment/start?request_id=${request.id}&payment_token=${encodeURIComponent(paymentToken!)}`}
+              />
+              <p className="mt-3 text-xs text-gray-500">
                 PayPal may offer card checkout without a PayPal account,
                 depending on your location, account settings, and PayPal risk
                 checks.

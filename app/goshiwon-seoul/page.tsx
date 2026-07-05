@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { siteConfig } from "@/lib/site-data";
-import { formatApproxKRW } from "@/lib/pricing";
+import { formatApproxKRW, formatUSD } from "@/lib/pricing";
+import { getEconomyTier } from "@/lib/queries";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: {
@@ -20,7 +23,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function GoshiwonSeoulPage() {
+export default async function GoshiwonSeoulPage() {
+  const tier = await getEconomyTier();
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <article>
@@ -100,7 +104,7 @@ export default function GoshiwonSeoulPage() {
           <li>₩140,000 to building rent and depreciation</li>
           <li>₩70,000 to utilities (gas, electric, water, internet — bundled)</li>
           <li>₩50,000 to cleaning staff and shared-area maintenance</li>
-          <li>₩15,000 to pantry food (rice, kimchi, ramen)</li>
+          <li>₩15,000 to pantry food (rice, kimchi)</li>
           <li>₩70,000 to the operator before tax</li>
         </ul>
         <p className="text-base text-gray-600 mb-4 leading-relaxed">
@@ -318,7 +322,7 @@ export default function GoshiwonSeoulPage() {
           We&rsquo;re one foreigner-friendly goshiwon in Dongjak-gu&rsquo;s
           Noryangjin neighborhood. Our pitch is simple: clean rooms,
           English-speaking management, transparent pricing, no surprise fees.
-          $75({formatApproxKRW(74)})/week, $275({formatApproxKRW(275)})/4 weeks for 4+ weeks (a 15% discount baked in).
+          {formatUSD(tier.weekly)}({formatApproxKRW(tier.weekly)})/week, {formatUSD(tier.monthly)}({formatApproxKRW(tier.monthly)})/4 weeks for 4+ weeks (a {Math.round(tier.discount * 100)}% discount baked in).
         </p>
         <p className="text-base text-gray-600 mb-4 leading-relaxed">
           If you&rsquo;re shopping around: visit a few goshiwons, including

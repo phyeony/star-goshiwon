@@ -18,9 +18,8 @@ export function RoomForm({ room }: RoomFormProps) {
     name_ko: room?.name_ko || "",
     slug: room?.slug || "",
     description: room?.description || "",
-    price_monthly: room?.price_monthly || 0,
-    price_weekly: room?.price_weekly || 0,
-    price_daily: room?.price_daily || 0,
+    nightly_rate_usd: room?.nightly_rate_usd || 0,
+    long_stay_discount: room?.long_stay_discount ?? 0.4,
     capacity: room?.capacity || 1,
     size_sqm: room?.size_sqm || "",
     amenities: room?.amenities.join(", ") || "",
@@ -179,55 +178,47 @@ export function RoomForm({ room }: RoomFormProps) {
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label
-            htmlFor="price_monthly"
+            htmlFor="nightly_rate_usd"
             className="block text-xs font-bold text-gray-700 uppercase mb-1"
           >
-            월 요금 (KRW)
+            1박 요금 (USD)
           </label>
           <input
-            id="price_monthly"
+            id="nightly_rate_usd"
             type="number"
-            value={form.price_monthly}
+            min={0}
+            step={0.5}
+            value={form.nightly_rate_usd}
             onChange={(e) =>
-              updateField("price_monthly", Number(e.target.value))
+              updateField("nightly_rate_usd", Number(e.target.value))
             }
             className="block w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             required
           />
+          <p className="mt-1 text-xs text-gray-500">
+            주 요금 = 1박×7, 4주 요금 = 1박×28에서 장기 할인 적용 (자동 계산).
+          </p>
         </div>
         <div>
           <label
-            htmlFor="price_weekly"
+            htmlFor="long_stay_discount"
             className="block text-xs font-bold text-gray-700 uppercase mb-1"
           >
-            주 요금 (KRW)
+            장기 할인 (%) · 28박 이상
           </label>
           <input
-            id="price_weekly"
+            id="long_stay_discount"
             type="number"
-            value={form.price_weekly}
+            min={0}
+            max={100}
+            step={1}
+            value={Math.round(form.long_stay_discount * 100)}
             onChange={(e) =>
-              updateField("price_weekly", Number(e.target.value))
+              updateField("long_stay_discount", Number(e.target.value) / 100)
             }
-            className="block w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            required
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="price_daily"
-            className="block text-xs font-bold text-gray-700 uppercase mb-1"
-          >
-            일 요금 (KRW)
-          </label>
-          <input
-            id="price_daily"
-            type="number"
-            value={form.price_daily}
-            onChange={(e) => updateField("price_daily", Number(e.target.value))}
             className="block w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             required
           />

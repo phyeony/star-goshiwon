@@ -82,7 +82,10 @@ const lodgingJsonLd = {
   email: siteConfig.email,
   telephone: siteConfig.phone,
   image: `${siteConfig.url}/images/og-cover.jpg`,
-  priceRange: "$75–$300",
+  // Economy weekly ($15×7) to private 4-week rate ($20×28 at 40% off). SEO
+  // metadata only — kept literal since the layout doesn't fetch; update if
+  // room rates change materially.
+  priceRange: "$105–$336",
   address: {
     "@type": "PostalAddress",
     streetAddress: "64, Manyang-ro 12ga-gil, Dongjak-gu",

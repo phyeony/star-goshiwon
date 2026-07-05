@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import { formatUSD, type UsdPriceTier } from "@/lib/pricing";
 
 type Slide = { type: "image"; base: string } | { type: "video"; src: string };
 
@@ -25,15 +26,17 @@ function heroSrcSet(base: string) {
 
 const variant = {
   font: "font-caveat font-bold",
-  headlineWeekly: "$75 a week.",
-  headlineMonthly: "$255 for 4 weeks.",
   subline: "Your life in the Heart of Seoul.",
   headlineOnly: false,
   description:
     "Central Seoul. Private room. Men\u00a0Only.\nThe cheapest way to experience Korea.",
 };
 
-export function HeroSlideshow() {
+// Hero pricing is quoted from the cheapest room (economy); the derived tier is
+// passed in from the server so the headline tracks the DB nightly rate.
+export function HeroSlideshow({ economy }: { economy: UsdPriceTier }) {
+  const headlineWeekly = `${formatUSD(economy.weekly)} a week.`;
+  const headlineMonthly = `${formatUSD(economy.monthly)} for 4 weeks.`;
   const [currentSlide, setCurrentSlide] = useState(0);
   const [pricingMode, setPricingMode] = useState<"weekly" | "monthly">(
     "monthly",
@@ -148,9 +151,7 @@ export function HeroSlideshow() {
             <p
               className={`${variant.font} text-6xl sm:text-7xl lg:text-8xl leading-[1.05] text-white mb-2 hero-text-shadow-heavy`}
             >
-              {pricingMode === "weekly"
-                ? variant.headlineWeekly
-                : variant.headlineMonthly}
+              {pricingMode === "weekly" ? headlineWeekly : headlineMonthly}
             </p>
             <h2
               className={`${variant.font} ${

@@ -7,7 +7,7 @@ import {
   formatApproxKRW,
   DEPOSIT_USD,
   calculateEstimate,
-  getUsdPrices,
+  roomTier,
 } from "@/lib/pricing";
 import { siteConfig } from "@/lib/site-data";
 
@@ -30,12 +30,14 @@ export default async function SuccessPage({
   // Wrapped in try/catch so older requests with retired room slugs still render.
   let breakdown: ReturnType<typeof calculateEstimate> | null = null;
   try {
-    breakdown = calculateEstimate(
-      getUsdPrices(request.room_slug),
-      request.check_in_date,
-      request.check_out_date,
-      { beddingPrepaid: request.bedding_prepaid }
-    );
+    if (request.rooms) {
+      breakdown = calculateEstimate(
+        roomTier(request.rooms),
+        request.check_in_date,
+        request.check_out_date,
+        { beddingPrepaid: request.bedding_prepaid },
+      );
+    }
   } catch {
     breakdown = null;
   }
@@ -93,35 +95,24 @@ export default async function SuccessPage({
                 {request.guest_count}
               </dd>
             </div>
-            {breakdown && breakdown.weeks > 0 && (
+            {breakdown && breakdown.nights > 0 && (
               <div className="flex justify-between border-t border-gray-100 pt-3">
                 <dt className="text-sm text-gray-500">
-                  {formatUSD(breakdown.weeklyRate)} × {breakdown.weeks} week
-                  {breakdown.weeks > 1 ? "s" : ""}
+                  {breakdown.nights} night{breakdown.nights > 1 ? "s" : ""} ×{" "}
+                  {formatUSD(breakdown.nightlyRate)}
                 </dt>
                 <dd className="text-sm font-medium text-gray-900">
-                  {formatUSD(breakdown.weeklySubtotal)}
+                  {formatUSD(breakdown.nightsSubtotal)}
                 </dd>
               </div>
             )}
-            {breakdown && breakdown.days > 0 && (
-              <div className="flex justify-between">
-                <dt className="text-sm text-gray-500">
-                  {formatUSD(breakdown.dailyRate)} × {breakdown.days} day
-                  {breakdown.days > 1 ? "s" : ""}
-                </dt>
-                <dd className="text-sm font-medium text-gray-900">
-                  {formatUSD(breakdown.dailySubtotal)}
-                </dd>
-              </div>
-            )}
-            {breakdown?.discountApplied && (
+            {breakdown && breakdown.totalSaving > 0 && (
               <div className="flex justify-between">
                 <dt className="text-sm text-green-700">
-                  Long-stay discount (15%)
+                  {breakdown.savingLabel}
                 </dt>
                 <dd className="text-sm font-medium text-green-700">
-                  −{formatUSD(breakdown.discount)}
+                  −{formatUSD(breakdown.totalSaving)}
                 </dd>
               </div>
             )}

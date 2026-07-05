@@ -37,57 +37,44 @@ interface PaymentLinkEmailData {
 
 function renderRateRowsHtml(b: PricingBreakdown) {
   const rows: string[] = [];
-  if (b.weeks > 0) {
+  if (b.nights > 0) {
     rows.push(
-      `<tr><td style="padding: 6px 0; color: #6b7280;">${formatUSD(b.weeklyRate)} × ${b.weeks} week${b.weeks > 1 ? "s" : ""}</td><td style="padding: 6px 0; text-align: right; font-weight: 600;">${formatUSD(b.weeklySubtotal)}</td></tr>`
+      `<tr><td style="padding: 6px 0; color: #6b7280;">${b.nights} night${b.nights > 1 ? "s" : ""} × ${formatUSD(b.nightlyRate)}</td><td style="padding: 6px 0; text-align: right; font-weight: 600;">${formatUSD(b.nightsSubtotal)}</td></tr>`,
     );
   }
-  if (b.days > 0) {
+  if (b.totalSaving > 0) {
     rows.push(
-      `<tr><td style="padding: 6px 0; color: #6b7280;">${formatUSD(b.dailyRate)} × ${b.days} day${b.days > 1 ? "s" : ""}</td><td style="padding: 6px 0; text-align: right; font-weight: 600;">${formatUSD(b.dailySubtotal)}</td></tr>`
-    );
-  }
-  if (b.discountApplied) {
-    rows.push(
-      `<tr><td style="padding: 6px 0; color: #15803d;">Long-stay discount (15%)</td><td style="padding: 6px 0; text-align: right; font-weight: 600; color: #15803d;">−${formatUSD(b.discount)}</td></tr>`
+      `<tr><td style="padding: 6px 0; color: #15803d;">${b.savingLabel}</td><td style="padding: 6px 0; text-align: right; font-weight: 600; color: #15803d;">−${formatUSD(b.totalSaving)}</td></tr>`,
     );
   }
   return rows.join("");
 }
 
-function renderRateLinesText(b: PricingBreakdown, currencyLabel?: string) {
+function renderRateLinesText(b: PricingBreakdown, savingLabel?: string) {
   const lines: string[] = [];
-  if (b.weeks > 0) {
+  if (b.nights > 0) {
     lines.push(
-      `- ${formatUSD(b.weeklyRate)} × ${b.weeks} week${b.weeks > 1 ? "s" : ""}: ${formatUSD(b.weeklySubtotal)}`
+      `- ${b.nights} night${b.nights > 1 ? "s" : ""} × ${formatUSD(b.nightlyRate)}: ${formatUSD(b.nightsSubtotal)}`,
     );
   }
-  if (b.days > 0) {
+  if (b.totalSaving > 0) {
     lines.push(
-      `- ${formatUSD(b.dailyRate)} × ${b.days} day${b.days > 1 ? "s" : ""}: ${formatUSD(b.dailySubtotal)}`
+      `- ${savingLabel ?? b.savingLabel}: −${formatUSD(b.totalSaving)}`,
     );
-  }
-  if (b.discountApplied) {
-    lines.push(`- ${currencyLabel ?? "Long-stay discount (15%)"}: −${formatUSD(b.discount)}`);
   }
   return lines.join("\n");
 }
 
 function renderRateRowsHtmlKo(b: PricingBreakdown) {
   const rows: string[] = [];
-  if (b.weeks > 0) {
+  if (b.nights > 0) {
     rows.push(
-      `<tr><td style="padding: 6px 0; color: #6b7280;">${formatUSD(b.weeklyRate)} × ${b.weeks}주</td><td style="padding: 6px 0; font-weight: 600;">${formatUSD(b.weeklySubtotal)}</td></tr>`
+      `<tr><td style="padding: 6px 0; color: #6b7280;">${b.nights}박 × ${formatUSD(b.nightlyRate)}</td><td style="padding: 6px 0; font-weight: 600;">${formatUSD(b.nightsSubtotal)}</td></tr>`,
     );
   }
-  if (b.days > 0) {
+  if (b.totalSaving > 0) {
     rows.push(
-      `<tr><td style="padding: 6px 0; color: #6b7280;">${formatUSD(b.dailyRate)} × ${b.days}일</td><td style="padding: 6px 0; font-weight: 600;">${formatUSD(b.dailySubtotal)}</td></tr>`
-    );
-  }
-  if (b.discountApplied) {
-    rows.push(
-      `<tr><td style="padding: 6px 0; color: #15803d;">장기 숙박 할인 (15%)</td><td style="padding: 6px 0; font-weight: 600; color: #15803d;">−${formatUSD(b.discount)}</td></tr>`
+      `<tr><td style="padding: 6px 0; color: #15803d;">장기 숙박 할인</td><td style="padding: 6px 0; font-weight: 600; color: #15803d;">−${formatUSD(b.totalSaving)}</td></tr>`,
     );
   }
   return rows.join("");
@@ -95,14 +82,13 @@ function renderRateRowsHtmlKo(b: PricingBreakdown) {
 
 function renderRateLinesTextKo(b: PricingBreakdown) {
   const lines: string[] = [];
-  if (b.weeks > 0) {
-    lines.push(`- ${formatUSD(b.weeklyRate)} × ${b.weeks}주: ${formatUSD(b.weeklySubtotal)}`);
+  if (b.nights > 0) {
+    lines.push(
+      `- ${b.nights}박 × ${formatUSD(b.nightlyRate)}: ${formatUSD(b.nightsSubtotal)}`,
+    );
   }
-  if (b.days > 0) {
-    lines.push(`- ${formatUSD(b.dailyRate)} × ${b.days}일: ${formatUSD(b.dailySubtotal)}`);
-  }
-  if (b.discountApplied) {
-    lines.push(`- 장기 숙박 할인 (15%): −${formatUSD(b.discount)}`);
+  if (b.totalSaving > 0) {
+    lines.push(`- 장기 숙박 할인: −${formatUSD(b.totalSaving)}`);
   }
   return lines.join("\n");
 }
@@ -141,8 +127,7 @@ function parseFromAddress(): { name?: string; email: string } {
 }
 
 const fromAddress = parseFromAddress();
-const adminEmail =
-  process.env.ADMIN_EMAIL || "stargoshiwon.seoul@gmail.com";
+const adminEmail = process.env.ADMIN_EMAIL || "stargoshiwon.seoul@gmail.com";
 
 export function buildGuestConfirmationHtml(data: BookingEmailData) {
   const inner = `
@@ -317,7 +302,7 @@ Seoul Goshiwon by Star Goshiwon`;
 }
 
 export async function sendPaymentConfirmedEmail(
-  data: Omit<PaymentLinkEmailData, "payment_url" | "payment_expires_at">
+  data: Omit<PaymentLinkEmailData, "payment_url" | "payment_expires_at">,
 ) {
   const subject = "Your booking is confirmed — Seoul Goshiwon by Star Goshiwon";
   const html = wrapEmailHtml(`
@@ -362,7 +347,7 @@ Seoul Goshiwon by Star Goshiwon`;
 체크아웃: ${data.check_out_date}
 결제 금액: ${formatTotal(data.estimated_total)}
 
-확인하기: ${siteConfig.url}/admin/requests`
+확인하기: ${siteConfig.url}/admin/requests`,
     ),
   ]);
 }
@@ -376,9 +361,7 @@ interface RefundEmailData {
 }
 
 export async function sendDepositRefundEmail(data: RefundEmailData) {
-  const label = data.is_deposit_refund
-    ? "security deposit"
-    : "booking payment";
+  const label = data.is_deposit_refund ? "security deposit" : "booking payment";
   const subject = `Your ${label} has been refunded — Seoul Goshiwon by Star Goshiwon`;
   const html = wrapEmailHtml(`
     <h1 style="font-size: 22px; margin: 0 0 16px;">Your refund is on its way</h1>
@@ -419,7 +402,7 @@ Seoul Goshiwon by Star Goshiwon`;
 객실: ${data.room_name}
 환불 금액: ${formatTotal(data.refund_amount)}
 
-확인하기: ${siteConfig.url}/admin/requests`
+확인하기: ${siteConfig.url}/admin/requests`,
     ),
   ]);
 }
@@ -428,7 +411,7 @@ export async function sendEmail(
   to: string,
   subject: string,
   text: string,
-  html?: string
+  html?: string,
 ) {
   if (process.env.E2E_TEST_MODE === "true") {
     storeTestEmail({ to, subject, text, html: html ?? "" });
@@ -449,7 +432,10 @@ export async function sendEmail(
     to = process.env.DEV_EMAIL_OVERRIDE;
     const tag = process.env.STAGING === "true" ? "STAGING" : "DEV";
     subject = `[${tag} → ${originalTo}] ${subject}`;
-    effectiveFrom = { name: `Goshiwon ${tag}`, email: process.env.DEV_EMAIL_OVERRIDE };
+    effectiveFrom = {
+      name: `Goshiwon ${tag}`,
+      email: process.env.DEV_EMAIL_OVERRIDE,
+    };
   }
 
   const config = getSmtpConfig();
