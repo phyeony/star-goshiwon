@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ADDITIONAL_REVIEW_CATEGORY_LABELS,
@@ -67,6 +67,13 @@ export function ReviewForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+
+  // The form is tall and users submit from its bottom; when the short
+  // thank-you panel replaces it, the old scroll offset would leave the
+  // message off-screen above the viewport.
+  useEffect(() => {
+    if (done) window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [done]);
 
   const needsComment =
     score !== null &&

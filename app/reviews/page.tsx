@@ -47,19 +47,21 @@ export default async function ReviewsPage() {
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_320px] lg:items-end">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">
-                Booking.com guest reviews
+                Verified guest reviews
               </p>
               <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-gray-900">
                 Guest Reviews
               </h1>
               <p className="mt-4 max-w-3xl text-lg leading-8 text-gray-600">
-                Recent reviews show strong scores for location, value for money,
-                room view, and WiFi. The review score uses Booking.com&rsquo;s
-                weighted calculation, where newer guest experiences carry more
-                weight.
+                Every review on this page comes from a verified stay. We now
+                collect reviews directly from our guests after checkout through
+                personal one-time review links — each one is marked
+                &ldquo;Verified direct stay&rdquo;. Earlier reviews are from our
+                guests&rsquo; verified Booking.com stays in 2025&ndash;2026.
               </p>
               <p className="mt-4 max-w-3xl text-sm leading-6 text-gray-500">
-                {bookingReviewSummary.source}
+                Guests rate location, value for money, room view, and WiFi
+                highly. {bookingReviewSummary.source}
               </p>
             </div>
 
