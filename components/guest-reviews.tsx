@@ -192,7 +192,9 @@ export function GuestReviews({
         <div className="mb-3 flex items-center justify-between gap-3">
           <div>
             <p className="text-sm font-bold text-gray-900">Guest review</p>
-            <p className="text-xs text-gray-500">Booking.com stay</p>
+            <p className="text-xs text-gray-500">
+              Verified stay · Booking.com
+            </p>
           </div>
           <ScoreBadge score={review.score} />
         </div>
@@ -212,7 +214,7 @@ export function GuestReviews({
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">
-              Booking.com reviews
+              Verified guest reviews
             </p>
             <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-gray-900">
               Guest Reviews
@@ -259,14 +261,15 @@ export function GuestReviews({
         <div className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">
-              Booking.com feedback
+              Verified guest reviews
             </p>
             <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-gray-900">
               Guest Reviews
             </h2>
             <p className="mt-2 text-base text-gray-500">
-              Booking.com guests rate the location and value highly, with the
-              strongest feedback on the view, WiFi, and nearby food options.
+              Guests from verified stays rate the location and value highly,
+              with the strongest feedback on the view, WiFi, and nearby food
+              options.
             </p>
           </div>
 

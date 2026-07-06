@@ -44,7 +44,7 @@ export default async function ReviewsPage() {
             <span className="text-gray-900">Guest Reviews</span>
           </nav>
 
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_320px] lg:items-end">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_320px] lg:items-start">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">
                 Verified guest reviews
