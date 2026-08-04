@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { AdminModal } from "@/components/admin/admin-modal";
 import { DocumentView } from "@/components/documents/document-view";
 import { ISSUER } from "@/lib/documents/issuer";
 import { resolveDocument } from "@/lib/documents/resolve";
@@ -34,6 +35,7 @@ interface Props {
 }
 
 export function DocumentsCard({ request, templates }: Props) {
+  const [open, setOpen] = useState(false);
   const [type, setType] = useState<DocumentType>("letter");
   const [lang, setLang] = useState<DocumentLang>("ko");
   const [form, setForm] = useState<GuestDocumentForm>({
@@ -111,18 +113,8 @@ export function DocumentsCard({ request, templates }: Props) {
   const inputClass =
     "block w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500";
 
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">문서 발급</h2>
-        <Link
-          href="/admin/document-templates"
-          className="text-xs font-medium text-indigo-600 hover:text-indigo-700"
-        >
-          양식 관리
-        </Link>
-      </div>
-
+  const editor = (
+    <div className="space-y-4">
       <div className="flex flex-wrap gap-3">
         <div className="inline-flex rounded-lg border border-gray-300 overflow-hidden">
           <button
@@ -270,26 +262,18 @@ export function DocumentsCard({ request, templates }: Props) {
       {resolved.unknownTokens.length > 0 && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
           양식에 알 수 없는 항목이 있습니다:{" "}
-          {resolved.unknownTokens.map((t) => `{{${t}}}`).join(", ")} — 양식
-          관리에서 확인해 주세요.
+          {resolved.unknownTokens.map((t) => `{{${t}}}`).join(", ")} —{" "}
+          <Link href="/admin/document-templates" className="underline">
+            양식 관리
+          </Link>
+          에서 확인해 주세요.
         </div>
       )}
 
-      <div>
-        <div className="text-xs font-bold text-gray-700 uppercase mb-1">
-          미리보기
-        </div>
-        <div className="border border-gray-200 rounded-lg bg-gray-50 max-h-[420px] overflow-y-auto">
-          <div className="origin-top scale-[0.72] w-[139%]">
-            <DocumentView resolved={resolved} />
-          </div>
-        </div>
-      </div>
-
       {send.kind === "success" && (
         <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
-          문서를 {request.guest_email}로 발송했습니다. 아래 이메일 기록에서
-          확인할 수 있습니다.
+          문서를 {request.guest_email}로 발송했습니다. 이메일 기록에서 확인할 수
+          있습니다.
         </div>
       )}
       {send.kind === "error" && (
@@ -298,11 +282,11 @@ export function DocumentsCard({ request, templates }: Props) {
         </div>
       )}
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
         <button
           type="button"
           onClick={openPrintView}
-          className="w-full px-4 py-2 rounded-lg text-sm font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100"
+          className="flex-1 px-4 py-2 rounded-lg text-sm font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100"
         >
           인쇄 / PDF 저장
         </button>
@@ -310,11 +294,66 @@ export function DocumentsCard({ request, templates }: Props) {
           type="button"
           onClick={handleSend}
           disabled={send.kind === "sending"}
-          className="w-full px-4 py-2 rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+          className="flex-1 px-4 py-2 rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
         >
           {send.kind === "sending" ? "발송 중..." : "게스트에게 발송"}
         </button>
       </div>
     </div>
+  );
+
+  const preview = (
+    <div className="flex flex-col lg:h-full">
+      <div className="text-xs font-bold text-gray-700 uppercase mb-1">
+        미리보기
+      </div>
+      <div className="border border-gray-200 rounded-lg bg-gray-50 overflow-y-auto lg:flex-1 max-h-[60vh]">
+        <div className="origin-top scale-[0.72] w-[139%]">
+          <DocumentView resolved={resolved} />
+        </div>
+      </div>
+    </div>
+  );
+
+  const customCount = templates.length;
+
+  return (
+    <>
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">문서 발급</h2>
+          <Link
+            href="/admin/document-templates"
+            className="text-xs font-medium text-indigo-600 hover:text-indigo-700"
+          >
+            양식 관리
+          </Link>
+        </div>
+        <p className="text-xs text-gray-500">
+          체류 확인서 · 이용 계약서를 미리보기 후 인쇄하거나 게스트에게
+          발송합니다.
+          {customCount > 0 && ` 등록된 사용자 양식 ${customCount}개.`}
+        </p>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="w-full px-4 py-2 rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+        >
+          문서 발급 열기
+        </button>
+      </div>
+
+      {open && (
+        <AdminModal
+          title={`문서 발급 — ${request.guest_name}`}
+          onClose={() => setOpen(false)}
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {editor}
+            {preview}
+          </div>
+        </AdminModal>
+      )}
+    </>
   );
 }

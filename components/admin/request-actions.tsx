@@ -9,6 +9,7 @@ import type {
 } from "@/lib/types";
 import { BOOKING_STATUS_LABELS, PAYMENT_STATUS_LABELS_KO } from "@/lib/types";
 import { DEPOSIT_USD, formatUSD } from "@/lib/pricing";
+import { AdminModal } from "@/components/admin/admin-modal";
 import {
   EmailComposer,
   type EmailComposerMode,
@@ -296,7 +297,10 @@ export function RequestActions({
       </div>
 
       {composerMode && (
-        <ComposerModal onClose={() => setComposerMode(null)}>
+        <AdminModal
+          title="고객에게 이메일 보내기"
+          onClose={() => setComposerMode(null)}
+        >
           <EmailComposer
             request={request}
             templates={templates}
@@ -305,45 +309,8 @@ export function RequestActions({
             bare
             onSent={() => setComposerMode(null)}
           />
-        </ComposerModal>
+        </AdminModal>
       )}
     </>
-  );
-}
-
-function ComposerModal({
-  onClose,
-  children,
-}: {
-  onClose: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[92vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 sticky top-0 bg-white z-10">
-          <h2 className="text-lg font-semibold text-gray-900">
-            고객에게 이메일 보내기
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="닫기"
-            className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
-          >
-            ×
-          </button>
-        </div>
-        <div className="p-6">{children}</div>
-      </div>
-    </div>
   );
 }

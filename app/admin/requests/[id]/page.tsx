@@ -267,8 +267,8 @@ export default async function RequestDetailPage({ params }: Props) {
             request={request}
             units={roomUnitAvailability}
           />
-          <RequestActions request={request} templates={templates} />
           <DocumentsCard request={request} templates={documentTemplates} />
+          <RequestActions request={request} templates={templates} />
           {request.payment_status === "paid" && (
             <ReviewInviteButton
               requestId={request.id}
