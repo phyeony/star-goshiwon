@@ -12,3 +12,40 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Uploaded document templates arrive as plain HTML (converted from .docx),
+   which carries no styling of its own. These rules give headings, lists, and
+   tables a document-like appearance in the preview, print view, and email. */
+.document-template-body h1,
+.document-template-body h2,
+.document-template-body h3 {
+  font-weight: 700;
+  margin: 1.2em 0 0.5em;
+}
+.document-template-body h1 {
+  font-size: 1.25rem;
+  text-align: center;
+}
+.document-template-body h2 {
+  font-size: 1rem;
+}
+.document-template-body p {
+  margin: 0 0 0.6em;
+}
+.document-template-body ul,
+.document-template-body ol {
+  margin: 0 0 0.8em 1.25em;
+  list-style: revert;
+}
+.document-template-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.8em 0;
+}
+.document-template-body th,
+.document-template-body td {
+  border: 1px solid #d1d5db;
+  padding: 0.4em 0.6em;
+  text-align: left;
+  vertical-align: top;
+}

@@ -14,6 +14,7 @@ const navItems = [
   { href: "/admin/rooms", label: "객실 타입" },
   { href: "/admin/room-units", label: "객실 번호" },
   { href: "/admin/email-templates", label: "이메일 템플릿" },
+  { href: "/admin/document-templates", label: "문서 양식" },
 ];
 
 export function AdminNav() {

@@ -12,6 +12,8 @@ import { RequestActions } from "@/components/admin/request-actions";
 import { ReviewInviteButton } from "@/components/admin/review-invite-button";
 import { EmailHistory } from "@/components/admin/email-history";
 import { RoomUnitAssignment } from "@/components/admin/room-unit-assignment";
+import { DocumentsCard } from "@/components/admin/documents-card";
+import { getDocumentTemplates } from "@/lib/documents/queries";
 import { PAYMENT_STATUS_LABELS_KO } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -22,10 +24,11 @@ interface Props {
 
 export default async function RequestDetailPage({ params }: Props) {
   const { id } = await params;
-  const [request, templates, emailSends] = await Promise.all([
+  const [request, templates, emailSends, documentTemplates] = await Promise.all([
     getBookingRequestById(id),
     getEmailTemplates(),
     getEmailSendsForRequest(id),
+    getDocumentTemplates(),
   ]);
   if (!request) notFound();
 
@@ -265,6 +268,7 @@ export default async function RequestDetailPage({ params }: Props) {
             units={roomUnitAvailability}
           />
           <RequestActions request={request} templates={templates} />
+          <DocumentsCard request={request} templates={documentTemplates} />
           {request.payment_status === "paid" && (
             <ReviewInviteButton
               requestId={request.id}
