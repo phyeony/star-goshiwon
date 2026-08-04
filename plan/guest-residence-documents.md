@@ -2,7 +2,7 @@
 
 Date: 2026-07-05
 Revised: 2026-08-04 — added admin-editable document templates + DOCX upload
-Status: approved design, pending implementation plan
+Status: implemented 2026-08-05 (commits b69c0b0, 81e388e, fc9b6d7)
 
 ## Goal
 
@@ -217,11 +217,29 @@ DocumentsCard (booking props + ephemeral form state)
   `{{tokens}}` typed in where guest data belongs, so the import path can be
   verified against the real document rather than a synthetic fixture.
 
-## Known risk (rev. 2026-08-04)
+## Known risk (rev. 2026-08-04, updated 2026-08-05)
 
-`mammoth` has not been verified against the OpenNext/Cloudflare Workers
-runtime — the app currently ships 11 runtime dependencies, none of which do
-file parsing. The implementation plan therefore opens with a spike task: if
-`mammoth` cannot build or run on Workers, the DOCX route is dropped and the
-admin pastes HTML instead (converting the .docx to HTML once, locally). Every
-other part of this design is independent of that outcome.
+`mammoth` (added as a dependency) **builds cleanly into the OpenNext/Workers
+bundle** — verified with `opennextjs-cloudflare build`. Its *runtime* behaviour
+on Workers is still unverified: the conversion route sits behind admin auth,
+so it cannot be exercised through `opennextjs-cloudflare preview` without a
+Supabase login. First real proof comes from a staging deploy.
+
+If it does fail at runtime, the fallback needs no code change: the admin
+pastes HTML into the editor instead (converting the .docx locally once), and
+`lib/documents/docx.ts` plus the `convert` route can be deleted in one pass.
+Everything else — templates, resolution, rendering, sending — is independent
+of the DOCX path.
+
+## Verification at implementation (2026-08-05)
+
+- `pnpm run verify` green: 84 unit tests, production build, 13 e2e.
+- Unit coverage: builders (KO/EN, missing fields, room fallback), email HTML
+  and text rendering, token substitution + unknown-token passthrough, HTML
+  sanitizing, non-lease wording warnings, and `resolveDocument` fallback.
+- E2E: built-in letter (KO) and contract (EN) sends land in the test outbox
+  with an audit row; an uploaded template replaces the document and deleting
+  it restores the built-in one; unknown booking returns `not_found`.
+- **Not yet verified by hand** (needs an admin browser session): the live
+  preview, the print dialog output for all four variants, and a real .docx
+  upload through the UI.

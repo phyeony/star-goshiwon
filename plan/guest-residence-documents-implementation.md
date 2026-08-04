@@ -1,3 +1,27 @@
+> **STATUS: SUPERSEDED — implemented 2026-08-05.**
+>
+> This plan was written for the pre-revision spec (code-only document wording).
+> The 2026-08-04 spec revision added DB-backed templates and .docx upload,
+> which reshaped Tasks 4–6. The feature shipped in commits `b69c0b0`,
+> `81e388e`, `fc9b6d7`; `pnpm run verify` is green (84 unit tests, production
+> build, 13 e2e).
+>
+> Tasks 1–3 below (document model, letter builder, contract builder, email
+> renderer) shipped essentially as written. What changed in flight:
+>
+> - `@/…` imports do not resolve in vitest; files under `lib/` use relative
+>   imports. Test fixtures moved to `lib/documents/test-fixtures.ts` so
+>   importing them does not re-register another file's suites.
+> - Added beyond the plan: `lib/documents/{queries,templates,resolve,docx}.ts`,
+>   the `document_templates` migration, `/admin/document-templates` with the
+>   editor component, and the `mammoth` dependency.
+> - `DocumentView` takes a `ResolvedDocument` (built-in model *or* uploaded
+>   HTML), not a bare `DocumentModel`.
+> - The e2e fixture route gained `set-template` / `clear-template` actions.
+>
+> Kept for the task-by-task reasoning and test lists. For current behaviour,
+> read `plan/guest-residence-documents.md` and the code.
+
 # Guest Residence Documents Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
