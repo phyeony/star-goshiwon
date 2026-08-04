@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DOCUMENT_TOKENS } from "@/lib/documents/templates";
 import type { DocumentLang, DocumentType } from "@/lib/documents/types";
@@ -22,9 +22,15 @@ export interface SlotDescriptor {
 interface Props {
   slot: SlotDescriptor;
   template: DocumentTemplate | null;
+  /** Lets the manager warn before switching slots away from unsaved edits. */
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
-export function DocumentTemplateEditor({ slot, template }: Props) {
+export function DocumentTemplateEditor({
+  slot,
+  template,
+  onDirtyChange,
+}: Props) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -35,9 +41,19 @@ export function DocumentTemplateEditor({ slot, template }: Props) {
   );
   const [state, setState] = useState<SaveState>({ kind: "idle" });
   const [conversionWarnings, setConversionWarnings] = useState<string[]>([]);
+  // Last saved content, so switching slots can warn about unsaved edits.
+  const [baseline, setBaseline] = useState({
+    title: template?.title ?? "",
+    bodyHtml: template?.body_html ?? "",
+  });
 
   const isCustom = Boolean(template);
   const busy = state.kind === "busy";
+
+  const dirty = title !== baseline.title || bodyHtml !== baseline.bodyHtml;
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+  }, [dirty, onDirtyChange]);
 
   const previewHtml = useMemo(() => bodyHtml, [bodyHtml]);
 
@@ -94,6 +110,7 @@ export function DocumentTemplateEditor({ slot, template }: Props) {
         setState({ kind: "error", message: body?.error || `HTTP ${res.status}` });
         return;
       }
+      setBaseline({ title, bodyHtml });
       setState({ kind: "saved", warnings: body.warnings ?? [] });
       router.refresh();
     } catch (err) {
@@ -123,6 +140,7 @@ export function DocumentTemplateEditor({ slot, template }: Props) {
       setTitle("");
       setBodyHtml("");
       setSourceFilename("");
+      setBaseline({ title: "", bodyHtml: "" });
       setState({ kind: "idle" });
       router.refresh();
     } catch (err) {
@@ -131,11 +149,10 @@ export function DocumentTemplateEditor({ slot, template }: Props) {
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+    <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">{slot.label}</h2>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-xs text-gray-500">
             {isCustom ? (
               <>
                 업로드한 양식 사용 중

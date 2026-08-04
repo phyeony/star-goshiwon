@@ -1,37 +1,7 @@
 import { getDocumentTemplates } from "@/lib/documents/queries";
-import {
-  DocumentTemplateEditor,
-  type SlotDescriptor,
-} from "@/components/admin/document-template-editor";
+import { DocumentTemplateManager } from "@/components/admin/document-template-manager";
 
 export const dynamic = "force-dynamic";
-
-const SLOTS: SlotDescriptor[] = [
-  {
-    type: "letter",
-    lang: "ko",
-    label: "체류 확인서 (한국어)",
-    builtInTitle: "체류(숙소) 확인서",
-  },
-  {
-    type: "letter",
-    lang: "en",
-    label: "체류 확인서 (English)",
-    builtInTitle: "Accommodation (Residence) Confirmation",
-  },
-  {
-    type: "contract",
-    lang: "ko",
-    label: "이용 계약서 (한국어)",
-    builtInTitle: "숙소 이용 계약서",
-  },
-  {
-    type: "contract",
-    lang: "en",
-    label: "이용 계약서 (English)",
-    builtInTitle: "Accommodation Agreement",
-  },
-];
 
 export default async function DocumentTemplatesPage() {
   const templates = await getDocumentTemplates();
@@ -56,19 +26,7 @@ export default async function DocumentTemplatesPage() {
         자동으로 확인하여 안내합니다.
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {SLOTS.map((slot) => (
-          <DocumentTemplateEditor
-            key={`${slot.type}-${slot.lang}`}
-            slot={slot}
-            template={
-              templates.find(
-                (t) => t.type === slot.type && t.lang === slot.lang
-              ) ?? null
-            }
-          />
-        ))}
-      </div>
+      <DocumentTemplateManager templates={templates} />
     </div>
   );
 }
