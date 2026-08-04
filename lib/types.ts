@@ -451,6 +451,11 @@ export interface Database {
         Insert: EmailReceiveInsert;
         Update: Partial<EmailReceiveInsert>;
       };
+      document_templates: {
+        Row: DocumentTemplate;
+        Insert: DocumentTemplateUpsert;
+        Update: Partial<DocumentTemplateUpsert>;
+      };
     };
     Views: {};
     Functions: {};
@@ -545,6 +550,31 @@ export interface Review {
   status: ReviewStatus;
   submitted_at: string;
   reviewed_at: string | null;
+}
+
+// ─── Guest Residence Documents ───
+
+/** Admin-editable override for a built-in document. No row = built-in renders. */
+export interface DocumentTemplate {
+  id: string;
+  type: "letter" | "contract";
+  lang: "ko" | "en";
+  title: string;
+  /** Document body HTML with {{token}} placeholders. Sanitized at save time. */
+  body_html: string;
+  /** Provenance only, e.g. "계약서_2026.docx". The file itself is not stored. */
+  source_filename: string;
+  updated_at: string;
+  updated_by_email: string;
+}
+
+export interface DocumentTemplateUpsert {
+  type: "letter" | "contract";
+  lang: "ko" | "en";
+  title: string;
+  body_html: string;
+  source_filename?: string;
+  updated_by_email?: string;
 }
 
 export interface ReviewInsert {

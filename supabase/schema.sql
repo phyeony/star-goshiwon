@@ -284,3 +284,19 @@ CREATE INDEX IF NOT EXISTS reviews_status_idx ON reviews (status);
 
 ALTER TABLE review_invites ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
+
+-- Admin-editable templates for guest residence documents. A row overrides the
+-- built-in code-generated document for its (type, lang) pair; no row = built-in.
+CREATE TABLE IF NOT EXISTS document_templates (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  type TEXT NOT NULL CHECK (type IN ('letter', 'contract')),
+  lang TEXT NOT NULL CHECK (lang IN ('ko', 'en')),
+  title TEXT NOT NULL DEFAULT '',
+  body_html TEXT NOT NULL DEFAULT '',
+  source_filename TEXT NOT NULL DEFAULT '',
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_by_email TEXT NOT NULL DEFAULT '',
+  UNIQUE (type, lang)
+);
+
+ALTER TABLE document_templates ENABLE ROW LEVEL SECURITY;

@@ -151,6 +151,23 @@ function missingGuestFields(
   return missing;
 }
 
+/**
+ * Required ephemeral fields still blank, in the document's language. Used by
+ * both the built-in documents and uploaded templates so the admin gets the
+ * same warning either way.
+ */
+export function missingDocumentFields(
+  type: DocumentType,
+  form: GuestDocumentForm,
+  lang: DocumentLang
+): string[] {
+  const missing = missingGuestFields(form, lang);
+  if (type === "contract" && !form.homeAddress.trim()) {
+    missing.push(CONTRACT_TEXT[lang].homeAddress);
+  }
+  return missing;
+}
+
 function issuerFields(issuer: Issuer, lang: DocumentLang): DocumentField[] {
   const t = LETTER_TEXT[lang];
   return [
@@ -300,8 +317,7 @@ export function buildContract(
   lang: DocumentLang
 ): DocumentModel {
   const t = CONTRACT_TEXT[lang];
-  const missing = missingGuestFields(form, lang);
-  if (!form.homeAddress.trim()) missing.push(t.homeAddress);
+  const missing = missingDocumentFields("contract", form, lang);
 
   // Explicitly typed: without the annotation TypeScript infers `never[]` for
   // the empty `paragraphs`/`fields` arrays and rejects the push below.

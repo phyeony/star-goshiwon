@@ -85,7 +85,7 @@ function renderButton(url: string, label: string): string {
   return `<p style="margin: 24px 0;"><a href="${escapeHtml(url)}" style="display: inline-block; background: #4f46e5; color: #ffffff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 700;">${escapeHtml(label)}</a></p>`;
 }
 
-function escapeHtml(s: string): string {
+export function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")

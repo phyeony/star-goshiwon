@@ -1,6 +1,7 @@
 # Guest Residence Documents — Design Spec
 
 Date: 2026-07-05
+Revised: 2026-08-04 — added admin-editable document templates + DOCX upload
 Status: approved design, pending implementation plan
 
 ## Goal
@@ -20,6 +21,9 @@ them to the guest. Guests need these for immigration (체류지 변경신고,
 | Language | **Two separate versions** — admin picks KO or EN per document; each renders standalone. |
 | UX placement | **Card on the existing request detail page** (`/admin/requests/[id]`), not a new page. Print view is a separate chrome-free route. |
 | Send button | **Option A** — the document is rendered as the email's HTML body and sent through the existing `sendEmail` + `createEmailSend` audit pipeline. No attachment, no tokenized link. Email includes a "print / save as PDF" hint for the guest. |
+| Document wording source (rev. 2026-08-04) | **DB-backed templates with a code fallback.** A `document_templates` row for a (type, lang) pair overrides the built-in document; with no row, the code-built document renders. The feature therefore works before any template is uploaded. |
+| Updating a template (rev. 2026-08-04) | **Upload a .docx**, or paste/edit HTML directly. The upload is converted to HTML *at upload time* and stored as text — the file itself is never stored, so no R2 bucket or Supabase Storage is needed and the render pipeline is unchanged. |
+| Per-booking data in templates (rev. 2026-08-04) | `{{token}}` substitution reusing `substitute()` from `lib/admin-email-templates.ts`. The admin types tokens into the Word document before uploading. |
 
 ## The two documents
 
@@ -34,6 +38,58 @@ foreign stays as a residential lease would invoke 주택임대차보호법
 tenancy rights. Both documents state only facts backed by the booking
 record. Documents are only issuable per real booking request, which
 enforces "only certify true stays."
+
+## Admin-editable templates (rev. 2026-08-04)
+
+The owner must be able to change the contract wording — and replace the whole
+format from an existing Word file — without a code change or deploy.
+
+**Storage.** One additive table:
+
+```
+document_templates
+  id                uuid pk
+  type              text     'letter' | 'contract'
+  lang              text     'ko' | 'en'
+  title             text     document title, overrides the built-in
+  body_html         text     the document body, with {{tokens}}
+  source_filename   text     e.g. "계약서_2026.docx" — provenance only
+  updated_at        timestamptz
+  updated_by_email  text
+  unique (type, lang)
+```
+
+**Resolution.** `resolveDocument(type, lang, booking, form)` returns the
+template-rendered document when a row exists for that pair, and the
+code-built `DocumentModel` otherwise. A missing or deleted row is always a
+safe state: the built-in document takes over. Both shapes feed the same
+preview, print route, and email renderer.
+
+**Upload.** `.docx` is converted to HTML on upload (`mammoth`) and stored in
+`body_html`; the binary is discarded. Fidelity is approximate — headings,
+paragraphs, and simple tables survive; text boxes, columns, and exact fonts
+do not — so the admin previews and touches up the HTML before saving. Pasting
+or editing HTML directly is always available and is the fallback if the DOCX
+converter cannot run in the Workers runtime.
+
+**Tokens.** The admin types `{{guest_name}}`, `{{room_name}}`, `{{period}}`,
+`{{passport_number}}`, `{{nationality}}`, `{{date_of_birth}}`,
+`{{home_address}}`, `{{special_terms}}`, `{{total_usd}}`, `{{deposit_usd}}`,
+`{{issue_date}}`, `{{issuer_name}}`, `{{issuer_registration_number}}`,
+`{{issuer_representative}}`, `{{issuer_address}}` into the Word file before
+uploading. Substitution reuses `substitute()` from
+`lib/admin-email-templates.ts`; unknown tokens are left visible rather than
+silently blanked, so a typo shows up in the preview.
+
+**Legal guard.** Once a contract body is uploaded wholesale, the non-lease
+framing is the owner's to maintain — nothing can structurally protect it. The
+save action therefore shows a **non-blocking warning** when a contract body
+contains `임대차계약서` / "lease" or lacks a non-lease statement. It warns; it
+does not refuse.
+
+**Trust boundary.** Only allowlisted admins can upload, and the stored HTML is
+rendered with `dangerouslySetInnerHTML` after `<script>`/event-handler
+stripping. This is an admin-trusted surface, not a guest-facing one.
 
 ## Components
 
@@ -76,6 +132,24 @@ enforces "only certify true stays."
    `createEmailSend(...)` audit row (so sends appear in Email History).
    Guest legal fields exist only in the request body — not logged, not
    stored beyond the email audit copy of the sent body.
+7. **`supabase/migrations/<date>-document-templates.sql`** (rev. 2026-08-04) —
+   additive `document_templates` table above, plus `schema.sql` and
+   `lib/types.ts` entries. No change to existing tables.
+8. **`lib/documents/templates.ts`** (rev. 2026-08-04) — token map builder
+   (`buildDocumentVarMap(booking, form, issuer, lang)`), HTML sanitizer, and
+   `renderTemplateBody(template, vars)`. Pure; unit-tested.
+9. **`lib/documents/resolve.ts`** (rev. 2026-08-04) — `resolveDocument(...)`
+   returning either `{ kind: "model", model }` (code-built) or
+   `{ kind: "html", title, html }` (template-rendered). The single seam every
+   surface goes through.
+10. **`lib/documents/docx.ts`** (rev. 2026-08-04) — `convertDocxToHtml(bytes)`
+    via `mammoth`. Isolated in one module so the paste-HTML fallback is a
+    one-file removal if the Workers runtime rejects it.
+11. **`/admin/document-templates`** (rev. 2026-08-04) — list of the four
+    (type, lang) slots showing built-in vs custom, an editor with .docx
+    upload + HTML textarea + live preview + token reference, a save that runs
+    the legal-guard warning, and a delete that reverts the slot to built-in.
+    Mirrors `/admin/email-templates`.
 
 ## Data flow
 
@@ -113,11 +187,22 @@ DocumentsCard (booking props + ephemeral form state)
   mailbox; all four variants (letter/contract × KO/EN) checked via
   Save-as-PDF. The rasterized PDF itself is not machine-verifiable
   (native print dialog); the print route's HTML is the tested artifact.
+- **Templates** (rev. 2026-08-04): unit tests for token substitution
+  (including unknown-token passthrough), HTML sanitizing, and the legal-guard
+  warning; `resolveDocument` falling back to the built-in document when no row
+  exists; DOCX conversion asserted against a small fixture `.docx` committed
+  under `lib/documents/__fixtures__/`. E2E: uploading a template changes the
+  emailed document, and deleting it restores the built-in one.
 
 ## Out of scope (YAGNI)
 
 - E-signature flow.
-- Persisting documents or guest legal data in the DB.
+- Persisting *issued* documents or guest legal data in the DB. (Templates are
+  persisted; filled-in documents and passport data are not.)
+- Template version history / rollback. The emailed copy in `email_sends`
+  records what was actually sent; printed PDFs have no such record.
+- Uploading HWP/HWPX or PDF. 한글 exports to .docx; that is the import path.
+- Guest-facing or non-admin template editing.
 - A documents list/history page (email audit already records sends).
 - Server-side PDF generation / attachments (revisit only if guests
   report the email-body format being rejected by officials).
@@ -128,3 +213,15 @@ DocumentsCard (booking props + ephemeral form state)
   대표자명, Korean business name + address, stamp image.
 - Confirm with 출입국·외국인청 (or a 행정사) whether typical guests'
   visa types need the letter, the contract, or both.
+- (rev. 2026-08-04) Provide the existing contract as a `.docx` with
+  `{{tokens}}` typed in where guest data belongs, so the import path can be
+  verified against the real document rather than a synthetic fixture.
+
+## Known risk (rev. 2026-08-04)
+
+`mammoth` has not been verified against the OpenNext/Cloudflare Workers
+runtime — the app currently ships 11 runtime dependencies, none of which do
+file parsing. The implementation plan therefore opens with a spike task: if
+`mammoth` cannot build or run on Workers, the DOCX route is dropped and the
+admin pastes HTML instead (converting the .docx to HTML once, locally). Every
+other part of this design is independent of that outcome.
