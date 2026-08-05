@@ -80,10 +80,13 @@ export function DocumentsCard({ request, templates }: Props) {
   }
 
   function openPrintView() {
+    // Deliberately NOT "noopener": that puts the new tab in a fresh browsing
+    // context group, which does not inherit sessionStorage — the print view
+    // would then render blanks instead of the guest data typed here. Same
+    // origin, admin-only, so the opener reference costs nothing.
     window.open(
       `/admin/requests/${request.id}/documents/print?type=${type}&lang=${lang}`,
-      "_blank",
-      "noopener"
+      "_blank"
     );
   }
 

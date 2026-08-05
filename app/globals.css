@@ -49,3 +49,52 @@
   text-align: left;
   vertical-align: top;
 }
+
+/* ── Document print view ──────────────────────────────────────────────
+   The print route renders inside the admin layout, so printing must be
+   isolated to the document itself: any surrounding chrome (nav, buttons,
+   warning bars, and — if the dialog is opened from elsewhere — form
+   inputs) must never reach the PDF. Page margins live here rather than in
+   an inline <style> so they are part of a real stylesheet. */
+@media print {
+  @page {
+    size: A4;
+    margin: 18mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  /* Hide everything, then reveal only the document subtree. */
+  body * {
+    visibility: hidden;
+  }
+  .document-print-root,
+  .document-print-root * {
+    visibility: visible;
+  }
+  .document-print-root {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Form controls never belong in an issued document. */
+  .document-print-root input,
+  .document-print-root textarea,
+  .document-print-root select,
+  .document-print-root button {
+    display: none !important;
+  }
+
+  /* Keep table rules and shaded cells visible in the PDF. */
+  .document-print-root * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

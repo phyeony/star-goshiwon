@@ -8,7 +8,9 @@ import type { DocumentModel } from "@/lib/documents/types";
  */
 export function DocumentView({ resolved }: { resolved: ResolvedDocument }) {
   return (
-    <article className="bg-white text-gray-900 mx-auto w-full max-w-[210mm] px-10 py-12 print:px-0 print:py-0">
+    // On screen the article mimics an A4 sheet. In print, @page owns the
+    // margins, so the sheet drops its own padding and width cap.
+    <article className="bg-white text-gray-900 mx-auto w-full max-w-[210mm] px-10 py-12 print:max-w-none print:px-0 print:py-0">
       {resolved.kind === "model" ? (
         <ModelBody model={resolved.model} />
       ) : (

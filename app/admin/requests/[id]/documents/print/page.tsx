@@ -24,8 +24,9 @@ export default async function DocumentPrintPage({
   const template = await getDocumentTemplate(type, lang);
 
   return (
-    <main className="bg-white min-h-screen p-8 print:p-0">
-      <style>{`@page { size: A4; margin: 18mm; } @media print { body { background: #fff; } }`}</style>
+    // document-print-root drives the @media print rules in globals.css: only
+    // this subtree reaches the PDF, and @page supplies the page margins.
+    <main className="document-print-root bg-white min-h-screen p-8">
       <DocumentPrintClient
         request={request}
         template={template}
