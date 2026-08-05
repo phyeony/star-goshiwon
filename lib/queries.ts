@@ -485,6 +485,46 @@ export async function updateRoomUnitBlock(
   return data as RoomUnitBlock;
 }
 
+/**
+ * A cancelled direct block means the request no longer holds the room, so the
+ * booking request's assignment has to be released with it. Otherwise the unit
+ * frees up on the calendar while the request still claims it, and a second
+ * request can be assigned the same unit — a clash that only surfaces at
+ * approval time, after the guest has been told.
+ *
+ * Only releases when the request still points at the unit this block held: if
+ * the assignment was already moved elsewhere, that newer assignment wins.
+ */
+export function shouldReleaseAssignmentForCancelledBlock(
+  block: Pick<RoomUnitBlock, "source" | "booking_request_id" | "room_unit_id">,
+  request: Pick<BookingRequest, "assigned_room_unit_id"> | null
+): boolean {
+  if (block.source !== "direct" || !block.booking_request_id) return false;
+  if (!request?.assigned_room_unit_id) return false;
+  return request.assigned_room_unit_id === block.room_unit_id;
+}
+
+export async function releaseAssignmentForCancelledBlock(
+  block: RoomUnitBlock
+): Promise<void> {
+  if (!block.booking_request_id) return;
+  const request = await getBookingRequestById(block.booking_request_id);
+  if (!shouldReleaseAssignmentForCancelledBlock(block, request)) return;
+  await updateBookingRequest(block.booking_request_id, {
+    assigned_room_unit_id: null,
+  });
+}
+
+/**
+ * Cancel a calendar block and keep the linked booking request in sync.
+ * Use this instead of `updateRoomUnitBlock(id, { status: "cancelled" })`.
+ */
+export async function cancelRoomUnitBlock(id: string): Promise<RoomUnitBlock> {
+  const block = await updateRoomUnitBlock(id, { status: "cancelled" });
+  await releaseAssignmentForCancelledBlock(block);
+  return block;
+}
+
 export async function getDirectRoomUnitBlockForRequest(
   bookingRequestId: string
 ): Promise<RoomUnitBlock | null> {

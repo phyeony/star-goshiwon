@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
+  cancelRoomUnitBlock,
   getBookingRequestById,
   getRoomUnitAvailability,
   getRoomUnitBlockById,
   getRoomUnitById,
+  releaseAssignmentForCancelledBlock,
   updateBookingRequest,
   updateRoomUnitBlock,
 } from "@/lib/queries";
@@ -104,7 +106,9 @@ export async function PUT(req: NextRequest, context: Context) {
     }
 
     const block = await updateRoomUnitBlock(id, parsed.data);
-    if (
+    if (block.status === "cancelled") {
+      await releaseAssignmentForCancelledBlock(block);
+    } else if (
       block.source === "direct" &&
       block.booking_request_id &&
       parsed.data.room_unit_id
@@ -131,7 +135,8 @@ export async function DELETE(_req: NextRequest, context: Context) {
 
   try {
     const { id } = await context.params;
-    const block = await updateRoomUnitBlock(id, { status: "cancelled" });
+    // Also releases the linked booking request's room assignment.
+    const block = await cancelRoomUnitBlock(id);
     return NextResponse.json(block);
   } catch (error) {
     console.error("Cancel room unit block error:", error);

@@ -544,15 +544,24 @@ export function AvailabilityManager({
           }}
           onCreate={createBlock}
           onUpdate={updateBlock}
-          onCancel={(block) =>
-            submitJson(
+          onCancel={async (block) => {
+            // Cancelling a direct block also releases the booking request's
+            // room assignment, so the admin has to re-assign before approving.
+            if (
+              block.source === "direct" &&
+              !window.confirm(
+                "이 예약을 취소하면 해당 예약 요청의 객실 번호 배정도 함께 해제됩니다. 계속할까요?"
+              )
+            ) {
+              return;
+            }
+            const ok = await submitJson(
               "cancel-block",
               `/api/admin/room-unit-blocks/${block.id}`,
               "DELETE"
-            ).then((ok) => {
-              if (ok) setModal(null);
-            })
-          }
+            );
+            if (ok) setModal(null);
+          }}
         />
       )}
     </div>
