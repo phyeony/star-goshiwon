@@ -188,7 +188,7 @@ export function RequestActions({
         <div className="space-y-3">
           {!canApprove && !isPaid && (
             <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-800">
-              Assign an available physical room before approving this request.
+              이 요청을 승인하기 전에 예약 가능한 객실 번호를 배정하세요.
             </div>
           )}
           {!isPaid && (

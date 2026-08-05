@@ -4,7 +4,8 @@ import { assignRoomUnitToBookingRequest } from "@/lib/queries";
 import { getAdminUserOrNull } from "@/lib/supabase-server";
 
 const bodySchema = z.object({
-  room_unit_id: z.string().uuid(),
+  // null clears the assignment and releases the calendar block.
+  room_unit_id: z.string().uuid().nullable(),
 });
 
 interface Context {

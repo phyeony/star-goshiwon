@@ -375,15 +375,15 @@ export async function assertRoomUnitAvailableForRequest(
   request: BookingRequestWithRoom,
   roomUnitId: string
 ): Promise<RoomUnit> {
-  if (!request.room_id) throw new Error("Booking request has no room type");
+  if (!request.room_id) throw new Error("예약 요청에 객실 타입이 없습니다.");
 
   const unit = await getRoomUnitById(roomUnitId);
-  if (!unit) throw new Error("Selected physical room not found");
+  if (!unit) throw new Error("선택한 객실 번호를 찾을 수 없습니다.");
   if (unit.room_id !== request.room_id) {
-    throw new Error("Selected physical room does not match the requested room type");
+    throw new Error("선택한 객실 번호가 요청한 객실 타입과 다릅니다.");
   }
   if (unit.status !== "active") {
-    throw new Error("Selected physical room is not active");
+    throw new Error("선택한 객실 번호는 운영 중이 아닙니다.");
   }
 
   const availability = await getRoomUnitAvailability(
@@ -393,7 +393,7 @@ export async function assertRoomUnitAvailableForRequest(
   );
   const selected = availability.find((candidate) => candidate.id === roomUnitId);
   if (!selected || !isRoomUnitAvailableForBooking(selected, request.id)) {
-    throw new Error("Selected physical room is not available for these dates");
+    throw new Error("선택한 객실 번호는 해당 기간에 예약이 있습니다.");
   }
 
   return unit;
@@ -401,10 +401,19 @@ export async function assertRoomUnitAvailableForRequest(
 
 export async function assignRoomUnitToBookingRequest(
   bookingRequestId: string,
-  roomUnitId: string
+  roomUnitId: string | null
 ) {
   const request = await getBookingRequestById(bookingRequestId);
-  if (!request) throw new Error("Booking request not found");
+  if (!request) throw new Error("예약 요청을 찾을 수 없습니다.");
+
+  if (!roomUnitId) {
+    const cleared = await updateBookingRequest(bookingRequestId, {
+      assigned_room_unit_id: null,
+    });
+    await cancelDirectRoomUnitBlocksForRequest(bookingRequestId);
+    return cleared;
+  }
+
   await assertRoomUnitAvailableForRequest(request, roomUnitId);
   const updated = await updateBookingRequest(bookingRequestId, {
     assigned_room_unit_id: roomUnitId,
@@ -547,7 +556,7 @@ export async function ensureTentativeRoomUnitBlockForRequest(
   request: BookingRequestWithRoom
 ): Promise<RoomUnitBlock> {
   if (!request.assigned_room_unit_id) {
-    throw new Error("Assign an available physical room before approval");
+    throw new Error("승인 전에 예약 가능한 객실 번호를 배정하세요.");
   }
 
   await assertRoomUnitAvailableForRequest(request, request.assigned_room_unit_id);
