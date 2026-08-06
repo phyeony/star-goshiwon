@@ -19,6 +19,16 @@ export const siteConfig = {
   url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
 };
 
+// Single source of truth for the stay times. Previously these were typed
+// separately into each policy page and had drifted apart (EN said 2 PM, KO said
+// 15:00); the accommodation agreement quotes them too, so they live here now.
+export const stayTimes = {
+  checkInKo: "15:00",
+  checkInEn: "3 PM",
+  checkOutKo: "11:00",
+  checkOutEn: "11 AM",
+};
+
 
 export const amenities = [
   { icon: "wifi", label: "High-Speed WiFi" },

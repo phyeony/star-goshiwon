@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SectionTitle } from "@/components/section-title";
-import { siteConfig } from "@/lib/site-data";
+import { siteConfig, stayTimes } from "@/lib/site-data";
 import { getEconomyTier } from "@/lib/queries";
 import {
   CURRENT_POLICY_VERSION,
@@ -372,13 +372,14 @@ export default async function PoliciesPage() {
         <Section id="checkin" title="5. Check-in / Check-out">
           <ul className="list-disc pl-6 space-y-1.5">
             <li>
-              <strong>Check-in:</strong> 2 PM.
+              <strong>Check-in:</strong> {stayTimes.checkInEn}.
             </li>
             <li>
               <strong>Late arrival:</strong> message us as soon as you know.
             </li>
             <li>
-              <strong>Check-out:</strong> by 11 AM on your departure date.
+              <strong>Check-out:</strong> by {stayTimes.checkOutEn} on your
+              departure date.
             </li>
             <li>
               Check-in is <strong>self check-in</strong> — there is no front

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { siteConfig } from "@/lib/site-data";
+import { siteConfig, stayTimes } from "@/lib/site-data";
 import { getEconomyTier } from "@/lib/queries";
 import {
   CURRENT_POLICY_VERSION,
@@ -361,17 +361,25 @@ export default async function PoliciesKoPage() {
         <Section id="checkin" title="5. 체크인 / 체크아웃">
           <ul className="list-disc pl-6 space-y-1.5">
             <li>
-              <strong>체크인:</strong> 15:00.
+              <strong>체크인:</strong> {stayTimes.checkInKo}.
             </li>
             <li>
               <strong>늦은 도착:</strong> 가능한 한 빨리 알려주세요.
             </li>
             <li>
-              <strong>체크아웃:</strong> 출발일 11:00까지.
+              <strong>체크아웃:</strong> 출발일 {stayTimes.checkOutKo}까지.
             </li>
             <li>
-              체크인 시 한국의 외국인 투숙객 등록 규정에 따라{" "}
-              <strong>여권</strong>을 지참해 주세요.
+              체크인은 <strong>셀프 체크인</strong>입니다. 맞이하는 프런트
+              데스크가 없으므로 신원 확인은 반드시{" "}
+              <strong>도착 전에</strong> 완료되어야 합니다.
+            </li>
+            <li>
+              도착 전에 <strong>여권</strong>과{" "}
+              <strong>유효한 대한민국 비자</strong>(또는 무비자 입국 도장 등
+              합법적 체류를 증명하는 자료)의 선명한 사진을 보내주세요. 서류
+              확인은 예약 승인의 조건이며, 한국의 외국인 투숙객 등록 의무
+              이행을 위해 필요합니다.
             </li>
             <li>
               개인 방키는 체크인 시 발급되며 체크아웃 시 반환해 주셔야 합니다.{" "}

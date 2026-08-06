@@ -8,6 +8,12 @@ import {
 import { ISSUER } from "./issuer";
 import { EMPTY_DOCUMENT_FORM } from "./types";
 import type { BookingRequestWithRoom } from "../types";
+import {
+  CURRENT_POLICY_VERSION,
+  formatPolicyDate,
+} from "../policy-versions";
+import { BEDDING_FEE_USD, DEPOSIT_USD, formatUSD } from "../pricing";
+import { siteConfig, stayTimes } from "../site-data";
 import { fixtureBooking, fixtureForm } from "./test-fixtures";
 
 const fieldValue = (
@@ -142,6 +148,93 @@ describe("buildContract", () => {
       "ko"
     );
     expect(model.missingFields).toContain("본국 주소");
+  });
+});
+
+describe("contract terms vs. /policies", () => {
+  const paragraphsOf = (model: { sections: { paragraphs: string[] }[] }) =>
+    model.sections.flatMap((s) => s.paragraphs).join(" ");
+
+  it("carries every policy section, in both languages", () => {
+    const ko = buildContract(fixtureBooking, fixtureForm, ISSUER, "ko");
+    const en = buildContract(fixtureBooking, fixtureForm, ISSUER, "en");
+
+    expect(ko.sections.map((s) => s.heading)).toEqual(
+      expect.arrayContaining([
+        "취소 및 환불",
+        "보증금",
+        "이용 규칙",
+        "계약 해지 및 퇴거",
+        "기타 약정",
+        "약관의 적용",
+      ])
+    );
+    expect(en.sections.map((s) => s.heading)).toEqual(
+      expect.arrayContaining([
+        "Cancellation and refunds",
+        "Deposit",
+        "House rules",
+        "Termination and eviction",
+        "Other terms",
+        "Governing terms",
+      ])
+    );
+  });
+
+  it("prints the full refund tier table", () => {
+    const model = buildContract(fixtureBooking, fixtureForm, ISSUER, "ko");
+
+    expect(fieldValue(model, "체크인 30일 이상 전")).toBe("100%");
+    expect(fieldValue(model, "체크인 15~29일 전")).toBe("90% (10% 행정 수수료)");
+    expect(fieldValue(model, "체크인 8~14일 전")).toBe("70%");
+    expect(fieldValue(model, "체크인 1~7일 전")).toBe("50%");
+    expect(fieldValue(model, "체크인 당일 / 노쇼")).toBe("0%");
+  });
+
+  it("quotes the deposit and bedding fees from the pricing constants", () => {
+    const text = paragraphsOf(
+      buildContract(fixtureBooking, fixtureForm, ISSUER, "en")
+    );
+    expect(text).toContain(formatUSD(DEPOSIT_USD));
+    expect(text).toContain(formatUSD(BEDDING_FEE_USD));
+  });
+
+  // Regression: the old wording banned smoking only 객실 내, while /policies
+  // bans it building-wide. A contract narrower than the policy is unenforceable
+  // beyond what it states, so the two must agree.
+  it("bans smoking building-wide, not just in the room", () => {
+    expect(
+      paragraphsOf(buildContract(fixtureBooking, fixtureForm, ISSUER, "ko"))
+    ).toContain("건물 내부 전 구역에서 흡연이 금지");
+    expect(
+      paragraphsOf(buildContract(fixtureBooking, fixtureForm, ISSUER, "en"))
+    ).toContain("Smoking is prohibited everywhere inside the building");
+  });
+
+  it("incorporates the policies by URL and by the version in force at booking", () => {
+    const model = buildContract(fixtureBooking, fixtureForm, ISSUER, "en");
+    const clause = model.sections.find((s) => s.heading === "Governing terms");
+
+    expect(clause?.paragraphs[0]).toContain(`${siteConfig.url}/policies`);
+    expect(clause?.paragraphs[0]).toContain(
+      formatPolicyDate(CURRENT_POLICY_VERSION.effectiveFrom, "en")
+    );
+    expect(clause?.paragraphs[0]).toContain("form part of this agreement");
+  });
+
+  it("links the Korean contract to the Korean policy page", () => {
+    const model = buildContract(fixtureBooking, fixtureForm, ISSUER, "ko");
+    const clause = model.sections.find((s) => s.heading === "약관의 적용");
+    expect(clause?.paragraphs[0]).toContain(`${siteConfig.url}/policies/ko`);
+  });
+
+  it("quotes the shared check-in and check-out times", () => {
+    expect(
+      paragraphsOf(buildContract(fixtureBooking, fixtureForm, ISSUER, "ko"))
+    ).toContain(`체크인은 ${stayTimes.checkInKo}`);
+    expect(
+      paragraphsOf(buildContract(fixtureBooking, fixtureForm, ISSUER, "en"))
+    ).toContain(`Check-in is at ${stayTimes.checkInEn}`);
   });
 });
 
