@@ -17,6 +17,11 @@ export async function getDocumentTemplate(
   type: DocumentType,
   lang: DocumentLang
 ): Promise<DocumentTemplate | null> {
+  // The 영문병기 variant is composed in code from the ko and en documents, so
+  // no row can exist for it — skip the round-trip and let the caller fall back
+  // to the built-in document.
+  if (lang === "bi") return null;
+
   const supabase = getSupabaseServiceClient();
   const { data, error } = await supabase
     .from("document_templates")

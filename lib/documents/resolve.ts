@@ -47,9 +47,16 @@ export function resolveDocument(
   issuer: Issuer,
   lang: DocumentLang
 ): ResolvedDocument {
-  const missingFields = missingDocumentFields(type, form, lang);
+  const missingFields = missingDocumentFields(
+    type,
+    form,
+    lang === "bi" ? "ko" : lang
+  );
 
-  if (!template || !template.body_html.trim()) {
+  // The 영문병기 variant is composed from the ko and en documents, so there is
+  // no single template body to render it from. Uploaded templates stay a
+  // (type, ko|en) matrix and "bi" always falls through to the built-in.
+  if (lang === "bi" || !template || !template.body_html.trim()) {
     const model = buildDocument(type, booking, form, issuer, lang);
     return {
       kind: "model",

@@ -289,7 +289,9 @@ ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 -- built-in code-generated document for its (type, lang) pair; no row = built-in.
 CREATE TABLE IF NOT EXISTS document_templates (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  type TEXT NOT NULL CHECK (type IN ('letter', 'contract')),
+  -- 'bi' (영문병기) is deliberately absent from lang: that variant is composed
+  -- in code from the ko and en documents, so it has no template body.
+  type TEXT NOT NULL CHECK (type IN ('letter', 'contract', 'receipt')),
   lang TEXT NOT NULL CHECK (lang IN ('ko', 'en')),
   title TEXT NOT NULL DEFAULT '',
   body_html TEXT NOT NULL DEFAULT '',

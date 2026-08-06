@@ -7,7 +7,11 @@ import {
   upsertDocumentTemplate,
 } from "@/lib/documents/queries";
 import { sanitizeTemplateHtml } from "@/lib/documents/templates";
-import { EMPTY_DOCUMENT_FORM } from "@/lib/documents/types";
+import {
+  EMPTY_DOCUMENT_FORM,
+  type DocumentLang,
+  type DocumentType,
+} from "@/lib/documents/types";
 
 export const dynamic = "force-dynamic";
 
@@ -23,8 +27,8 @@ export async function POST(req: NextRequest) {
     const body = (await req.json().catch(() => ({}))) as {
       action?: string;
       requestId?: string;
-      type?: "letter" | "contract";
-      lang?: "ko" | "en";
+      type?: DocumentType;
+      lang?: DocumentLang;
       form?: Record<string, string>;
       title?: string;
       bodyHtml?: string;
@@ -80,7 +84,9 @@ export async function POST(req: NextRequest) {
     if (body.action === "set-template") {
       const template = await upsertDocumentTemplate({
         type: body.type ?? "contract",
-        lang: body.lang ?? "ko",
+        // Templates are a (type, ko|en) matrix — "bi" is composed in code and
+        // has no stored body.
+        lang: body.lang === "en" ? "en" : "ko",
         title: body.title ?? "",
         body_html: sanitizeTemplateHtml(body.bodyHtml ?? ""),
         source_filename: "playwright.docx",

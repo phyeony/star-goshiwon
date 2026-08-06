@@ -15,12 +15,34 @@ const PRINT_TITLES: Record<DocumentType, Record<DocumentLang, string>> = {
   letter: {
     ko: "체류확인서",
     en: "Accommodation Residence Confirmation",
+    bi: "체류확인서 Confirmation of Residence",
   },
   contract: {
     ko: "숙소이용계약서",
     en: "Accommodation Agreement",
+    bi: "숙소이용계약서 Accommodation Agreement",
+  },
+  receipt: {
+    ko: "숙박료영수증",
+    en: "Accommodation Payment Receipt",
+    bi: "숙박료영수증 Accommodation Payment Receipt",
   },
 };
+
+const DOCUMENT_TYPES: DocumentType[] = ["letter", "contract", "receipt"];
+const DOCUMENT_LANGS: DocumentLang[] = ["ko", "en", "bi"];
+
+function parseType(value: string | undefined): DocumentType {
+  return DOCUMENT_TYPES.includes(value as DocumentType)
+    ? (value as DocumentType)
+    : "letter";
+}
+
+function parseLang(value: string | undefined): DocumentLang {
+  return DOCUMENT_LANGS.includes(value as DocumentLang)
+    ? (value as DocumentLang)
+    : "ko";
+}
 
 /**
  * The browser's Save-as-PDF uses document.title as the default filename.
@@ -28,8 +50,8 @@ const PRINT_TITLES: Record<DocumentType, Record<DocumentLang, string>> = {
  */
 export async function generateMetadata({ params, searchParams }: Props) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
-  const type: DocumentType = query.type === "contract" ? "contract" : "letter";
-  const lang: DocumentLang = query.lang === "en" ? "en" : "ko";
+  const type: DocumentType = parseType(query.type);
+  const lang: DocumentLang = parseLang(query.lang);
   const request = await getBookingRequestById(id);
 
   const base = PRINT_TITLES[type][lang];
@@ -46,8 +68,8 @@ export default async function DocumentPrintPage({
   const request = await getBookingRequestById(id);
   if (!request) notFound();
 
-  const type: DocumentType = query.type === "contract" ? "contract" : "letter";
-  const lang: DocumentLang = query.lang === "en" ? "en" : "ko";
+  const type: DocumentType = parseType(query.type);
+  const lang: DocumentLang = parseLang(query.lang);
   const template = await getDocumentTemplate(type, lang);
 
   return (

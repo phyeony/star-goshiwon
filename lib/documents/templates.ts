@@ -10,7 +10,7 @@ import {
   stayPeriod,
 } from "./build";
 import type { Issuer } from "./issuer";
-import type { DocumentLang, DocumentType, GuestDocumentForm } from "./types";
+import type { BaseLang, DocumentType, GuestDocumentForm } from "./types";
 
 export interface DocumentTokenDoc {
   name: string;
@@ -44,7 +44,7 @@ export function buildDocumentVarMap(
   booking: BookingRequestWithRoom,
   form: GuestDocumentForm,
   issuer: Issuer,
-  lang: DocumentLang
+  lang: BaseLang
 ): Record<string, string> {
   return {
     guest_name: booking.guest_name,

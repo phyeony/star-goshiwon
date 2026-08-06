@@ -1,3 +1,4 @@
+import { SIGNATURE_NOTE } from "@/lib/documents/email-html";
 import type { ResolvedDocument } from "@/lib/documents/resolve";
 import type { DocumentModel } from "@/lib/documents/types";
 
@@ -77,9 +78,7 @@ function ModelBody({ model }: { model: DocumentModel }) {
           >
             <span className="text-gray-500">{signature.role}</span>
             <span className="font-medium">{signature.name}</span>
-            <span className="text-gray-400">
-              {model.lang === "ko" ? "(서명 또는 인)" : "(signature)"}
-            </span>
+            <span className="text-gray-400">{SIGNATURE_NOTE[model.lang]}</span>
           </div>
         ))}
       </div>

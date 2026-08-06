@@ -9,6 +9,7 @@ import { siteConfig, stayTimes } from "../site-data";
 import type { BookingRequestWithRoom } from "../types";
 import type { Issuer } from "./issuer";
 import type {
+  BaseLang,
   DocumentField,
   DocumentLang,
   DocumentModel,
@@ -34,7 +35,7 @@ const MONTHS_EN = [
 
 const BLANK = "—";
 
-export function formatDocumentDate(iso: string, lang: DocumentLang): string {
+export function formatDocumentDate(iso: string, lang: BaseLang): string {
   if (!iso) return "";
   const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
   if (!y || !m || !d) return iso;
@@ -46,24 +47,24 @@ function shown(value: string): string {
   return trimmed.length > 0 ? trimmed : BLANK;
 }
 
-export function issuerName(issuer: Issuer, lang: DocumentLang): string {
+export function issuerName(issuer: Issuer, lang: BaseLang): string {
   return lang === "ko" ? issuer.businessNameKo : issuer.businessNameEn;
 }
 
-export function issuerAddress(issuer: Issuer, lang: DocumentLang): string {
+export function issuerAddress(issuer: Issuer, lang: BaseLang): string {
   return lang === "ko" ? issuer.addressKo : issuer.addressEn;
 }
 
 export function issuerRepresentative(
   issuer: Issuer,
-  lang: DocumentLang
+  lang: BaseLang
 ): string {
   return lang === "ko" ? issuer.representativeKo : issuer.representativeEn;
 }
 
 export function roomLabel(
   booking: BookingRequestWithRoom,
-  lang: DocumentLang
+  lang: BaseLang
 ): string {
   const room = booking.rooms;
   const name = lang === "ko" ? room?.name_ko || room?.name : room?.name;
@@ -74,7 +75,7 @@ export function roomLabel(
 
 export function stayPeriod(
   booking: BookingRequestWithRoom,
-  lang: DocumentLang
+  lang: BaseLang
 ): string {
   const nights = daysBetween(booking.check_in_date, booking.check_out_date);
   const from = formatDocumentDate(booking.check_in_date, lang);
@@ -94,9 +95,11 @@ const LETTER_TEXT = {
     nationality: "국적",
     passportNumber: "여권번호",
     dateOfBirth: "생년월일",
+    alienRegistrationNumber: "외국인등록번호",
     accommodation: "숙소명",
     address: "숙소 주소",
     room: "객실",
+    firstEntry: "최초입실일",
     period: "체류 기간",
     businessName: "상호",
     registrationNumber: "사업자등록번호",
@@ -113,9 +116,11 @@ const LETTER_TEXT = {
     nationality: "Nationality",
     passportNumber: "Passport number",
     dateOfBirth: "Date of birth",
+    alienRegistrationNumber: "Alien registration no.",
     accommodation: "Accommodation",
     address: "Address",
     room: "Room",
+    firstEntry: "Date of first entry",
     period: "Period of stay",
     businessName: "Business name",
     registrationNumber: "Business registration no.",
@@ -128,13 +133,16 @@ const LETTER_TEXT = {
 function letterStatement(
   booking: BookingRequestWithRoom,
   issuer: Issuer,
-  lang: DocumentLang
+  lang: BaseLang
 ): string[] {
   if (lang === "ko") {
     return [
       `위 사람은 ${issuerName(issuer, lang)}(${issuerAddress(issuer, lang)})에 ` +
         `${stayPeriod(booking, lang)} 동안 숙소를 계약하고 실제로 체류하고 있음을 확인합니다.`,
       "본 확인서는 상기 숙박 예약 기록에 근거하여 사실대로 발급되었으며, 체류지 신고 등 행정 목적으로 사용될 수 있습니다.",
+      // 출입국 asks for a three-part bundle; this letter is only the first part,
+      // and it gets returned when submitted on its own.
+      "※ 제출 시 본 확인서와 함께 숙소의 사업자등록증 사본 및 숙박료 영수증을 제출하시기 바랍니다.",
     ];
   }
   return [
@@ -142,12 +150,13 @@ function letterStatement(
       `${issuerName(issuer, lang)} (${issuerAddress(issuer, lang)}) and is staying there for ` +
       `${stayPeriod(booking, lang)}.`,
     "This confirmation is issued on the basis of the accommodation booking record above and may be used for administrative purposes such as reporting a place of residence.",
+    "* Please submit this confirmation together with a copy of the accommodation's business registration certificate and the accommodation payment receipt.",
   ];
 }
 
 function missingGuestFields(
   form: GuestDocumentForm,
-  lang: DocumentLang
+  lang: BaseLang
 ): string[] {
   const t = LETTER_TEXT[lang];
   const missing: string[] = [];
@@ -165,7 +174,7 @@ function missingGuestFields(
 export function missingDocumentFields(
   type: DocumentType,
   form: GuestDocumentForm,
-  lang: DocumentLang
+  lang: BaseLang
 ): string[] {
   const missing = missingGuestFields(form, lang);
   if (type === "contract" && !form.homeAddress.trim()) {
@@ -174,7 +183,7 @@ export function missingDocumentFields(
   return missing;
 }
 
-function issuerFields(issuer: Issuer, lang: DocumentLang): DocumentField[] {
+function issuerFields(issuer: Issuer, lang: BaseLang): DocumentField[] {
   const t = LETTER_TEXT[lang];
   return [
     { label: t.businessName, value: shown(issuerName(issuer, lang)) },
@@ -192,7 +201,7 @@ export function buildLetter(
   booking: BookingRequestWithRoom,
   form: GuestDocumentForm,
   issuer: Issuer,
-  lang: DocumentLang
+  lang: BaseLang
 ): DocumentModel {
   const t = LETTER_TEXT[lang];
 
@@ -214,6 +223,16 @@ export function buildLetter(
               ? formatDocumentDate(form.dateOfBirth, lang)
               : BLANK,
           },
+          // Only guests already holding an ARC (filing a 체류지 변경신고) have
+          // one, so the row is omitted rather than left blank for the rest.
+          ...(form.alienRegistrationNumber.trim()
+            ? [
+                {
+                  label: t.alienRegistrationNumber,
+                  value: form.alienRegistrationNumber.trim(),
+                },
+              ]
+            : []),
         ],
         paragraphs: [],
       },
@@ -223,6 +242,13 @@ export function buildLetter(
           { label: t.accommodation, value: shown(issuerName(issuer, lang)) },
           { label: t.address, value: shown(issuerAddress(issuer, lang)) },
           { label: t.room, value: shown(roomLabel(booking, lang)) },
+          // Printed separately from the period range: 최초입실일 is the field
+          // 출입국 looks for, and reading it out of a range is what gets these
+          // letters sent back.
+          {
+            label: t.firstEntry,
+            value: formatDocumentDate(booking.check_in_date, lang),
+          },
           { label: t.period, value: stayPeriod(booking, lang) },
         ],
         paragraphs: [],
@@ -264,8 +290,10 @@ const CONTRACT_TEXT = {
     homeAddress: "본국 주소",
     room: "객실",
     period: "이용 기간",
-    total: "이용 요금 총액",
-    deposit: "보증금",
+    roomCharge: "객실료",
+    beddingFee: "침구비",
+    paidTotal: "결제 총액 (보증금 포함)",
+    deposit: "보증금 (환급)",
     bedding: "침구 세트",
     beddingIncluded: "포함 (선결제)",
     beddingExcluded: "미포함",
@@ -289,7 +317,9 @@ const CONTRACT_TEXT = {
     homeAddress: "Home address",
     room: "Room",
     period: "Period of use",
-    total: "Total fee",
+    roomCharge: "Room charge",
+    beddingFee: "Bedding fee",
+    paidTotal: "Total paid (incl. deposit)",
     deposit: "Refundable deposit",
     bedding: "Bedding set",
     beddingIncluded: "Included (prepaid)",
@@ -321,7 +351,7 @@ const REFUND_TIERS: RefundTier[] = [
   { ko: "체크인 당일 / 노쇼", en: "Day of check-in / no-show", refund: "0%" },
 ];
 
-function refundTierFields(lang: DocumentLang): DocumentField[] {
+function refundTierFields(lang: BaseLang): DocumentField[] {
   return REFUND_TIERS.map((tier) => ({
     label: lang === "ko" ? tier.ko : tier.en,
     value:
@@ -330,7 +360,47 @@ function refundTierFields(lang: DocumentLang): DocumentField[] {
   }));
 }
 
-function policyUrl(lang: DocumentLang): string {
+/**
+ * `estimated_total` is the grand total the guest was charged — it already
+ * includes the bedding fee and the refundable deposit (see `calculateEstimate`
+ * in lib/pricing: `total = nightsSubtotal - discount + beddingFee + deposit`).
+ * Printing it as "이용 요금 총액" with the deposit listed under it reads as if
+ * the deposit were owed on top, so both money documents break it out instead.
+ */
+export interface PaymentBreakdown {
+  room: number;
+  bedding: number;
+  deposit: number;
+  total: number;
+}
+
+export function paymentBreakdown(
+  booking: BookingRequestWithRoom
+): PaymentBreakdown {
+  const total = booking.estimated_total;
+  const bedding = booking.bedding_prepaid ? BEDDING_FEE_USD : 0;
+  return { room: total - bedding - DEPOSIT_USD, bedding, deposit: DEPOSIT_USD, total };
+}
+
+/** The money rows, shared by the contract and the receipt so they cannot drift. */
+function priceFields(
+  booking: BookingRequestWithRoom,
+  lang: BaseLang
+): DocumentField[] {
+  const t = CONTRACT_TEXT[lang];
+  const money = paymentBreakdown(booking);
+  return [
+    { label: t.roomCharge, value: formatUSD(money.room) },
+    {
+      label: t.beddingFee,
+      value: money.bedding ? formatUSD(money.bedding) : t.beddingExcluded,
+    },
+    { label: t.deposit, value: formatUSD(money.deposit) },
+    { label: t.paidTotal, value: formatUSD(money.total) },
+  ];
+}
+
+function policyUrl(lang: BaseLang): string {
   return lang === "ko"
     ? `${siteConfig.url}/policies/ko`
     : `${siteConfig.url}/policies`;
@@ -352,7 +422,7 @@ function policyUrl(lang: DocumentLang): string {
  */
 function contractTerms(
   booking: BookingRequestWithRoom,
-  lang: DocumentLang
+  lang: BaseLang
 ): DocumentSection[] {
   // Policy §15 pins the version in force when the guest booked, not today's.
   const version =
@@ -503,7 +573,7 @@ export function buildContract(
   booking: BookingRequestWithRoom,
   form: GuestDocumentForm,
   issuer: Issuer,
-  lang: DocumentLang
+  lang: BaseLang
 ): DocumentModel {
   const t = CONTRACT_TEXT[lang];
   const missing = missingDocumentFields("contract", form, lang);
@@ -539,16 +609,7 @@ export function buildContract(
     },
     {
       heading: t.priceHeading,
-      fields: [
-        { label: t.total, value: formatUSD(booking.estimated_total) },
-        { label: t.deposit, value: formatUSD(DEPOSIT_USD) },
-        {
-          label: t.bedding,
-          value: booking.bedding_prepaid
-            ? t.beddingIncluded
-            : t.beddingExcluded,
-        },
-      ],
+      fields: priceFields(booking, lang),
       paragraphs: [],
     },
     ...contractTerms(booking, lang),
@@ -587,6 +648,202 @@ export function buildContract(
   };
 }
 
+const RECEIPT_TEXT = {
+  ko: {
+    title: "숙박료 영수증",
+    providerHeading: "공급자",
+    guestHeading: "이용자",
+    stayHeading: "이용 내역",
+    paymentHeading: "결제 내역",
+    businessName: "상호",
+    registrationNumber: "사업자등록번호",
+    representative: "대표자",
+    address: "숙소 주소",
+    phone: "연락처",
+    guestName: "성명",
+    nationality: "국적",
+    passportNumber: "여권번호",
+    room: "객실",
+    firstEntry: "최초입실일",
+    period: "이용 기간",
+    method: "결제 수단",
+    paidOn: "결제일",
+    reference: "결제 번호",
+    issueDate: "발행일",
+    unpaid: "미결제",
+  },
+  en: {
+    title: "Accommodation Payment Receipt",
+    providerHeading: "Provider",
+    guestHeading: "Guest",
+    stayHeading: "Stay",
+    paymentHeading: "Payment",
+    businessName: "Business name",
+    registrationNumber: "Business registration no.",
+    representative: "Representative",
+    address: "Address",
+    phone: "Contact",
+    guestName: "Name",
+    nationality: "Nationality",
+    passportNumber: "Passport number",
+    room: "Room",
+    firstEntry: "Date of first entry",
+    period: "Period of use",
+    method: "Payment method",
+    paidOn: "Paid on",
+    reference: "Payment reference",
+    issueDate: "Date of issue",
+    unpaid: "Not yet paid",
+  },
+} as const;
+
+/**
+ * The payment proof half of the immigration bundle. 출입국 wants a 월세 영수증
+ * or a 계좌이체 내역 naming the 업체명 — but guests pay in USD through PayPal,
+ * so no Korean bank record naming this business will ever exist. A receipt
+ * issued by the business showing the address, the stay period, and the guest's
+ * name is the accepted substitute for hotel/Airbnb-type stays.
+ */
+function buildReceiptBase(
+  booking: BookingRequestWithRoom,
+  form: GuestDocumentForm,
+  issuer: Issuer,
+  lang: BaseLang
+): DocumentModel {
+  const t = RECEIPT_TEXT[lang];
+  const paidOn = booking.payment_paid_at
+    ? formatDocumentDate(booking.payment_paid_at.slice(0, 10), lang)
+    : t.unpaid;
+
+  return {
+    type: "receipt",
+    lang,
+    title: t.title,
+    subtitle: issuerName(issuer, lang),
+    sections: [
+      {
+        heading: t.providerHeading,
+        fields: [
+          { label: t.businessName, value: shown(issuerName(issuer, lang)) },
+          {
+            label: t.registrationNumber,
+            value: shown(issuer.registrationNumber),
+          },
+          {
+            label: t.representative,
+            value: shown(issuerRepresentative(issuer, lang)),
+          },
+          { label: t.address, value: shown(issuerAddress(issuer, lang)) },
+          { label: t.phone, value: shown(issuer.phone) },
+        ],
+        paragraphs: [],
+      },
+      {
+        heading: t.guestHeading,
+        fields: [
+          { label: t.guestName, value: shown(booking.guest_name) },
+          { label: t.nationality, value: shown(form.nationality) },
+          { label: t.passportNumber, value: shown(form.passportNumber) },
+        ],
+        paragraphs: [],
+      },
+      {
+        heading: t.stayHeading,
+        fields: [
+          { label: t.room, value: shown(roomLabel(booking, lang)) },
+          {
+            label: t.firstEntry,
+            value: formatDocumentDate(booking.check_in_date, lang),
+          },
+          { label: t.period, value: stayPeriod(booking, lang) },
+        ],
+        paragraphs: [],
+      },
+      {
+        heading: t.paymentHeading,
+        fields: [
+          ...priceFields(booking, lang),
+          { label: t.method, value: "PayPal" },
+          { label: t.paidOn, value: paidOn },
+          {
+            label: t.reference,
+            value: shown(booking.payment_capture_id ?? ""),
+          },
+        ],
+        paragraphs: [],
+      },
+    ],
+    statement:
+      lang === "ko"
+        ? ["위 금액을 숙박료로 정히 영수하였음을 확인합니다."]
+        : ["We confirm receipt of the amount above as payment for the stay."],
+    issueDateLine: `${t.issueDate}: ${formatDocumentDate(form.issueDate, lang)}`,
+    signatures: [
+      {
+        role: t.representative,
+        name: issuerRepresentative(issuer, lang),
+        showStamp: true,
+      },
+    ],
+    missingFields: missingDocumentFields("receipt", form, lang),
+  };
+}
+
+/** Joins two label/heading strings for the 영문병기 layout. */
+const pair = (ko: string, en: string) => (ko === en ? ko : `${ko} / ${en}`);
+
+/**
+ * Composes the KO and EN documents into one 영문병기 page rather than having a
+ * third translation to maintain — the two halves cannot drift out of sync
+ * because they are the same two documents the admin can already print.
+ *
+ * Values that render identically in both (passport numbers, money, room codes)
+ * print once; only genuinely different ones get the `ko / en` treatment.
+ */
+export function mergeBilingual(
+  ko: DocumentModel,
+  en: DocumentModel
+): DocumentModel {
+  return {
+    type: ko.type,
+    lang: "bi",
+    title: pair(ko.title, en.title),
+    subtitle: pair(ko.subtitle, en.subtitle),
+    sections: ko.sections.map((koSection, i) => {
+      const enSection = en.sections[i];
+      if (!enSection) return koSection;
+      return {
+        heading: pair(koSection.heading, enSection.heading),
+        fields: koSection.fields.map((koField, j) => {
+          const enField = enSection.fields[j];
+          if (!enField) return koField;
+          return {
+            label: pair(koField.label, enField.label),
+            value: pair(koField.value, enField.value),
+          };
+        }),
+        // Prose reads better stacked than interleaved on one line.
+        paragraphs: [...koSection.paragraphs, ...enSection.paragraphs],
+      };
+    }),
+    statement: [...ko.statement, ...en.statement],
+    issueDateLine: pair(ko.issueDateLine, en.issueDateLine),
+    signatures: ko.signatures.map((koSig, i) => {
+      const enSig = en.signatures[i];
+      if (!enSig) return koSig;
+      return {
+        role: pair(koSig.role, enSig.role),
+        name: pair(koSig.name, enSig.name),
+        showStamp: koSig.showStamp,
+      };
+    }),
+    missingFields: ko.missingFields,
+  };
+}
+
+/** Document types that offer the 영문병기 variant. */
+export const BILINGUAL_TYPES: DocumentType[] = ["letter", "receipt"];
+
 export function buildDocument(
   type: DocumentType,
   booking: BookingRequestWithRoom,
@@ -594,7 +851,22 @@ export function buildDocument(
   issuer: Issuer,
   lang: DocumentLang
 ): DocumentModel {
-  return type === "letter"
-    ? buildLetter(booking, form, issuer, lang)
-    : buildContract(booking, form, issuer, lang);
+  if (lang === "bi") {
+    return mergeBilingual(
+      buildDocument(type, booking, form, issuer, "ko"),
+      buildDocument(type, booking, form, issuer, "en")
+    );
+  }
+  if (type === "letter") return buildLetter(booking, form, issuer, lang);
+  if (type === "receipt") return buildReceiptBase(booking, form, issuer, lang);
+  return buildContract(booking, form, issuer, lang);
+}
+
+export function buildReceipt(
+  booking: BookingRequestWithRoom,
+  form: GuestDocumentForm,
+  issuer: Issuer,
+  lang: DocumentLang
+): DocumentModel {
+  return buildDocument("receipt", booking, form, issuer, lang);
 }

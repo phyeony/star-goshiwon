@@ -1,3 +1,5 @@
+import type { BaseLang, DocumentType } from "./documents/types";
+
 export type RoomStatus = "available" | "available_soon" | "limited" | "unavailable";
 
 export type BookingStatus =
@@ -557,8 +559,9 @@ export interface Review {
 /** Admin-editable override for a built-in document. No row = built-in renders. */
 export interface DocumentTemplate {
   id: string;
-  type: "letter" | "contract";
-  lang: "ko" | "en";
+  type: DocumentType;
+  /** No "bi": the 영문병기 variant is composed in code, not stored. */
+  lang: BaseLang;
   title: string;
   /** Document body HTML with {{token}} placeholders. Sanitized at save time. */
   body_html: string;
@@ -569,8 +572,9 @@ export interface DocumentTemplate {
 }
 
 export interface DocumentTemplateUpsert {
-  type: "letter" | "contract";
-  lang: "ko" | "en";
+  type: DocumentType;
+  /** No "bi": the 영문병기 variant is composed in code, not stored. */
+  lang: BaseLang;
   title: string;
   body_html: string;
   source_filename?: string;

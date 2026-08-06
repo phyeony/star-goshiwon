@@ -33,10 +33,28 @@ export const DOCUMENT_SLOTS: SlotDescriptor[] = [
     label: "이용 계약서 (English)",
     builtInTitle: "Accommodation Agreement",
   },
+  {
+    type: "receipt",
+    lang: "ko",
+    label: "숙박료 영수증 (한국어)",
+    builtInTitle: "숙박료 영수증",
+  },
+  {
+    type: "receipt",
+    lang: "en",
+    label: "숙박료 영수증 (English)",
+    builtInTitle: "Accommodation Payment Receipt",
+  },
+];
+
+const TYPE_TABS: { type: DocumentType; label: string }[] = [
+  { type: "letter", label: "체류 확인서" },
+  { type: "contract", label: "이용 계약서" },
+  { type: "receipt", label: "숙박료 영수증" },
 ];
 
 /**
- * One card for all four document slots. The type/lang toggles mirror the
+ * One card for all document slots. The type/lang toggles mirror the
  * 문서 발급 card on the request detail page, so the admin picks a template the
  * same way they pick a document to issue.
  */
@@ -85,22 +103,17 @@ export function DocumentTemplateManager({
     <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-5 max-w-3xl">
       <div className="flex flex-wrap items-center gap-3">
         <div className="inline-flex rounded-lg border border-gray-300 overflow-hidden">
-          <button
-            type="button"
-            onClick={() => switchTo("letter", lang)}
-            className={`${toggleBase} ${type === "letter" ? "bg-indigo-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"}`}
-          >
-            체류 확인서
-            <span className={dot(hasTemplate("letter", lang))} />
-          </button>
-          <button
-            type="button"
-            onClick={() => switchTo("contract", lang)}
-            className={`${toggleBase} border-l border-gray-300 ${type === "contract" ? "bg-indigo-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"}`}
-          >
-            이용 계약서
-            <span className={dot(hasTemplate("contract", lang))} />
-          </button>
+          {TYPE_TABS.map((tab, i) => (
+            <button
+              key={tab.type}
+              type="button"
+              onClick={() => switchTo(tab.type, lang)}
+              className={`${toggleBase} ${i > 0 ? "border-l border-gray-300" : ""} ${type === tab.type ? "bg-indigo-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"}`}
+            >
+              {tab.label}
+              <span className={dot(hasTemplate(tab.type, lang))} />
+            </button>
+          ))}
         </div>
 
         <div className="inline-flex rounded-lg border border-gray-300 overflow-hidden">

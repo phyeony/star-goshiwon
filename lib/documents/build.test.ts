@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  BILINGUAL_TYPES,
   buildContract,
   buildDocument,
   buildLetter,
+  buildReceipt,
   formatDocumentDate,
+  paymentBreakdown,
 } from "./build";
 import { ISSUER } from "./issuer";
 import { EMPTY_DOCUMENT_FORM } from "./types";
@@ -105,9 +108,13 @@ describe("buildContract", () => {
     expect(fieldValue(model, "이용 기간")).toBe(
       "2026년 6월 1일 ~ 2026년 7월 1일 (30박)"
     );
-    expect(fieldValue(model, "이용 요금 총액")).toBe("$700");
-    expect(fieldValue(model, "보증금")).toBe("$70");
-    expect(fieldValue(model, "침구 세트")).toBe("포함 (선결제)");
+    // estimated_total ($700) is the grand total and already contains the
+    // bedding fee and the deposit, so the rows must sum back to it rather than
+    // reading as $700 + $70 due.
+    expect(fieldValue(model, "객실료")).toBe("$615");
+    expect(fieldValue(model, "침구비")).toBe("$15");
+    expect(fieldValue(model, "보증금 (환급)")).toBe("$70");
+    expect(fieldValue(model, "결제 총액 (보증금 포함)")).toBe("$700");
 
     expect(model.signatures.map((s) => s.role)).toEqual(["대표자", "이용자"]);
     expect(model.signatures[1].name).toBe("Jane Traveler");
@@ -235,6 +242,134 @@ describe("contract terms vs. /policies", () => {
     expect(
       paragraphsOf(buildContract(fixtureBooking, fixtureForm, ISSUER, "en"))
     ).toContain(`Check-in is at ${stayTimes.checkInEn}`);
+  });
+});
+
+describe("paymentBreakdown", () => {
+  it("splits the grand total back into its parts", () => {
+    const money = paymentBreakdown(fixtureBooking);
+
+    expect(money.total).toBe(fixtureBooking.estimated_total);
+    expect(money.deposit).toBe(DEPOSIT_USD);
+    expect(money.bedding).toBe(BEDDING_FEE_USD);
+    expect(money.room + money.bedding + money.deposit).toBe(money.total);
+  });
+
+  it("charges no bedding fee when bedding is not prepaid", () => {
+    const money = paymentBreakdown({
+      ...fixtureBooking,
+      bedding_prepaid: false,
+    });
+    expect(money.bedding).toBe(0);
+    expect(money.room + money.deposit).toBe(money.total);
+  });
+});
+
+describe("buildReceipt", () => {
+  it("carries the facts immigration checks a payment proof for", () => {
+    const model = buildReceipt(fixtureBooking, fixtureForm, ISSUER, "ko");
+
+    expect(model.type).toBe("receipt");
+    expect(model.title).toBe("숙박료 영수증");
+
+    // The address, the period, and the guest's name are what make a receipt
+    // acceptable as 체류지 payment proof.
+    expect(fieldValue(model, "숙소 주소")).toBe(ISSUER.addressKo);
+    expect(fieldValue(model, "성명")).toBe("Jane Traveler");
+    expect(fieldValue(model, "이용 기간")).toBe(
+      "2026년 6월 1일 ~ 2026년 7월 1일 (30박)"
+    );
+    expect(fieldValue(model, "최초입실일")).toBe("2026년 6월 1일");
+    expect(fieldValue(model, "사업자등록번호")).toBe(ISSUER.registrationNumber);
+    expect(fieldValue(model, "결제 총액 (보증금 포함)")).toBe("$700");
+    expect(fieldValue(model, "결제 수단")).toBe("PayPal");
+  });
+
+  it("marks an unpaid booking rather than inventing a payment date", () => {
+    const model = buildReceipt(
+      { ...fixtureBooking, payment_paid_at: null },
+      fixtureForm,
+      ISSUER,
+      "en"
+    );
+    expect(fieldValue(model, "Paid on")).toBe("Not yet paid");
+  });
+});
+
+describe("bilingual (영문병기) documents", () => {
+  it("pairs Korean and English labels on one page", () => {
+    const model = buildDocument(
+      "letter",
+      fixtureBooking,
+      fixtureForm,
+      ISSUER,
+      "bi"
+    );
+
+    expect(model.lang).toBe("bi");
+    expect(model.title).toBe(
+      "체류(숙소) 확인서 / Accommodation (Residence) Confirmation"
+    );
+    expect(fieldValue(model, "성명 / Name")).toBe("Jane Traveler");
+    expect(fieldValue(model, "여권번호 / Passport number")).toBe("M12345678");
+  });
+
+  it("prints a value once when both languages render it identically", () => {
+    const model = buildDocument(
+      "letter",
+      fixtureBooking,
+      fixtureForm,
+      ISSUER,
+      "bi"
+    );
+    // Passport numbers are language-neutral — "M12345678 / M12345678" would be
+    // noise on the page.
+    expect(fieldValue(model, "여권번호 / Passport number")).not.toContain(" / ");
+  });
+
+  it("carries both languages of every statement paragraph", () => {
+    const model = buildDocument(
+      "receipt",
+      fixtureBooking,
+      fixtureForm,
+      ISSUER,
+      "bi"
+    );
+    expect(model.statement.join(" ")).toContain("정히 영수하였음");
+    expect(model.statement.join(" ")).toContain("We confirm receipt");
+  });
+
+  it("offers the bilingual variant only for the immigration documents", () => {
+    expect(BILINGUAL_TYPES).toEqual(["letter", "receipt"]);
+  });
+});
+
+describe("letter as an immigration document", () => {
+  it("prints 최초입실일 as its own field, not folded into the range", () => {
+    const model = buildLetter(fixtureBooking, fixtureForm, ISSUER, "ko");
+    expect(fieldValue(model, "최초입실일")).toBe("2026년 6월 1일");
+  });
+
+  it("tells the guest which attachments must accompany it", () => {
+    const ko = buildLetter(fixtureBooking, fixtureForm, ISSUER, "ko");
+    const en = buildLetter(fixtureBooking, fixtureForm, ISSUER, "en");
+
+    expect(ko.statement.join(" ")).toContain("사업자등록증 사본");
+    expect(ko.statement.join(" ")).toContain("숙박료 영수증");
+    expect(en.statement.join(" ")).toContain("business registration certificate");
+  });
+
+  it("omits the ARC row for a guest who does not have one yet", () => {
+    const without = buildLetter(fixtureBooking, fixtureForm, ISSUER, "ko");
+    expect(fieldValue(without, "외국인등록번호")).toBeUndefined();
+
+    const with_ = buildLetter(
+      { ...fixtureBooking },
+      { ...fixtureForm, alienRegistrationNumber: "950314-5678901" },
+      ISSUER,
+      "ko"
+    );
+    expect(fieldValue(with_, "외국인등록번호")).toBe("950314-5678901");
   });
 });
 

@@ -1,10 +1,22 @@
 import { escapeHtml, wrapEmailHtml } from "../email-html";
-import type { DocumentModel } from "./types";
+import type { DocumentLang, DocumentModel } from "./types";
 
-const PDF_HINT = {
-  ko: "이 이메일을 브라우저에서 열고 인쇄(Ctrl/Cmd + P)를 누른 뒤 'PDF로 저장'을 선택하시면 문서를 PDF 파일로 보관하실 수 있습니다.",
-  en: "To keep a PDF copy, open this email in a browser, press Print (Ctrl/Cmd + P), and choose 'Save as PDF'.",
-} as const;
+const PDF_HINT_KO =
+  "이 이메일을 브라우저에서 열고 인쇄(Ctrl/Cmd + P)를 누른 뒤 'PDF로 저장'을 선택하시면 문서를 PDF 파일로 보관하실 수 있습니다.";
+const PDF_HINT_EN =
+  "To keep a PDF copy, open this email in a browser, press Print (Ctrl/Cmd + P), and choose 'Save as PDF'.";
+
+export const SIGNATURE_NOTE: Record<DocumentLang, string> = {
+  ko: "(서명 또는 인)",
+  en: "(signature)",
+  bi: "(서명 또는 인 / signature)",
+};
+
+const PDF_HINT: Record<DocumentLang, string> = {
+  ko: PDF_HINT_KO,
+  en: PDF_HINT_EN,
+  bi: `${PDF_HINT_KO}\n${PDF_HINT_EN}`,
+};
 
 export function documentEmailSubject(model: DocumentModel): string {
   return `${model.title} — ${model.subtitle}`;
@@ -57,7 +69,7 @@ export function renderDocumentEmailHtml(model: DocumentModel): string {
     `<p style="margin: 24px 0 4px; font-size: 14px; text-align: center;">${escapeHtml(model.issueDateLine)}</p>`
   );
 
-  const signatureNote = model.lang === "ko" ? "(서명 또는 인)" : "(signature)";
+  const signatureNote = SIGNATURE_NOTE[model.lang];
   for (const signature of model.signatures) {
     parts.push(
       `<p style="margin: 8px 0 0; font-size: 14px; text-align: right;">${escapeHtml(signature.role)}: ${escapeHtml(signature.name)} ${escapeHtml(signatureNote)}</p>`
@@ -105,7 +117,7 @@ export function renderDocumentText(model: DocumentModel): string {
 export function renderTemplateEmailHtml(
   title: string,
   bodyHtml: string,
-  lang: "ko" | "en"
+  lang: DocumentLang
 ): string {
   return wrapEmailHtml(
     [
@@ -121,7 +133,7 @@ export function renderTemplateEmailHtml(
 export function renderTemplateText(
   title: string,
   bodyHtml: string,
-  lang: "ko" | "en"
+  lang: DocumentLang
 ): string {
   const text = bodyHtml
     .replace(/<\/(p|div|h[1-6]|tr|li)>/gi, "\n")

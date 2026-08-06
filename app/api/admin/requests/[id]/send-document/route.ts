@@ -9,14 +9,15 @@ const formSchema = z.object({
   passportNumber: z.string().trim().max(64).default(""),
   nationality: z.string().trim().max(120).default(""),
   dateOfBirth: z.string().trim().max(32).default(""),
+  alienRegistrationNumber: z.string().trim().max(32).default(""),
   homeAddress: z.string().trim().max(300).default(""),
   specialTerms: z.string().trim().max(2000).default(""),
   issueDate: z.string().trim().max(32).default(""),
 });
 
 const bodySchema = z.object({
-  type: z.enum(["letter", "contract"]),
-  lang: z.enum(["ko", "en"]),
+  type: z.enum(["letter", "contract", "receipt"]),
+  lang: z.enum(["ko", "en", "bi"]),
   form: formSchema,
 });
 

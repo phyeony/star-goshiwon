@@ -108,6 +108,72 @@ test("admin sends the built-in English accommodation agreement", async ({
   expect(email.html).not.toContain("임대차계약서");
 });
 
+test("admin sends the payment receipt that immigration asks for", async ({
+  request,
+}) => {
+  await clearEmailOutbox(request);
+  const booking = await createBooking(request);
+
+  const result = await sendDocument(request, {
+    requestId: booking.id,
+    type: "receipt",
+    lang: "ko",
+    form,
+  });
+  expect(result.status).toBe("sent");
+
+  const email = await findEmail(request, "숙박료 영수증");
+  // What makes a receipt usable as 체류지 payment proof: the address, the
+  // period, and the guest's name.
+  expect(email.html).toContain("Playwright Document Guest");
+  expect(email.html).toContain("최초입실일");
+  expect(email.html).toContain("사업자등록번호");
+  expect(email.html).toContain("PayPal");
+  // The rows must sum back to the charged total, not read as deposit-on-top.
+  expect(email.html).toContain("결제 총액");
+});
+
+test("the bilingual letter prints both languages on one document", async ({
+  request,
+}) => {
+  await clearEmailOutbox(request);
+  const booking = await createBooking(request);
+
+  const result = await sendDocument(request, {
+    requestId: booking.id,
+    type: "letter",
+    lang: "bi",
+    form,
+  });
+  expect(result.status).toBe("sent");
+
+  const email = await findEmail(request, "체류(숙소) 확인서");
+  expect(email.html).toContain("성명 / Name");
+  expect(email.html).toContain("여권번호 / Passport number");
+  // Both statements, so an officer reading either language gets the full text.
+  expect(email.html).toContain("확인합니다");
+  expect(email.html).toContain("This is to certify");
+});
+
+test("the letter tells the guest which attachments must go with it", async ({
+  request,
+}) => {
+  await clearEmailOutbox(request);
+  const booking = await createBooking(request);
+
+  await sendDocument(request, {
+    requestId: booking.id,
+    type: "letter",
+    lang: "ko",
+    form,
+  });
+
+  // 출입국 returns the letter when it arrives without the other two documents.
+  const email = await findEmail(request, "체류(숙소) 확인서");
+  expect(email.html).toContain("사업자등록증 사본");
+  expect(email.html).toContain("숙박료 영수증");
+});
+
 test("an uploaded template replaces the document, and deleting it restores the built-in one", async ({
   request,
 }) => {

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AdminModal } from "@/components/admin/admin-modal";
 import { DocumentView } from "@/components/documents/document-view";
+import { BILINGUAL_TYPES } from "@/lib/documents/build";
 import { ISSUER } from "@/lib/documents/issuer";
 import { resolveDocument } from "@/lib/documents/resolve";
 import {
@@ -28,6 +29,22 @@ export function documentDraftKey(requestId: string) {
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
 }
+
+const TYPE_OPTIONS: { value: DocumentType; label: string }[] = [
+  { value: "letter", label: "체류 확인서" },
+  { value: "contract", label: "이용 계약서" },
+  { value: "receipt", label: "숙박료 영수증" },
+];
+
+const LANG_OPTIONS: { value: DocumentLang; label: string; hint?: string }[] = [
+  { value: "ko", label: "한국어" },
+  { value: "en", label: "English" },
+  {
+    value: "bi",
+    label: "영문병기",
+    hint: "한국어와 영어를 한 장에 함께 인쇄합니다. 출입국 제출용 권장.",
+  },
+];
 
 interface Props {
   request: BookingRequestWithRoom;
@@ -73,6 +90,17 @@ export function DocumentsCard({ request, templates }: Props) {
     () => resolveDocument(template, type, request, form, ISSUER, lang),
     [template, type, request, form, lang]
   );
+
+  // The contract has no 영문병기 variant (it is not an immigration document and
+  // a third full translation would drift), so switching to it drops back to KO.
+  const langOptions = LANG_OPTIONS.filter(
+    (option) => option.value !== "bi" || BILINGUAL_TYPES.includes(type)
+  );
+
+  function chooseType(next: DocumentType) {
+    setType(next);
+    if (lang === "bi" && !BILINGUAL_TYPES.includes(next)) setLang("ko");
+  }
 
   function update(patch: Partial<GuestDocumentForm>) {
     setForm((prev) => ({ ...prev, ...patch }));
@@ -120,39 +148,41 @@ export function DocumentsCard({ request, templates }: Props) {
     <div className="space-y-4">
       <div className="flex flex-wrap gap-3">
         <div className="inline-flex rounded-lg border border-gray-300 overflow-hidden">
-          <button
-            type="button"
-            onClick={() => setType("letter")}
-            className={`${toggleBase} ${type === "letter" ? "bg-indigo-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"}`}
-          >
-            체류 확인서
-          </button>
-          <button
-            type="button"
-            onClick={() => setType("contract")}
-            className={`${toggleBase} border-l border-gray-300 ${type === "contract" ? "bg-indigo-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"}`}
-          >
-            이용 계약서
-          </button>
+          {TYPE_OPTIONS.map((option, i) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => chooseType(option.value)}
+              className={`${toggleBase} ${i > 0 ? "border-l border-gray-300" : ""} ${type === option.value ? "bg-indigo-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"}`}
+            >
+              {option.label}
+            </button>
+          ))}
         </div>
 
         <div className="inline-flex rounded-lg border border-gray-300 overflow-hidden">
-          <button
-            type="button"
-            onClick={() => setLang("ko")}
-            className={`${toggleBase} ${lang === "ko" ? "bg-indigo-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"}`}
-          >
-            한국어
-          </button>
-          <button
-            type="button"
-            onClick={() => setLang("en")}
-            className={`${toggleBase} border-l border-gray-300 ${lang === "en" ? "bg-indigo-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"}`}
-          >
-            English
-          </button>
+          {langOptions.map((option, i) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => setLang(option.value)}
+              title={option.hint}
+              className={`${toggleBase} ${i > 0 ? "border-l border-gray-300" : ""} ${lang === option.value ? "bg-indigo-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"}`}
+            >
+              {option.label}
+            </button>
+          ))}
         </div>
       </div>
+
+      {type !== "contract" && (
+        <p className="text-xs text-gray-600 bg-amber-50 border border-amber-200 rounded-lg p-2.5">
+          출입국은 이 서류만으로는 접수하지 않습니다. <strong>사업자등록증
+          사본</strong>과 <strong>숙박료 영수증</strong>을 함께 제출하도록
+          안내해 주세요. 관공서 제출용은 <strong>영문병기</strong>가
+          무난합니다.
+        </p>
+      )}
 
       <p className="text-xs text-gray-500">
         {template
@@ -203,6 +233,27 @@ export function DocumentsCard({ request, templates }: Props) {
             type="date"
             value={form.dateOfBirth}
             onChange={(e) => update({ dateOfBirth: e.target.value })}
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="doc-arc"
+            className="block text-xs font-bold text-gray-700 uppercase mb-1"
+          >
+            외국인등록번호{" "}
+            <span className="font-normal normal-case text-gray-500">
+              (선택 — 체류지 변경신고 시)
+            </span>
+          </label>
+          <input
+            id="doc-arc"
+            type="text"
+            value={form.alienRegistrationNumber}
+            onChange={(e) =>
+              update({ alienRegistrationNumber: e.target.value })
+            }
+            placeholder="이미 외국인등록증이 있는 경우에만"
             className={inputClass}
           />
         </div>
