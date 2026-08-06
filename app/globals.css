@@ -51,23 +51,31 @@
 }
 
 /* ── Document print view ──────────────────────────────────────────────
-   The print route renders inside the admin layout, so printing must be
-   isolated to the document itself: any surrounding chrome (nav, buttons,
-   warning bars, and — if the dialog is opened from elsewhere — form
-   inputs) must never reach the PDF. Page margins live here rather than in
-   an inline <style> so they are part of a real stylesheet. */
+   Printing is pinned to the paper rather than left to the print dialog:
+
+   - @page margin is 0 and the page margins are drawn as padding on the sheet
+     itself. Chromium's headless printToPDF ignores @page margins entirely,
+     and the print dialog lets the user override them, so relying on @page for
+     margins produced text against the paper edge.
+   - html/body are forced to 210mm so the print layout width maps 1:1 onto A4.
+     Without this the layout keeps the viewport width (e.g. 1280px) and the
+     document overflows the right edge of the page.
+   - Only the document subtree is visible, so no admin chrome or form input
+     can reach the paper. */
 @media print {
   @page {
     size: A4;
-    margin: 18mm;
+    margin: 0;
   }
 
   html,
   body {
+    width: 210mm;
     background: #fff !important;
   }
 
-  /* Hide everything, then reveal only the document subtree. */
+  /* Hide everything, then reveal only the document subtree. Visibility (not
+     display) keeps the document in normal flow inside the sheet. */
   body * {
     visibility: hidden;
   }
@@ -75,13 +83,19 @@
   .document-print-root * {
     visibility: visible;
   }
+
   .document-print-root {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
     margin: 0;
     padding: 0;
+  }
+
+  /* The sheet: exactly A4, with the page margins as its own padding. */
+  .document-print-root article {
+    box-sizing: border-box;
+    width: 210mm;
+    max-width: 210mm;
+    margin: 0;
+    padding: 18mm;
   }
 
   /* Form controls never belong in an issued document. */
