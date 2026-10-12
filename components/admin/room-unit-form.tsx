@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { AdminModal } from "@/components/admin/admin-modal";
 import type { Room } from "@/lib/types";
 
 type RoomUnitStatus = "active" | "inactive" | "maintenance";
@@ -20,7 +21,33 @@ type Props = {
   roomUnit?: RoomUnit | null;
 };
 
-export function RoomUnitForm({ rooms, roomUnit }: Props) {
+const LIST_PATH = "/admin/room-units";
+
+/** The form in a modal, opened by ?new=1 / ?edit=<id>; closing drops the param. */
+export function RoomUnitFormModal({ rooms, roomUnit }: Props) {
+  const router = useRouter();
+  const close = useCallback(
+    () => router.push(LIST_PATH, { scroll: false }),
+    [router]
+  );
+
+  return (
+    <AdminModal
+      size="md"
+      closeOnEscape
+      title={roomUnit ? "객실 번호 수정" : "객실 번호 등록"}
+      onClose={close}
+    >
+      <RoomUnitForm rooms={rooms} roomUnit={roomUnit} onClose={close} />
+    </AdminModal>
+  );
+}
+
+export function RoomUnitForm({
+  rooms,
+  roomUnit,
+  onClose,
+}: Props & { onClose: () => void }) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -62,7 +89,7 @@ export function RoomUnitForm({ rooms, roomUnit }: Props) {
         return;
       }
 
-      router.push("/admin/room-units");
+      router.push(LIST_PATH, { scroll: false });
       router.refresh();
     } catch {
       setError("네트워크 오류입니다. 다시 시도해 주세요.");
@@ -77,18 +104,10 @@ export function RoomUnitForm({ rooms, roomUnit }: Props) {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-5 h-fit"
-    >
-      <div>
-        <h2 className="text-sm font-bold uppercase text-gray-700">
-          {roomUnit ? "객실 번호 수정" : "객실 번호 등록"}
-        </h2>
-        <p className="mt-1 text-sm text-gray-500">
-          실제 객실은 선택한 객실 타입의 가격과 공개 정보를 사용합니다.
-        </p>
-      </div>
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <p className="text-sm text-gray-500">
+        실제 객실은 선택한 객실 타입의 가격과 공개 정보를 사용합니다.
+      </p>
 
       {error ? (
         <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
@@ -131,6 +150,7 @@ export function RoomUnitForm({ rooms, roomUnit }: Props) {
           value={form.name}
           onChange={(e) => updateField("name", e.target.value)}
           placeholder="예: 301호"
+          autoFocus={!roomUnit}
           className="block w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
           required
         />
@@ -205,15 +225,13 @@ export function RoomUnitForm({ rooms, roomUnit }: Props) {
           ) : null}
         </div>
         <div className="flex gap-3">
-          {roomUnit ? (
-            <button
-              type="button"
-              onClick={() => router.push("/admin/room-units")}
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              취소
-            </button>
-          ) : null}
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            취소
+          </button>
           <button
             type="submit"
             disabled={submitting || rooms.length === 0}
