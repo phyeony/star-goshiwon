@@ -128,6 +128,7 @@ ALTER TABLE booking_requests
 
 CREATE INDEX idx_room_units_room_id ON room_units(room_id, sort_order);
 CREATE INDEX idx_room_units_status ON room_units(status);
+CREATE UNIQUE INDEX room_units_name_unique ON room_units (lower(name));
 
 CREATE TABLE room_unit_blocks (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

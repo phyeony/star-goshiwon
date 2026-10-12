@@ -290,6 +290,25 @@ export async function getRoomUnitById(id: string): Promise<RoomUnit | null> {
   return (data as RoomUnit) ?? null;
 }
 
+/**
+ * Room numbers name physical rooms, so they must be unique across every room
+ * type — including inactive units, which still own their number. Compared
+ * case-insensitively to match the `room_units_name_unique` index.
+ */
+export async function isRoomUnitNameTaken(
+  name: string,
+  excludeId?: string
+): Promise<boolean> {
+  const supabase = getSupabaseServiceClient();
+  const { data, error } = await supabase.from("room_units").select("id, name");
+
+  if (error) throw error;
+  const target = name.trim().toLowerCase();
+  return (data ?? []).some(
+    (unit) => unit.id !== excludeId && unit.name.trim().toLowerCase() === target
+  );
+}
+
 export async function createRoomUnit(
   insert: RoomUnitInsert
 ): Promise<RoomUnit> {

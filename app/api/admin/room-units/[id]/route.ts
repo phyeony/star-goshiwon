@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { updateRoomUnit } from "@/lib/queries";
+import { isRoomUnitNameTaken, updateRoomUnit } from "@/lib/queries";
 import { roomUnitSchema } from "@/lib/validation";
 import { getAdminUserOrNull } from "@/lib/supabase-server";
+import { duplicateNameResponse, isUniqueViolation } from "../duplicate-name";
 
 interface Context {
   params: Promise<{ id: string }>;
@@ -25,9 +26,15 @@ export async function PUT(req: NextRequest, context: Context) {
 
   try {
     const { id } = await context.params;
+    if (parsed.data.name && (await isRoomUnitNameTaken(parsed.data.name, id))) {
+      return duplicateNameResponse(parsed.data.name);
+    }
     const unit = await updateRoomUnit(id, parsed.data);
     return NextResponse.json(unit);
   } catch (error) {
+    if (isUniqueViolation(error) && parsed.data.name) {
+      return duplicateNameResponse(parsed.data.name);
+    }
     console.error("Update room unit error:", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "update_failed" },

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createRoomUnit } from "@/lib/queries";
+import { createRoomUnit, isRoomUnitNameTaken } from "@/lib/queries";
 import { roomUnitSchema } from "@/lib/validation";
 import { getAdminUserOrNull } from "@/lib/supabase-server";
+import { duplicateNameResponse, isUniqueViolation } from "./duplicate-name";
 
 export async function POST(req: NextRequest) {
   const adminUser = await getAdminUserOrNull();
@@ -18,9 +19,15 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    if (await isRoomUnitNameTaken(parsed.data.name)) {
+      return duplicateNameResponse(parsed.data.name);
+    }
     const unit = await createRoomUnit(parsed.data);
     return NextResponse.json(unit, { status: 201 });
   } catch (error) {
+    if (isUniqueViolation(error)) {
+      return duplicateNameResponse(parsed.data.name);
+    }
     console.error("Create room unit error:", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "create_failed" },
