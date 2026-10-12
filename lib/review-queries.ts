@@ -1,5 +1,11 @@
 import { getSupabaseServiceClient } from "./supabase";
 import { siteConfig } from "./site-data";
+import {
+  dbReviewToGuestReview,
+  guestReviews,
+  pickHighlightedReviews,
+  type GuestReview,
+} from "./reviews";
 import type {
   Review,
   ReviewInsert,
@@ -127,4 +133,22 @@ export async function updateReviewStatus(
     .single();
   if (error) throw error;
   return data as Review;
+}
+
+/**
+ * Highlights for the home and room-page review sections, drawn from approved
+ * direct reviews plus the legacy Booking.com ones. Falls back to the legacy
+ * set alone if the DB read fails, so a reviews outage can't take down the
+ * home page.
+ */
+export async function getHighlightedGuestReviews(
+  count = 2
+): Promise<GuestReview[]> {
+  let directReviews: GuestReview[] = [];
+  try {
+    directReviews = (await getApprovedReviews()).map(dbReviewToGuestReview);
+  } catch (error) {
+    console.error("Highlighted reviews: falling back to legacy reviews", error);
+  }
+  return pickHighlightedReviews([...directReviews, ...guestReviews], count);
 }

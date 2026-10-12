@@ -9,6 +9,7 @@ import { ImageGallery } from "@/components/image-lightbox";
 import { GuestReviews } from "@/components/guest-reviews";
 import { RequestForm } from "@/components/request-form";
 import { getRoomBySlug } from "@/lib/queries";
+import { getHighlightedGuestReviews } from "@/lib/review-queries";
 import { formatUSD, formatApproxKRW, roomTier } from "@/lib/pricing";
 import { siteConfig } from "@/lib/site-data";
 
@@ -43,7 +44,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function RoomDetailPage({ params }: Props) {
   const { slug } = await params;
-  const room = await getRoomBySlug(slug);
+  const [room, reviewHighlights] = await Promise.all([
+    getRoomBySlug(slug),
+    getHighlightedGuestReviews(),
+  ]);
 
   if (!room) notFound();
 
@@ -283,7 +287,7 @@ export default async function RoomDetailPage({ params }: Props) {
         </div>
       </div>
 
-      <GuestReviews variant="bottom" />
+      <GuestReviews variant="bottom" highlights={reviewHighlights} />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { GuestReviews } from "@/components/guest-reviews";
 import { HeroSlideshow } from "@/components/hero-slideshow";
 import { SharedFacilities } from "@/components/shared-facilities";
 import { getPublicRooms } from "@/lib/queries";
+import { getHighlightedGuestReviews } from "@/lib/review-queries";
 import { siteConfig, amenities, buildFaqs } from "@/lib/site-data";
 import { guides } from "@/lib/guides-data";
 import { formatApproxKRW, formatUSD, roomTier, deriveTier } from "@/lib/pricing";
@@ -72,7 +73,10 @@ function AmenityIcon({ name }: { name: string }) {
 }
 
 export default async function HomePage() {
-  const rooms = await getPublicRooms();
+  const [rooms, reviewHighlights] = await Promise.all([
+    getPublicRooms(),
+    getHighlightedGuestReviews(),
+  ]);
 
   // Landing-page headline pricing is quoted from the cheapest room (economy),
   // derived from its stored nightly rate so it tracks what we actually charge.
@@ -152,7 +156,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <GuestReviews />
+      <GuestReviews highlights={reviewHighlights} />
 
       {/* Shared Facilities */}
       <section className="bg-white py-16 border-t border-gray-100">

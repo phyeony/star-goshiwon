@@ -177,9 +177,23 @@ export const guestReviews: GuestReview[] = [
   },
 ];
 
-export const highlightedGuestReviews = guestReviews.filter((review) =>
-  ["booking-2026-04-22", "booking-2026-01-22"].includes(review.id),
-);
+// Reviews featured in the home / room-page review sections: the most recent
+// ones scoring 8 or higher. A written comment is required too — the cards quote it,
+// and a score-only review would render as "left a score without comments".
+export const HIGHLIGHT_MIN_SCORE = 8;
+
+export function pickHighlightedReviews(
+  reviews: GuestReview[],
+  count = 2,
+): GuestReview[] {
+  return reviews
+    .filter(
+      (review) =>
+        review.score >= HIGHLIGHT_MIN_SCORE && Boolean(review.positive),
+    )
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, count);
+}
 
 // Maps an approved DB review (submitted via an admin-minted invite link) onto
 // the display shape the legacy hardcoded Booking.com reviews use. The date

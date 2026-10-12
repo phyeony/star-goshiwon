@@ -7,7 +7,6 @@ import {
   basicReviewCategories,
   bookingReviewSummary,
   guestReviews,
-  highlightedGuestReviews,
   type GuestReview,
   type ReviewCategoryScore,
 } from "@/lib/reviews";
@@ -181,11 +180,15 @@ function CategoryGrid({
 
 export function GuestReviews({
   variant = "full",
+  highlights,
 }: {
   variant?: "full" | "compact" | "bottom";
+  /** From getHighlightedGuestReviews — most recent reviews scoring 8 or higher. */
+  highlights: GuestReview[];
 }) {
   if (variant === "compact") {
-    const review = highlightedGuestReviews[0];
+    const review = highlights[0];
+    if (!review) return null;
 
     return (
       <div className="rounded-lg border border-blue-100 bg-blue-50/60 p-4">
@@ -246,7 +249,7 @@ export function GuestReviews({
             </p>
           </div>
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            {highlightedGuestReviews.map((review) => (
+            {highlights.map((review) => (
               <ReviewCard key={review.id} review={review} compact />
             ))}
           </div>
@@ -297,7 +300,7 @@ export function GuestReviews({
         </div>
 
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-          {highlightedGuestReviews.map((review) => (
+          {highlights.map((review) => (
             <ReviewCard key={review.id} review={review} />
           ))}
 
