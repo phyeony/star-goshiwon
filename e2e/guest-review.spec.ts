@@ -1,5 +1,19 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
 
+// Invites (and their reviews) created by the current test, deleted afterwards
+// so approved test reviews don't pile up in supabase-dev — they'd otherwise
+// become the newest highlighted reviews on the home page.
+let createdInviteIds: string[] = [];
+
+test.afterEach(async ({ request }) => {
+  if (createdInviteIds.length === 0) return;
+  const res = await request.post("/api/test/review-fixture", {
+    data: { action: "cleanup", inviteIds: createdInviteIds },
+  });
+  createdInviteIds = [];
+  expect(res.ok()).toBeTruthy();
+});
+
 async function createInvite(
   request: APIRequestContext,
   overrides: Record<string, unknown> = {}
@@ -8,7 +22,9 @@ async function createInvite(
     data: { action: "create-invite", ...overrides },
   });
   expect(res.ok()).toBeTruthy();
-  return (await res.json()) as { id: string; token: string; url: string };
+  const invite = (await res.json()) as { id: string; token: string; url: string };
+  createdInviteIds.push(invite.id);
+  return invite;
 }
 
 test("guest submits a review, admin approves, review appears on /reviews", async ({
