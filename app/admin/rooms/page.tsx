@@ -39,9 +39,6 @@ export default async function AdminRoomsPage() {
                     월 요금
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-bold text-gray-700 uppercase">
-                    수용 인원
-                  </th>
-                  <th className="text-left px-6 py-3 text-xs font-bold text-gray-700 uppercase">
                     상태
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-bold text-gray-700 uppercase">
@@ -63,9 +60,6 @@ export default async function AdminRoomsPage() {
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
                       {formatUSD(roomTier(room).monthly)}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {room.capacity}명
                     </td>
                     <td className="px-6 py-4">
                       <AdminRoomStatusBadge status={room.status} />
