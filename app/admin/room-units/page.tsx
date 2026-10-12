@@ -135,7 +135,11 @@ export default async function AdminRoomUnitsPage({ searchParams }: Props) {
           )}
         </div>
 
-        <RoomUnitForm rooms={rooms} roomUnit={editingUnit} />
+        <RoomUnitForm
+          key={editingUnit?.id ?? "new"}
+          rooms={rooms}
+          roomUnit={editingUnit}
+        />
       </div>
     </div>
   );
