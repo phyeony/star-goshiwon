@@ -495,6 +495,17 @@ export function ReviewList({
                 This guest left category scores without written comments.
               </p>
             )}
+
+            {review.ownerReply && (
+              <div className="mt-5 rounded-lg border border-[#e6e6e6] bg-[#f7f7f7] p-4">
+                <p className="text-xs font-bold uppercase tracking-wide text-[#6b6b6b]">
+                  Reply from Star Goshiwon
+                </p>
+                <p className="mt-2 text-base leading-7 text-gray-700">
+                  {review.ownerReply}
+                </p>
+              </div>
+            )}
           </article>
         );
       })}
