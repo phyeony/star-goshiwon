@@ -527,6 +527,9 @@ export interface ReviewInvite {
   created_at: string;
   expires_at: string;
   used_at: string | null;
+  /** YYYY-MM-DD; from the booking or entered by the admin. */
+  stay_check_in: string | null;
+  stay_check_out: string | null;
 }
 
 export interface ReviewInviteInsert {
@@ -535,6 +538,8 @@ export interface ReviewInviteInsert {
   guest_email?: string | null;
   room_type: string;
   booking_request_id?: string | null;
+  stay_check_in?: string | null;
+  stay_check_out?: string | null;
 }
 
 export interface Review {
@@ -552,6 +557,9 @@ export interface Review {
   status: ReviewStatus;
   submitted_at: string;
   reviewed_at: string | null;
+  /** YYYY-MM-DD, copied from the invite on submit. */
+  stay_check_in: string | null;
+  stay_check_out: string | null;
 }
 
 // ─── Guest Residence Documents ───
@@ -592,4 +600,6 @@ export interface ReviewInsert {
   negative: string | null;
   basic_categories: ReviewCategoryScoreRow[];
   additional_categories: ReviewCategoryScoreRow[];
+  stay_check_in?: string | null;
+  stay_check_out?: string | null;
 }

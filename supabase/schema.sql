@@ -259,7 +259,9 @@ CREATE TABLE IF NOT EXISTS review_invites (
   booking_request_id UUID REFERENCES booking_requests(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   expires_at TIMESTAMPTZ NOT NULL DEFAULT now() + interval '90 days',
-  used_at TIMESTAMPTZ
+  used_at TIMESTAMPTZ,
+  stay_check_in DATE,
+  stay_check_out DATE
 );
 
 CREATE TABLE IF NOT EXISTS reviews (
@@ -278,7 +280,9 @@ CREATE TABLE IF NOT EXISTS reviews (
   status TEXT NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'approved', 'rejected')),
   submitted_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  reviewed_at TIMESTAMPTZ
+  reviewed_at TIMESTAMPTZ,
+  stay_check_in DATE,
+  stay_check_out DATE
 );
 
 CREATE INDEX IF NOT EXISTS reviews_status_idx ON reviews (status);

@@ -1,23 +1,31 @@
 "use client";
 
 import { useState } from "react";
+import { CopyLinkButton } from "@/components/admin/copy-link-button";
 
 export function ReviewInviteButton({
   requestId,
   guestName,
   guestEmail,
   roomTypeName,
+  checkInDate,
+  checkOutDate,
 }: {
   requestId: string;
   guestName: string;
   guestEmail: string;
   roomTypeName: string;
+  checkInDate: string;
+  checkOutDate: string;
 }) {
+  // Prefilled from the booking; the admin can correct them (early check-out,
+  // extension) before making the link.
+  const [checkIn, setCheckIn] = useState(checkInDate);
+  const [checkOut, setCheckOut] = useState(checkOutDate);
   const [busy, setBusy] = useState(false);
   const [invite, setInvite] = useState<{ id: string; url: string } | null>(
     null
   );
-  const [copied, setCopied] = useState(false);
   const [emailState, setEmailState] = useState<
     "idle" | "sending" | "sent" | "error"
   >("idle");
@@ -35,6 +43,8 @@ export function ReviewInviteButton({
           guest_email: guestEmail,
           room_type: roomTypeName,
           booking_request_id: requestId,
+          stay_check_in: checkIn,
+          stay_check_out: checkOut,
         }),
       });
       const body = (await res.json()) as {
@@ -50,13 +60,6 @@ export function ReviewInviteButton({
     } finally {
       setBusy(false);
     }
-  }
-
-  async function handleCopy() {
-    if (!invite) return;
-    await navigator.clipboard.writeText(invite.url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   }
 
   async function handleSendEmail() {
@@ -75,8 +78,30 @@ export function ReviewInviteButton({
       {!invite ? (
         <>
           <p className="mt-1 text-sm text-gray-500">
-            이 고객에게 보낼 일회용 후기 링크를 만듭니다.
+            이 고객에게 보낼 일회용 후기 링크를 만듭니다. 숙박 날짜는 후기에
+            &ldquo;Stayed …&rdquo;로 표시됩니다.
           </p>
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <label className="text-sm text-gray-600">
+              체크인
+              <input
+                type="date"
+                value={checkIn}
+                onChange={(e) => setCheckIn(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-base text-gray-900 focus:border-indigo-500 focus:outline-none"
+              />
+            </label>
+            <label className="text-sm text-gray-600">
+              체크아웃
+              <input
+                type="date"
+                value={checkOut}
+                min={checkIn || undefined}
+                onChange={(e) => setCheckOut(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-base text-gray-900 focus:border-indigo-500 focus:outline-none"
+              />
+            </label>
+          </div>
           <button
             type="button"
             disabled={busy}
@@ -88,17 +113,11 @@ export function ReviewInviteButton({
         </>
       ) : (
         <div className="mt-3 space-y-3">
-          <code className="block truncate rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-700">
+          <code className="block select-all break-all rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-700">
             {invite.url}
           </code>
           <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              {copied ? "복사됨 ✓" : "링크 복사 (WhatsApp용)"}
-            </button>
+            <CopyLinkButton url={invite.url} label="링크 복사 (WhatsApp용)" />
             <button
               type="button"
               disabled={emailState === "sending" || emailState === "sent"}

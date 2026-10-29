@@ -6,6 +6,7 @@ import {
   additionalReviewCategories,
   basicReviewCategories,
   bookingReviewSummary,
+  formatStayLabel,
   guestReviews,
   type GuestReview,
   type ReviewCategoryScore,
@@ -71,6 +72,7 @@ function ReviewCard({
 }) {
   const quote =
     review.positive ?? "This guest left a score without written comments.";
+  const stay = formatStayLabel(review);
 
   return (
     <article className="h-full rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
@@ -78,11 +80,12 @@ function ReviewCard({
         <div>
           <h3 className="text-base font-bold text-gray-900">{review.title}</h3>
           <p className="mt-1 text-sm text-gray-500">
-            {review.guest}, {review.country} · {review.date}
+            {review.guest}, {review.country} · Reviewed {review.date}
           </p>
           <p className="mt-1 text-sm font-medium text-gray-700">
             {review.roomType}
           </p>
+          {stay && <p className="mt-1 text-sm text-gray-500">{stay}</p>}
         </div>
         <ScoreBadge score={review.score} />
       </div>
@@ -359,6 +362,17 @@ function parseReviewDate(date: string) {
   return new Date(date).getTime();
 }
 
+// "7 May 2026" -> "2026-05-07" for <time dateTime>, which needs a valid date.
+function reviewDateTime(date: string) {
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) return undefined;
+  return [
+    parsed.getFullYear(),
+    String(parsed.getMonth() + 1).padStart(2, "0"),
+    String(parsed.getDate()).padStart(2, "0"),
+  ].join("-");
+}
+
 export function ReviewControlsAndList({
   reviews = guestReviews,
 }: {
@@ -408,70 +422,82 @@ export function ReviewList({
 }) {
   return (
     <div className="space-y-5">
-      {reviews.map((review) => (
-        <article
-          key={review.id}
-          className="rounded-sm border border-[#d9d9d9] bg-white px-5 py-6 shadow-sm md:px-8"
-        >
-          <div className="grid gap-5 border-b border-[#e6e6e6] pb-6 md:grid-cols-[auto_1fr_auto] md:items-start">
-            <ScoreBadge score={review.score} />
-            <div className="min-w-0">
-              <h2 className="text-xl font-bold text-[#1a1a1a]">
-                {review.guest}, {review.country.toLowerCase()}
-              </h2>
-              <p className="mt-2 text-base font-semibold text-[#6b6b6b]">
-                {review.roomType}
-              </p>
-              <p className="mt-2 text-sm font-medium text-blue-700">
-                {review.source === "direct"
-                  ? "Verified direct stay"
-                  : "Verified stay · Booking.com"}
+      {reviews.map((review) => {
+        const stay = formatStayLabel(review);
+        return (
+          <article
+            key={review.id}
+            className="rounded-sm border border-[#d9d9d9] bg-white px-5 py-6 shadow-sm md:px-8"
+          >
+            <div className="grid gap-5 border-b border-[#e6e6e6] pb-6 md:grid-cols-[auto_1fr_auto] md:items-start">
+              <ScoreBadge score={review.score} />
+              <div className="min-w-0">
+                <h2 className="text-xl font-bold text-[#1a1a1a]">
+                  {review.guest}, {review.country.toLowerCase()}
+                </h2>
+                <p className="mt-2 text-base font-semibold text-[#6b6b6b]">
+                  {review.roomType}
+                </p>
+                {stay && (
+                  <p className="mt-1 text-sm text-[#6b6b6b]">{stay}</p>
+                )}
+                <p className="mt-2 text-sm font-medium text-blue-700">
+                  {review.source === "direct"
+                    ? "Verified direct stay"
+                    : "Verified stay · Booking.com"}
+                </p>
+              </div>
+              <p className="text-sm text-[#6b6b6b] md:text-right">
+                Reviewed
+                <time
+                  className="block text-base"
+                  dateTime={reviewDateTime(review.date)}
+                >
+                  {review.date}
+                </time>
               </p>
             </div>
-            <time className="text-base text-[#6b6b6b]" dateTime={review.date}>
-              {review.date}
-            </time>
-          </div>
 
-          <div className="mt-7 space-y-7">
-            {review.basicCategories && review.basicCategories.length > 0 && (
-              <InlineCategoryScores
-                title="Basic categories"
-                categories={review.basicCategories}
-              />
-            )}
-            {review.additionalCategories &&
-              review.additionalCategories.length > 0 && (
+            <div className="mt-7 space-y-7">
+              {review.basicCategories && review.basicCategories.length > 0 && (
                 <InlineCategoryScores
-                  title="Additional categories"
-                  categories={review.additionalCategories}
+                  title="Basic categories"
+                  categories={review.basicCategories}
                 />
               )}
-          </div>
-
-          {review.positive || review.negative ? (
-            <div className="mt-7 space-y-3">
-              <h3 className="text-lg font-bold text-[#1a1a1a]">
-                {review.title}
-              </h3>
-              {review.positive && (
-                <CommentBlock label="Liked" tone="positive">
-                  {review.positive}
-                </CommentBlock>
-              )}
-              {review.negative && (
-                <CommentBlock label="Did not like" tone="negative">
-                  {review.negative}
-                </CommentBlock>
-              )}
+              {review.additionalCategories &&
+                review.additionalCategories.length > 0 && (
+                  <InlineCategoryScores
+                    title="Additional categories"
+                    categories={review.additionalCategories}
+                  />
+                )}
             </div>
-          ) : (
-            <p className="mt-4 text-sm leading-6 text-gray-500">
-              This guest left category scores without written comments.
-            </p>
-          )}
-        </article>
-      ))}
+
+            {review.positive || review.negative ? (
+              <div className="mt-7 space-y-3">
+                <h3 className="text-lg font-bold text-[#1a1a1a]">
+                  {review.title}
+                </h3>
+                {review.positive && (
+                  <CommentBlock label="Liked" tone="positive">
+                    {review.positive}
+                  </CommentBlock>
+                )}
+                {review.negative && (
+                  <CommentBlock label="Did not like" tone="negative">
+                    {review.negative}
+                  </CommentBlock>
+                )}
+              </div>
+            ) : (
+              <p className="mt-4 text-sm leading-6 text-gray-500">
+                This guest left category scores without written comments.
+              </p>
+            )}
+          </article>
+        );
+      })}
     </div>
   );
 }

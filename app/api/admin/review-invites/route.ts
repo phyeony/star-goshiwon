@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   createReviewInvite,
+  findStayForInvite,
   generateReviewToken,
   reviewInviteUrl,
 } from "@/lib/review-queries";
+import { parseStayDates } from "@/lib/review-validation";
 import { getAdminUserOrNull } from "@/lib/supabase-server";
 import { getPostHogClient } from "@/lib/posthog-server";
 
@@ -38,12 +40,37 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const enteredStay = parseStayDates(
+      body.stay_check_in,
+      body.stay_check_out
+    );
+    if (!enteredStay.ok) {
+      return NextResponse.json({ error: enteredStay.error }, { status: 400 });
+    }
+
+    // No dates entered: take them from the booking / availability on the
+    // site. A failed lookup just leaves the invite undated.
+    let stay = enteredStay.value;
+    if (!stay) {
+      try {
+        stay = await findStayForInvite({
+          bookingRequestId,
+          guestEmail,
+          guestName,
+        });
+      } catch (error) {
+        console.error("Review invite stay lookup failed:", error);
+      }
+    }
+
     const invite = await createReviewInvite({
       token: generateReviewToken(),
       guest_name: guestName,
       guest_email: guestEmail,
       room_type: roomType,
       booking_request_id: bookingRequestId,
+      stay_check_in: stay?.stay_check_in ?? null,
+      stay_check_out: stay?.stay_check_out ?? null,
     });
 
     const posthog = getPostHogClient();
@@ -55,6 +82,7 @@ export async function POST(req: NextRequest) {
         room_type: roomType,
         from_booking: Boolean(bookingRequestId),
         has_email: Boolean(guestEmail),
+        has_stay_dates: Boolean(stay),
       },
     });
     await posthog.shutdown();

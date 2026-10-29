@@ -269,12 +269,15 @@ export default async function RequestDetailPage({ params }: Props) {
           />
           <DocumentsCard request={request} templates={documentTemplates} />
           <RequestActions request={request} templates={templates} />
-          {request.payment_status === "paid" && (
+          {(request.payment_status === "paid" ||
+            request.status === "confirmed") && (
             <ReviewInviteButton
               requestId={request.id}
               guestName={request.guest_name}
               guestEmail={request.guest_email}
               roomTypeName={request.rooms?.name ?? request.room_slug}
+              checkInDate={request.check_in_date}
+              checkOutDate={request.check_out_date}
             />
           )}
         </div>

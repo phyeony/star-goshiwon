@@ -5,12 +5,8 @@ import {
   ReviewControlsAndList,
   ReviewScoreBreakdown,
 } from "@/components/guest-reviews";
-import {
-  bookingReviewSummary,
-  dbReviewToGuestReview,
-  guestReviews,
-} from "@/lib/reviews";
-import { getApprovedReviews } from "@/lib/review-queries";
+import { bookingReviewSummary } from "@/lib/reviews";
+import { getPublicGuestReviews } from "@/lib/review-queries";
 
 export const dynamic = "force-dynamic";
 
@@ -22,9 +18,8 @@ export const metadata: Metadata = {
 };
 
 export default async function ReviewsPage() {
-  const approved = await getApprovedReviews();
-  const directReviews = approved.map(dbReviewToGuestReview);
-  const allReviews = [...directReviews, ...guestReviews];
+  const allReviews = await getPublicGuestReviews();
+  const directReviews = allReviews.filter((r) => r.source === "direct");
   const directAverage =
     directReviews.length > 0
       ? directReviews.reduce((sum, r) => sum + r.score, 0) /

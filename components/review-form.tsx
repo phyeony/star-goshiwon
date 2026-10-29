@@ -49,10 +49,13 @@ export function ReviewForm({
   token,
   initialGuestName,
   roomType,
+  stayDates,
 }: {
   token: string;
   initialGuestName: string;
   roomType: string;
+  /** e.g. "3 – 30 May 2026", when the stay is on our website. */
+  stayDates?: string | null;
 }) {
   const [score, setScore] = useState<number | null>(null);
   const [basic, setBasic] = useState<Record<string, number | null>>({});
@@ -162,6 +165,7 @@ export function ReviewForm({
       <div className="rounded-lg border border-gray-200 bg-white p-5">
         <p className="text-sm font-medium text-gray-500">Your stay</p>
         <p className="mt-1 text-base font-semibold text-gray-900">{roomType}</p>
+        {stayDates && <p className="mt-1 text-sm text-gray-600">{stayDates}</p>}
       </div>
 
       <div className="rounded-lg border border-gray-200 bg-white p-5">

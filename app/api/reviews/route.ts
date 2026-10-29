@@ -41,6 +41,8 @@ export async function POST(req: NextRequest) {
         invite_id: invite.id,
         ...result.value,
         room_type: invite.room_type,
+        stay_check_in: invite.stay_check_in,
+        stay_check_out: invite.stay_check_out,
       });
     } catch (error) {
       // 23505 = unique_violation on invite_id: a concurrent submit won.

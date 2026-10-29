@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateReviewSubmission } from "./review-validation";
+import { parseStayDates, validateReviewSubmission } from "./review-validation";
 
 const base = {
   guest_name: "Test Guest",
@@ -123,5 +123,23 @@ describe("validateReviewSubmission", () => {
     expect(
       validateReviewSubmission({ ...base, positive: "x".repeat(2001) }).ok
     ).toBe(false);
+  });
+});
+
+describe("parseStayDates", () => {
+  it("treats two blanks as no dates", () => {
+    expect(parseStayDates("", undefined)).toEqual({ ok: true, value: null });
+  });
+
+  it("accepts a valid range", () => {
+    expect(parseStayDates("2026-05-01", "2026-05-31")).toEqual({
+      ok: true,
+      value: { stay_check_in: "2026-05-01", stay_check_out: "2026-05-31" },
+    });
+  });
+
+  it("rejects one date alone or check-out not after check-in", () => {
+    expect(parseStayDates("2026-05-01", "").ok).toBe(false);
+    expect(parseStayDates("2026-05-01", "2026-05-01").ok).toBe(false);
   });
 });

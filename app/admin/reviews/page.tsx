@@ -1,4 +1,5 @@
 import {
+  getReviewableGuests,
   getReviewInvites,
   getReviews,
   reviewInviteUrl,
@@ -9,10 +10,11 @@ import { ReviewAdmin } from "@/components/admin/review-admin";
 export const dynamic = "force-dynamic";
 
 export default async function AdminReviewsPage() {
-  const [reviews, invites, rooms] = await Promise.all([
+  const [reviews, invites, rooms, guests] = await Promise.all([
     getReviews(),
     getReviewInvites(),
     getRooms(),
+    getReviewableGuests(),
   ]);
 
   return (
@@ -30,6 +32,7 @@ export default async function AdminReviewsPage() {
             url: reviewInviteUrl(invite.token),
           }))}
           roomTypeNames={rooms.map((room) => room.name)}
+          guests={guests}
         />
       </div>
     </div>
