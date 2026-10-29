@@ -25,6 +25,7 @@ const navItems: NavEntry[] = [
     label: "기타",
     items: [
       { href: "/admin/dashboard", label: "대시보드" },
+      { href: "/admin/funnel", label: "예약 전환 분석" },
       { href: "/admin/pricing", label: "요금 분석" },
       { href: "/admin/inbox", label: "받은 메일" },
     ],
