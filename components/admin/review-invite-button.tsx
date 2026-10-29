@@ -8,12 +8,20 @@ export function ReviewInviteButton({
   guestName,
   guestEmail,
   roomTypeName,
+  checkInDate,
+  checkOutDate,
 }: {
   requestId: string;
   guestName: string;
   guestEmail: string;
   roomTypeName: string;
+  checkInDate: string;
+  checkOutDate: string;
 }) {
+  // Prefilled from the booking; the admin can correct them (early check-out,
+  // extension) before making the link.
+  const [checkIn, setCheckIn] = useState(checkInDate);
+  const [checkOut, setCheckOut] = useState(checkOutDate);
   const [busy, setBusy] = useState(false);
   const [invite, setInvite] = useState<{ id: string; url: string } | null>(
     null
@@ -35,6 +43,8 @@ export function ReviewInviteButton({
           guest_email: guestEmail,
           room_type: roomTypeName,
           booking_request_id: requestId,
+          stay_check_in: checkIn,
+          stay_check_out: checkOut,
         }),
       });
       const body = (await res.json()) as {
@@ -68,8 +78,30 @@ export function ReviewInviteButton({
       {!invite ? (
         <>
           <p className="mt-1 text-sm text-gray-500">
-            이 고객에게 보낼 일회용 후기 링크를 만듭니다.
+            이 고객에게 보낼 일회용 후기 링크를 만듭니다. 숙박 날짜는 후기에
+            &ldquo;Stayed …&rdquo;로 표시됩니다.
           </p>
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <label className="text-sm text-gray-600">
+              체크인
+              <input
+                type="date"
+                value={checkIn}
+                onChange={(e) => setCheckIn(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-base text-gray-900 focus:border-indigo-500 focus:outline-none"
+              />
+            </label>
+            <label className="text-sm text-gray-600">
+              체크아웃
+              <input
+                type="date"
+                value={checkOut}
+                min={checkIn || undefined}
+                onChange={(e) => setCheckOut(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-base text-gray-900 focus:border-indigo-500 focus:outline-none"
+              />
+            </label>
+          </div>
           <button
             type="button"
             disabled={busy}

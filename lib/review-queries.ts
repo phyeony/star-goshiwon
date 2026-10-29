@@ -174,19 +174,22 @@ export async function getKnownStays(): Promise<KnownStay[]> {
 }
 
 /**
- * Approved direct reviews plus the legacy Booking.com ones, with stay dates
- * attached wherever the guest's stay is on our website. A failed stay lookup
- * only drops the stay dates, never the reviews.
+ * Approved direct reviews plus the legacy Booking.com ones. Direct reviews
+ * whose invite had no stay dates get them from stays on our website; the
+ * Booking.com ones are left as they are. A failed stay lookup only drops the
+ * stay dates, never the reviews.
  */
 export async function getPublicGuestReviews(): Promise<GuestReview[]> {
   const approved = await getApprovedReviews();
-  const reviews = [...approved.map(dbReviewToGuestReview), ...guestReviews];
-  try {
-    return attachKnownStays(reviews, await getKnownStays());
-  } catch (error) {
-    console.error("Guest reviews: stay lookup failed", error);
-    return reviews;
+  let direct = approved.map(dbReviewToGuestReview);
+  if (direct.some((review) => !review.stayedFrom)) {
+    try {
+      direct = attachKnownStays(direct, await getKnownStays());
+    } catch (error) {
+      console.error("Guest reviews: stay lookup failed", error);
+    }
   }
+  return [...direct, ...guestReviews];
 }
 
 /**

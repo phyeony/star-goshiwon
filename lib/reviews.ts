@@ -301,9 +301,8 @@ export function findKnownStay(
 }
 
 /**
- * Fills in stay dates for reviews that don't carry them (the legacy
- * Booking.com ones, and direct reviews whose invite had none) from stays on
- * our website.
+ * Fills in stay dates for reviews that don't carry them (direct reviews whose
+ * invite had none) from stays on our website.
  */
 export function attachKnownStays(
   reviews: GuestReview[],
@@ -311,7 +310,7 @@ export function attachKnownStays(
 ): GuestReview[] {
   return reviews.map((review) => {
     if (review.stayedFrom && review.stayedTo) return review;
-    // Review dates are "7 May 2026" strings with no time, so local parts are
+    // Review dates are "6 Jul 2026" strings with no time, so local parts are
     // the calendar date.
     const reviewedOn = new Date(review.date);
     if (Number.isNaN(reviewedOn.getTime())) return review;
