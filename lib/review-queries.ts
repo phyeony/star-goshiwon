@@ -82,6 +82,12 @@ export async function getReviewInvites(): Promise<ReviewInvite[]> {
   return (data as ReviewInvite[]) ?? [];
 }
 
+export async function deleteReviewInvite(id: string): Promise<void> {
+  const supabase = getSupabaseServiceClient();
+  const { error } = await supabase.from("review_invites").delete().eq("id", id);
+  if (error) throw error;
+}
+
 export async function markReviewInviteUsed(id: string): Promise<void> {
   const supabase = getSupabaseServiceClient();
   const { error } = await supabase

@@ -314,10 +314,30 @@ function NewInviteForm({
 }
 
 function InviteRow({ invite }: { invite: InviteWithUrl }) {
+  const router = useRouter();
   const [emailState, setEmailState] = useState<
     "idle" | "sending" | "sent" | "error"
   >("idle");
+  const [deleteState, setDeleteState] = useState<
+    "idle" | "confirm" | "deleting"
+  >("idle");
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const open = inviteStateKo(invite) === "대기 중";
+
+  async function handleDelete() {
+    setDeleteState("deleting");
+    setDeleteError(null);
+    const res = await fetch(`/api/admin/review-invites/${invite.id}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) {
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      setDeleteError(body.error ?? "삭제 실패");
+      setDeleteState("idle");
+      return;
+    }
+    router.refresh();
+  }
 
   async function handleSendEmail() {
     setEmailState("sending");
@@ -341,26 +361,57 @@ function InviteRow({ invite }: { invite: InviteWithUrl }) {
           {invite.guest_email ? ` · ${invite.guest_email}` : ""}
         </p>
       </div>
-      {open && (
-        <div className="flex flex-wrap gap-2">
-          <CopyLinkButton url={invite.url} />
-          {invite.guest_email && (
+      <div className="flex flex-wrap gap-2">
+        {open && <CopyLinkButton url={invite.url} />}
+        {open && invite.guest_email && (
+          <button
+            type="button"
+            disabled={emailState === "sending" || emailState === "sent"}
+            onClick={handleSendEmail}
+            className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          >
+            {emailState === "sent"
+              ? "발송됨 ✓"
+              : emailState === "sending"
+                ? "발송 중…"
+                : emailState === "error"
+                  ? "실패 — 재시도"
+                  : "이메일 보내기"}
+          </button>
+        )}
+        {/* A used link has a review attached; it stays as that review's record. */}
+        {!invite.used_at &&
+          (deleteState === "idle" ? (
             <button
               type="button"
-              disabled={emailState === "sending" || emailState === "sent"}
-              onClick={handleSendEmail}
-              className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              onClick={() => setDeleteState("confirm")}
+              className="rounded-lg border border-red-300 bg-white px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50"
             >
-              {emailState === "sent"
-                ? "발송됨 ✓"
-                : emailState === "sending"
-                  ? "발송 중…"
-                  : emailState === "error"
-                    ? "실패 — 재시도"
-                    : "이메일 보내기"}
+              삭제
             </button>
-          )}
-        </div>
+          ) : (
+            <>
+              <button
+                type="button"
+                disabled={deleteState === "deleting"}
+                onClick={handleDelete}
+                className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {deleteState === "deleting" ? "삭제 중…" : "정말 삭제"}
+              </button>
+              <button
+                type="button"
+                disabled={deleteState === "deleting"}
+                onClick={() => setDeleteState("idle")}
+                className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                취소
+              </button>
+            </>
+          ))}
+      </div>
+      {deleteError && (
+        <p className="basis-full text-sm text-red-600">{deleteError}</p>
       )}
     </div>
   );
