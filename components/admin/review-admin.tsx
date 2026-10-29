@@ -220,25 +220,28 @@ function NewInviteForm({
       <p className="mt-1 text-sm text-gray-500">
         플랫폼 외 예약 고객에게도 링크를 만들어 보낼 수 있습니다.
       </p>
-      {guests.length > 0 && (
-        <label className="mt-4 block text-sm text-gray-600">
-          투숙객 선택 (현재·최근 90일)
-          <select
-            value={guestKey}
-            onChange={(e) => handlePickGuest(e.target.value)}
-            className={`${inputClass} mt-1`}
-          >
-            <option value="">직접 입력</option>
-            {guests.map((guest) => (
-              <option key={guest.key} value={guest.key}>
-                {guest.current ? "[투숙 중] " : ""}
-                {guest.guestName} · {guest.roomType || "객실 미정"} ·{" "}
-                {formatStayRange(guest.checkIn, guest.checkOut)}
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
+      <label className="mt-4 block text-sm text-gray-600">
+        투숙객 선택 (현재·최근 90일)
+        <select
+          value={guestKey}
+          disabled={guests.length === 0}
+          onChange={(e) => handlePickGuest(e.target.value)}
+          className={`${inputClass} mt-1 disabled:bg-gray-50 disabled:text-gray-400`}
+        >
+          <option value="">
+            {guests.length === 0
+              ? "현재·최근 90일 투숙객이 없습니다 — 직접 입력하세요"
+              : "직접 입력"}
+          </option>
+          {guests.map((guest) => (
+            <option key={guest.key} value={guest.key}>
+              {guest.current ? "[투숙 중] " : ""}
+              {guest.guestName} · {guest.roomType || "객실 미정"} ·{" "}
+              {formatStayRange(guest.checkIn, guest.checkOut)}
+            </option>
+          ))}
+        </select>
+      </label>
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         <input
           type="text"
