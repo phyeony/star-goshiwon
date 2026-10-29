@@ -29,6 +29,7 @@ import type {
   EmailReceiveInsert,
 } from "./types";
 import { deriveTier, roomTier, type UsdPriceTier } from "./pricing";
+import type { FirstEmailByRequest, FunnelRequest } from "./funnel";
 
 // ─── Rooms ───
 
@@ -942,4 +943,44 @@ export async function getAdminStats() {
     totalRooms: totalRooms ?? 0,
     availableRooms: availableRooms ?? 0,
   };
+}
+
+export async function getFunnelData(filters?: { from?: string }): Promise<{
+  requests: FunnelRequest[];
+  firstEmail: FirstEmailByRequest;
+}> {
+  const supabase = getSupabaseServiceClient();
+  let query = supabase
+    .from("booking_requests")
+    .select(
+      "id, guest_name, guest_email, room_slug, check_in_date, check_out_date, status, payment_status, payment_amount, payment_currency, payment_created_at, payment_paid_at, created_at"
+    )
+    .order("created_at", { ascending: true });
+  if (filters?.from) {
+    query = query.gte("created_at", filters.from);
+  }
+  const { data, error } = await query;
+  if (error) throw error;
+  const requests = (data as FunnelRequest[]) ?? [];
+
+  const firstEmail: FirstEmailByRequest = new Map();
+  if (requests.length > 0) {
+    const { data: sends, error: sendsError } = await supabase
+      .from("email_sends")
+      .select("booking_request_id, sent_at")
+      .eq("send_status", "sent")
+      .in(
+        "booking_request_id",
+        requests.map((r) => r.id)
+      )
+      .order("sent_at", { ascending: true });
+    if (sendsError) throw sendsError;
+    for (const s of sends ?? []) {
+      if (!firstEmail.has(s.booking_request_id)) {
+        firstEmail.set(s.booking_request_id, s.sent_at);
+      }
+    }
+  }
+
+  return { requests, firstEmail };
 }
