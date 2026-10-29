@@ -14,6 +14,9 @@ export type GuestReview = {
   negative?: string;
   language?: "en" | "ja" | "de";
   source?: "booking" | "direct";
+  /** YYYY-MM-DD stay dates, when the guest's stay is on our website. */
+  stayedFrom?: string;
+  stayedTo?: string;
 };
 
 export type ReviewCategoryScore = {
@@ -217,5 +220,108 @@ export function dbReviewToGuestReview(review: Review): GuestReview {
     positive: review.positive ?? undefined,
     negative: review.negative ?? undefined,
     source: "direct",
+    ...(review.stay_check_in && review.stay_check_out
+      ? { stayedFrom: review.stay_check_in, stayedTo: review.stay_check_out }
+      : {}),
   };
+}
+
+const MONTHS = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
+function parseIsoDate(iso: string) {
+  const [year, month, day] = iso.slice(0, 10).split("-").map(Number);
+  return { year, month, day };
+}
+
+export function stayNights(from: string, to: string): number {
+  const a = parseIsoDate(from);
+  const b = parseIsoDate(to);
+  return Math.round(
+    (Date.UTC(b.year, b.month - 1, b.day) -
+      Date.UTC(a.year, a.month - 1, a.day)) /
+      86_400_000,
+  );
+}
+
+/** "3 – 30 May 2026", "28 Apr – 2 Jun 2026", "28 Dec 2025 – 2 Jan 2026". */
+export function formatStayRange(from: string, to: string): string {
+  const a = parseIsoDate(from);
+  const b = parseIsoDate(to);
+  const end = `${b.day} ${MONTHS[b.month - 1]} ${b.year}`;
+  if (a.year !== b.year) {
+    return `${a.day} ${MONTHS[a.month - 1]} ${a.year} – ${end}`;
+  }
+  if (a.month !== b.month) return `${a.day} ${MONTHS[a.month - 1]} – ${end}`;
+  return `${a.day} – ${end}`;
+}
+
+/** "Stayed 3 – 30 May 2026 · 27 nights", or null when the stay isn't known. */
+export function formatStayLabel(review: GuestReview): string | null {
+  if (!review.stayedFrom || !review.stayedTo) return null;
+  const nights = stayNights(review.stayedFrom, review.stayedTo);
+  return `Stayed ${formatStayRange(review.stayedFrom, review.stayedTo)} · ${nights} ${
+    nights === 1 ? "night" : "nights"
+  }`;
+}
+
+export type KnownStay = {
+  guestName: string;
+  checkIn: string;
+  checkOut: string;
+};
+
+export function normalizeGuestName(name: string): string {
+  return name.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+/**
+ * The guest's stay on our website: matched on the full guest name — at least
+ * two words, so a lone first name can't pick up someone else's stay — taking
+ * the latest stay that started on or before `onOrBefore` (YYYY-MM-DD).
+ */
+export function findKnownStay(
+  guestName: string,
+  onOrBefore: string,
+  stays: KnownStay[],
+): KnownStay | null {
+  const name = normalizeGuestName(guestName);
+  if (!name.includes(" ")) return null;
+  return (
+    stays
+      .filter(
+        (stay) =>
+          normalizeGuestName(stay.guestName) === name &&
+          stay.checkIn <= onOrBefore,
+      )
+      .sort((a, b) => b.checkIn.localeCompare(a.checkIn))[0] ?? null
+  );
+}
+
+/**
+ * Fills in stay dates for reviews that don't carry them (the legacy
+ * Booking.com ones, and direct reviews whose invite had none) from stays on
+ * our website.
+ */
+export function attachKnownStays(
+  reviews: GuestReview[],
+  stays: KnownStay[],
+): GuestReview[] {
+  return reviews.map((review) => {
+    if (review.stayedFrom && review.stayedTo) return review;
+    // Review dates are "7 May 2026" strings with no time, so local parts are
+    // the calendar date.
+    const reviewedOn = new Date(review.date);
+    if (Number.isNaN(reviewedOn.getTime())) return review;
+    const reviewedIso = [
+      reviewedOn.getFullYear(),
+      String(reviewedOn.getMonth() + 1).padStart(2, "0"),
+      String(reviewedOn.getDate()).padStart(2, "0"),
+    ].join("-");
+    const match = findKnownStay(review.guest, reviewedIso, stays);
+    if (!match) return review;
+    return { ...review, stayedFrom: match.checkIn, stayedTo: match.checkOut };
+  });
 }

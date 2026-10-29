@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CopyLinkButton } from "@/components/admin/copy-link-button";
 
 export function ReviewInviteButton({
   requestId,
@@ -17,7 +18,6 @@ export function ReviewInviteButton({
   const [invite, setInvite] = useState<{ id: string; url: string } | null>(
     null
   );
-  const [copied, setCopied] = useState(false);
   const [emailState, setEmailState] = useState<
     "idle" | "sending" | "sent" | "error"
   >("idle");
@@ -52,13 +52,6 @@ export function ReviewInviteButton({
     }
   }
 
-  async function handleCopy() {
-    if (!invite) return;
-    await navigator.clipboard.writeText(invite.url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-
   async function handleSendEmail() {
     if (!invite) return;
     setEmailState("sending");
@@ -88,17 +81,11 @@ export function ReviewInviteButton({
         </>
       ) : (
         <div className="mt-3 space-y-3">
-          <code className="block truncate rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-700">
+          <code className="block select-all break-all rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-700">
             {invite.url}
           </code>
           <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              {copied ? "복사됨 ✓" : "링크 복사 (WhatsApp용)"}
-            </button>
+            <CopyLinkButton url={invite.url} label="링크 복사 (WhatsApp용)" />
             <button
               type="button"
               disabled={emailState === "sending" || emailState === "sent"}

@@ -164,3 +164,27 @@ export function validateReviewSubmission(input: unknown): Result {
     },
   };
 }
+
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Stay dates the admin entered on a review invite. Both blank = not given;
+ * otherwise both must be YYYY-MM-DD with check-out after check-in.
+ */
+export function parseStayDates(
+  checkIn: unknown,
+  checkOut: unknown
+):
+  | { ok: true; value: { stay_check_in: string; stay_check_out: string } | null }
+  | { ok: false; error: string } {
+  const from = typeof checkIn === "string" ? checkIn.trim() : "";
+  const to = typeof checkOut === "string" ? checkOut.trim() : "";
+  if (!from && !to) return { ok: true, value: null };
+  if (!ISO_DATE.test(from) || !ISO_DATE.test(to)) {
+    return { ok: false, error: "체크인과 체크아웃 날짜를 모두 입력하세요" };
+  }
+  if (to <= from) {
+    return { ok: false, error: "체크아웃은 체크인 이후여야 합니다" };
+  }
+  return { ok: true, value: { stay_check_in: from, stay_check_out: to } };
+}

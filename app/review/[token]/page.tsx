@@ -5,6 +5,7 @@ import {
   getReviewInviteByToken,
   isReviewInviteOpen,
 } from "@/lib/review-queries";
+import { formatStayRange } from "@/lib/reviews";
 
 export const dynamic = "force-dynamic";
 
@@ -78,6 +79,11 @@ export default async function ReviewInvitePage({
             token={invite.token}
             initialGuestName={invite.guest_name}
             roomType={invite.room_type}
+            stayDates={
+              invite.stay_check_in && invite.stay_check_out
+                ? formatStayRange(invite.stay_check_in, invite.stay_check_out)
+                : null
+            }
           />
         </div>
       </div>

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { CopyLinkButton } from "@/components/admin/copy-link-button";
+import { formatStayRange } from "@/lib/reviews";
 import type { Review, ReviewInvite, ReviewStatus } from "@/lib/types";
 
 type InviteWithUrl = ReviewInvite & { url: string };
@@ -18,6 +20,15 @@ function inviteStateKo(invite: ReviewInvite): string {
   return "대기 중";
 }
 
+function stayKo(item: {
+  stay_check_in: string | null;
+  stay_check_out: string | null;
+}): string | null {
+  return item.stay_check_in && item.stay_check_out
+    ? `숙박 ${formatStayRange(item.stay_check_in, item.stay_check_out)}`
+    : null;
+}
+
 function formatDateKo(iso: string): string {
   return new Date(iso).toLocaleDateString("ko-KR", {
     year: "numeric",
@@ -25,26 +36,6 @@ function formatDateKo(iso: string): string {
     day: "numeric",
     timeZone: "Asia/Seoul",
   });
-}
-
-function CopyLinkButton({ url }: { url: string }) {
-  const [copied, setCopied] = useState(false);
-
-  async function handleCopy() {
-    await navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={handleCopy}
-      className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-    >
-      {copied ? "복사됨 ✓" : "링크 복사"}
-    </button>
-  );
 }
 
 function ReviewModerationCard({ review }: { review: Review }) {
@@ -86,8 +77,9 @@ function ReviewModerationCard({ review }: { review: Review }) {
             {review.country ? `, ${review.country}` : ""} · {review.room_type}
           </p>
           <p className="mt-1 text-sm text-gray-500">
-            {formatDateKo(review.submitted_at)} ·{" "}
+            {formatDateKo(review.submitted_at)} 작성 ·{" "}
             {STATUS_LABELS_KO[review.status]}
+            {stayKo(review) ? ` · ${stayKo(review)}` : ""}
           </p>
         </div>
         <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-md bg-indigo-600 text-lg font-bold text-white">
@@ -152,6 +144,8 @@ function NewInviteForm({ roomTypeNames }: { roomTypeNames: string[] }) {
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
   const [roomType, setRoomType] = useState(roomTypeNames[0] ?? "");
+  const [checkIn, setCheckIn] = useState("");
+  const [checkOut, setCheckOut] = useState("");
   const [busy, setBusy] = useState(false);
   const [createdUrl, setCreatedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -169,6 +163,8 @@ function NewInviteForm({ roomTypeNames }: { roomTypeNames: string[] }) {
           guest_name: guestName,
           guest_email: guestEmail,
           room_type: roomType,
+          stay_check_in: checkIn,
+          stay_check_out: checkOut,
         }),
       });
       const body = (await res.json()) as { url?: string; error?: string };
@@ -179,6 +175,8 @@ function NewInviteForm({ roomTypeNames }: { roomTypeNames: string[] }) {
       setCreatedUrl(body.url);
       setGuestName("");
       setGuestEmail("");
+      setCheckIn("");
+      setCheckOut("");
       router.refresh();
     } finally {
       setBusy(false);
@@ -224,7 +222,30 @@ function NewInviteForm({ roomTypeNames }: { roomTypeNames: string[] }) {
             </option>
           ))}
         </select>
+        <label className="text-sm text-gray-600">
+          체크인
+          <input
+            type="date"
+            value={checkIn}
+            onChange={(e) => setCheckIn(e.target.value)}
+            className={`${inputClass} mt-1`}
+          />
+        </label>
+        <label className="text-sm text-gray-600">
+          체크아웃
+          <input
+            type="date"
+            value={checkOut}
+            min={checkIn || undefined}
+            onChange={(e) => setCheckOut(e.target.value)}
+            className={`${inputClass} mt-1`}
+          />
+        </label>
       </div>
+      <p className="mt-2 text-xs text-gray-500">
+        숙박 날짜는 후기에 &ldquo;Stayed …&rdquo;로 표시됩니다. 비워 두면 사이트의
+        예약·객실 현황에서 같은 이름/이메일의 숙박을 찾아 자동으로 채웁니다.
+      </p>
       <button
         type="submit"
         disabled={busy}
@@ -233,8 +254,8 @@ function NewInviteForm({ roomTypeNames }: { roomTypeNames: string[] }) {
         {busy ? "생성 중…" : "초대 링크 만들기"}
       </button>
       {createdUrl && (
-        <div className="mt-3 flex items-center gap-2 rounded-lg bg-green-50 p-3">
-          <code className="min-w-0 flex-1 truncate text-xs text-gray-700">
+        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg bg-green-50 p-3">
+          <code className="min-w-0 basis-full select-all break-all text-xs text-gray-700">
             {createdUrl}
           </code>
           <CopyLinkButton url={createdUrl} />
@@ -269,11 +290,12 @@ function InviteRow({ invite }: { invite: InviteWithUrl }) {
         <p className="text-xs text-gray-500">
           {formatDateKo(invite.created_at)} 생성 ·{" "}
           {formatDateKo(invite.expires_at)} 만료 · {inviteStateKo(invite)}
+          {stayKo(invite) ? ` · ${stayKo(invite)}` : ""}
           {invite.guest_email ? ` · ${invite.guest_email}` : ""}
         </p>
       </div>
       {open && (
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <CopyLinkButton url={invite.url} />
           {invite.guest_email && (
             <button

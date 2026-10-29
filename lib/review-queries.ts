@@ -1,10 +1,13 @@
 import { getSupabaseServiceClient } from "./supabase";
 import { siteConfig } from "./site-data";
 import {
+  attachKnownStays,
   dbReviewToGuestReview,
+  findKnownStay,
   guestReviews,
   pickHighlightedReviews,
   type GuestReview,
+  type KnownStay,
 } from "./reviews";
 import type {
   Review,
@@ -136,6 +139,115 @@ export async function updateReviewStatus(
 }
 
 /**
+ * Guest stays on our website: room availability blocks plus confirmed or paid
+ * booking requests. Used to date reviews that don't carry their own stay.
+ */
+export async function getKnownStays(): Promise<KnownStay[]> {
+  const supabase = getSupabaseServiceClient();
+  const [blocks, bookings] = await Promise.all([
+    supabase
+      .from("room_unit_blocks")
+      .select("guest_name, check_in_date, check_out_date")
+      .neq("status", "cancelled"),
+    supabase
+      .from("booking_requests")
+      .select("guest_name, check_in_date, check_out_date")
+      .or("status.eq.confirmed,payment_status.eq.paid"),
+  ]);
+  if (blocks.error) throw blocks.error;
+  if (bookings.error) throw bookings.error;
+  type StayRow = {
+    guest_name: string;
+    check_in_date: string;
+    check_out_date: string;
+  };
+  return [...(blocks.data ?? []), ...(bookings.data ?? [])]
+    .filter(
+      (row: StayRow) =>
+        row.guest_name && row.check_in_date && row.check_out_date
+    )
+    .map((row: StayRow) => ({
+      guestName: row.guest_name,
+      checkIn: row.check_in_date,
+      checkOut: row.check_out_date,
+    }));
+}
+
+/**
+ * Approved direct reviews plus the legacy Booking.com ones, with stay dates
+ * attached wherever the guest's stay is on our website. A failed stay lookup
+ * only drops the stay dates, never the reviews.
+ */
+export async function getPublicGuestReviews(): Promise<GuestReview[]> {
+  const approved = await getApprovedReviews();
+  const reviews = [...approved.map(dbReviewToGuestReview), ...guestReviews];
+  try {
+    return attachKnownStays(reviews, await getKnownStays());
+  } catch (error) {
+    console.error("Guest reviews: stay lookup failed", error);
+    return reviews;
+  }
+}
+
+/**
+ * Finds the stay a review invite is for, when the admin didn't enter one: the
+ * booking it was made from, else the guest's latest confirmed/paid booking by
+ * email, else a room availability block under the guest's full name.
+ */
+export async function findStayForInvite({
+  bookingRequestId,
+  guestEmail,
+  guestName,
+}: {
+  bookingRequestId: string | null;
+  guestEmail: string | null;
+  guestName: string;
+}): Promise<{ stay_check_in: string; stay_check_out: string } | null> {
+  const supabase = getSupabaseServiceClient();
+  const today = new Date().toLocaleDateString("en-CA", {
+    timeZone: "Asia/Seoul",
+  });
+
+  if (bookingRequestId) {
+    const { data, error } = await supabase
+      .from("booking_requests")
+      .select("check_in_date, check_out_date")
+      .eq("id", bookingRequestId)
+      .maybeSingle();
+    if (error) throw error;
+    if (data) {
+      return {
+        stay_check_in: data.check_in_date,
+        stay_check_out: data.check_out_date,
+      };
+    }
+  }
+
+  if (guestEmail) {
+    const { data, error } = await supabase
+      .from("booking_requests")
+      .select("check_in_date, check_out_date")
+      .ilike("guest_email", guestEmail)
+      .or("status.eq.confirmed,payment_status.eq.paid")
+      .lte("check_in_date", today)
+      .order("check_in_date", { ascending: false })
+      .limit(1);
+    if (error) throw error;
+    if (data?.[0]) {
+      return {
+        stay_check_in: data[0].check_in_date,
+        stay_check_out: data[0].check_out_date,
+      };
+    }
+  }
+
+  const match = findKnownStay(guestName, today, await getKnownStays());
+  return match
+    ? { stay_check_in: match.checkIn, stay_check_out: match.checkOut }
+    : null;
+}
+
+/**
  * Highlights for the home and room-page review sections, drawn from approved
  * direct reviews plus the legacy Booking.com ones. Falls back to the legacy
  * set alone if the DB read fails, so a reviews outage can't take down the
@@ -144,11 +256,11 @@ export async function updateReviewStatus(
 export async function getHighlightedGuestReviews(
   count = 2
 ): Promise<GuestReview[]> {
-  let directReviews: GuestReview[] = [];
+  let reviews: GuestReview[] = guestReviews;
   try {
-    directReviews = (await getApprovedReviews()).map(dbReviewToGuestReview);
+    reviews = await getPublicGuestReviews();
   } catch (error) {
     console.error("Highlighted reviews: falling back to legacy reviews", error);
   }
-  return pickHighlightedReviews([...directReviews, ...guestReviews], count);
+  return pickHighlightedReviews(reviews, count);
 }
