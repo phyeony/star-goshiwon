@@ -250,6 +250,105 @@ export async function findStayForInvite({
     : null;
 }
 
+/** A current or recent guest the admin can pick when making a review link. */
+export type ReviewableGuest = {
+  key: string;
+  bookingRequestId: string | null;
+  guestName: string;
+  guestEmail: string | null;
+  roomType: string;
+  checkIn: string;
+  checkOut: string;
+  /** Checked in and not yet checked out. */
+  current: boolean;
+};
+
+// Review links last 90 days, so guests who left longer ago aren't offered.
+const REVIEWABLE_DAYS_AFTER_CHECKOUT = 90;
+
+/**
+ * Guests staying now or who checked out in the last 90 days: confirmed or
+ * paid booking requests, plus off-platform guests from room availability
+ * blocks (blocks tied to a booking are covered by the booking). Current
+ * guests first, then most recent check-out.
+ */
+export async function getReviewableGuests(): Promise<ReviewableGuest[]> {
+  const supabase = getSupabaseServiceClient();
+  const now = new Date();
+  const today = now.toLocaleDateString("en-CA", { timeZone: "Asia/Seoul" });
+  const since = new Date(
+    now.getTime() - REVIEWABLE_DAYS_AFTER_CHECKOUT * 86_400_000
+  ).toLocaleDateString("en-CA", { timeZone: "Asia/Seoul" });
+
+  const [bookings, blocks] = await Promise.all([
+    supabase
+      .from("booking_requests")
+      .select(
+        "id, guest_name, guest_email, room_slug, check_in_date, check_out_date, rooms(name)"
+      )
+      .or("status.eq.confirmed,payment_status.eq.paid")
+      .lte("check_in_date", today)
+      .gte("check_out_date", since),
+    supabase
+      .from("room_unit_blocks")
+      .select(
+        "id, guest_name, check_in_date, check_out_date, room_units(rooms(name))"
+      )
+      .is("booking_request_id", null)
+      .neq("status", "cancelled")
+      .neq("guest_name", "")
+      .lte("check_in_date", today)
+      .gte("check_out_date", since),
+  ]);
+  if (bookings.error) throw bookings.error;
+  if (blocks.error) throw blocks.error;
+
+  // Supabase types embedded rows loosely; normalise one-or-many to one.
+  const one = <T,>(value: T | T[] | null | undefined): T | null =>
+    Array.isArray(value) ? (value[0] ?? null) : (value ?? null);
+
+  const guests: ReviewableGuest[] = [
+    ...(bookings.data ?? []).map((row) => ({
+      key: `booking:${row.id}`,
+      bookingRequestId: row.id as string,
+      guestName: row.guest_name as string,
+      guestEmail: (row.guest_email as string) || null,
+      roomType:
+        one(row.rooms as { name: string } | { name: string }[] | null)?.name ??
+        (row.room_slug as string),
+      checkIn: row.check_in_date as string,
+      checkOut: row.check_out_date as string,
+      current: false,
+    })),
+    ...(blocks.data ?? []).map((row) => {
+      const unit = one(
+        row.room_units as
+          | { rooms: { name: string } | { name: string }[] | null }
+          | { rooms: { name: string } | { name: string }[] | null }[]
+          | null
+      );
+      return {
+        key: `block:${row.id}`,
+        bookingRequestId: null,
+        guestName: row.guest_name as string,
+        guestEmail: null,
+        roomType: one(unit?.rooms)?.name ?? "",
+        checkIn: row.check_in_date as string,
+        checkOut: row.check_out_date as string,
+        current: false,
+      };
+    }),
+  ];
+
+  return guests
+    .map((guest) => ({ ...guest, current: guest.checkOut > today }))
+    .sort((a, b) =>
+      a.current !== b.current
+        ? Number(b.current) - Number(a.current)
+        : b.checkOut.localeCompare(a.checkOut)
+    );
+}
+
 /**
  * Highlights for the home and room-page review sections, drawn from approved
  * direct reviews plus the legacy Booking.com ones. Falls back to the legacy

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CopyLinkButton } from "@/components/admin/copy-link-button";
 import { formatStayRange } from "@/lib/reviews";
+import type { ReviewableGuest } from "@/lib/review-queries";
 import type { Review, ReviewInvite, ReviewStatus } from "@/lib/types";
 
 type InviteWithUrl = ReviewInvite & { url: string };
@@ -139,8 +140,15 @@ function ReviewModerationCard({ review }: { review: Review }) {
   );
 }
 
-function NewInviteForm({ roomTypeNames }: { roomTypeNames: string[] }) {
+function NewInviteForm({
+  roomTypeNames,
+  guests,
+}: {
+  roomTypeNames: string[];
+  guests: ReviewableGuest[];
+}) {
   const router = useRouter();
+  const [guestKey, setGuestKey] = useState("");
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
   const [roomType, setRoomType] = useState(roomTypeNames[0] ?? "");
@@ -149,6 +157,21 @@ function NewInviteForm({ roomTypeNames }: { roomTypeNames: string[] }) {
   const [busy, setBusy] = useState(false);
   const [createdUrl, setCreatedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const selectedGuest = guests.find((guest) => guest.key === guestKey) ?? null;
+
+  // Picking a guest fills the form from their booking / availability block;
+  // every field stays editable afterwards.
+  function handlePickGuest(key: string) {
+    setGuestKey(key);
+    const guest = guests.find((g) => g.key === key);
+    if (!guest) return;
+    setGuestName(guest.guestName);
+    setGuestEmail(guest.guestEmail ?? "");
+    if (roomTypeNames.includes(guest.roomType)) setRoomType(guest.roomType);
+    setCheckIn(guest.checkIn);
+    setCheckOut(guest.checkOut);
+  }
 
   async function handleCreate(event: React.FormEvent) {
     event.preventDefault();
@@ -165,6 +188,7 @@ function NewInviteForm({ roomTypeNames }: { roomTypeNames: string[] }) {
           room_type: roomType,
           stay_check_in: checkIn,
           stay_check_out: checkOut,
+          booking_request_id: selectedGuest?.bookingRequestId ?? null,
         }),
       });
       const body = (await res.json()) as { url?: string; error?: string };
@@ -177,6 +201,7 @@ function NewInviteForm({ roomTypeNames }: { roomTypeNames: string[] }) {
       setGuestEmail("");
       setCheckIn("");
       setCheckOut("");
+      setGuestKey("");
       router.refresh();
     } finally {
       setBusy(false);
@@ -195,6 +220,25 @@ function NewInviteForm({ roomTypeNames }: { roomTypeNames: string[] }) {
       <p className="mt-1 text-sm text-gray-500">
         플랫폼 외 예약 고객에게도 링크를 만들어 보낼 수 있습니다.
       </p>
+      {guests.length > 0 && (
+        <label className="mt-4 block text-sm text-gray-600">
+          투숙객 선택 (현재·최근 90일)
+          <select
+            value={guestKey}
+            onChange={(e) => handlePickGuest(e.target.value)}
+            className={`${inputClass} mt-1`}
+          >
+            <option value="">직접 입력</option>
+            {guests.map((guest) => (
+              <option key={guest.key} value={guest.key}>
+                {guest.current ? "[투숙 중] " : ""}
+                {guest.guestName} · {guest.roomType || "객실 미정"} ·{" "}
+                {formatStayRange(guest.checkIn, guest.checkOut)}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         <input
           type="text"
@@ -323,17 +367,19 @@ export function ReviewAdmin({
   reviews,
   invites,
   roomTypeNames,
+  guests,
 }: {
   reviews: Review[];
   invites: InviteWithUrl[];
   roomTypeNames: string[];
+  guests: ReviewableGuest[];
 }) {
   const pending = reviews.filter((r) => r.status === "pending");
   const handled = reviews.filter((r) => r.status !== "pending");
 
   return (
     <div className="space-y-8">
-      <NewInviteForm roomTypeNames={roomTypeNames} />
+      <NewInviteForm roomTypeNames={roomTypeNames} guests={guests} />
 
       <section>
         <h2 className="text-lg font-bold text-gray-900">
