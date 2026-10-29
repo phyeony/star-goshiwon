@@ -17,6 +17,8 @@ export type GuestReview = {
   /** YYYY-MM-DD stay dates, when the guest's stay is on our website. */
   stayedFrom?: string;
   stayedTo?: string;
+  /** Our public reply, shown under the guest's comments. */
+  ownerReply?: string;
 };
 
 export type ReviewCategoryScore = {
@@ -177,6 +179,8 @@ export const guestReviews: GuestReview[] = [
     negative:
       "The bathrooms and showers were dirty and disgusting. There is no soap in the bathroom and the toilets, it seems, are never cleaned.",
     language: "de",
+    ownerReply:
+      "Thank you for your honest feedback, and we are sorry the bathrooms and showers were not clean during your stay. Since then, we have been doing our best to keep the goshiwon cleaner, especially the shared bathrooms, showers and toilets. We hope you will give us another chance.",
   },
 ];
 
