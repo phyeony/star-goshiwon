@@ -3,6 +3,7 @@ import Link from "next/link";
 import { KoHeader } from "@/components/ko/ko-header";
 import { KoFooter } from "@/components/ko/ko-footer";
 import { KoBookingForm } from "@/components/ko/ko-booking-form";
+import { KoMapToggle } from "@/components/ko/ko-map-toggle";
 import { OptimizedPhoto } from "@/components/optimized-photo";
 import { siteConfig } from "@/lib/site-data";
 import {
@@ -29,8 +30,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const rooms = await getKoRooms().catch(() => []);
   const lowest = lowestMonthlyKrw(rooms);
   const priceText = lowest ? `월 ${formatManwon(lowest)}부터` : "1인실 · 공과금 포함";
-  const title = `노량진 고시원 스타고시원 | 상도역 5분 · ${priceText}`;
-  const description = `노량진 고시원 스타고시원. 상도역 도보 5분, 노량진역 도보 10분. ${
+  const title = `노량진 고시원 스타고시원 | 노량진역 15분 · ${priceText}`;
+  const description = `노량진 고시원 스타고시원. 노량진역 15분, 상도역 대중교통 15분. ${
     lowest ? `월 ${formatManwon(lowest)}부터, ` : ""
   }공과금 · 인터넷 포함, 1개월부터 입실 가능한 남성 전용 고시원(고시텔)입니다.`;
   return {
@@ -256,13 +257,16 @@ export default async function KoHomePage({
               오시는 길
             </h2>
           </div>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/images/hero/optimized/hill-street-night-1280.webp"
-            alt="고시원 앞 골목"
-            loading="lazy"
-            className="h-[200px] w-full object-cover md:order-1 md:col-span-7 md:row-span-2 md:h-[440px]"
-          />
+          <div className="md:order-1 md:col-span-7 md:row-span-2">
+            <KoMapToggle
+              lat={siteConfig.coordinates.lat}
+              lng={siteConfig.coordinates.lng}
+              name={koSite.name}
+              naverUrl={koSite.naverMapUrl}
+              kakaoUrl={siteConfig.kakaoMapUrl}
+              fallbackImage="/images/hero/optimized/hill-street-night-1280.webp"
+            />
+          </div>
           <div className="md:order-3 md:col-span-5">
             <div className="mt-3.5 text-[15px] font-semibold md:mt-0 md:text-[19px]">{koSite.address}</div>
             <ul className="mt-3 border-t border-[#16181A] text-sm md:mt-5 md:text-base">
@@ -273,14 +277,6 @@ export default async function KoHomePage({
                 </li>
               ))}
             </ul>
-            <a
-              href={koSite.naverMapUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3.5 inline-block border-b border-[#16181A] pb-0.5 text-sm font-semibold md:mt-5 md:text-base"
-            >
-              네이버 지도 열기 →
-            </a>
           </div>
         </section>
 

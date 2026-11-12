@@ -8,7 +8,7 @@ export const koSite = {
   name: "스타고시원",
   // The main search keyword (Naver: ~5,500 searches/month, Nov 2026).
   keyword: "노량진 고시원",
-  tagline: "노량진 고시원 · 상도역 5분 · 남성 전용",
+  tagline: "노량진 고시원 · 노량진역 15분 · 남성 전용",
   address: "서울 동작구 만양로12가길 64",
   businessNumber: "495-17-00545",
   // 1:1 chat with the KakaoTalk channel. Opens the app on phones.
@@ -22,8 +22,8 @@ export const koSite = {
 };
 
 export const koTransit = [
-  { place: "7호선 상도역", time: "도보 5분" },
-  { place: "1 · 9호선 노량진역, 학원가", time: "도보 10분" },
+  { place: "1 · 9호선 노량진역, 학원가", time: "15분" },
+  { place: "7호선 상도역", time: "대중교통 15분" },
   { place: "숭실대학교", time: "도보 15분" },
   { place: "중앙대학교", time: "버스 10분" },
 ];
