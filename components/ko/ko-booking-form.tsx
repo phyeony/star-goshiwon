@@ -211,7 +211,7 @@ export function KoBookingForm({ rooms, initialRoom, kakaoChatUrl, singleRoom }: 
             </div>
             {months > 1 ? (
               <p className="mt-1 text-xs text-[#5A5F63]">
-                {months}개월 이용 시 이용료 합계 {won(monthly * months)} · 한 번에 미리 내셔도 돼요.
+                {months}개월 이용 시 이용료 합계 {won(monthly * months)}.
               </p>
             ) : (
               <p className="mt-1 text-xs text-[#5A5F63]">연장하면 매달 입실일 전에 다음 달 이용료를 입금해요.</p>
