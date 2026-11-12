@@ -17,8 +17,15 @@ export function KoHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-[#DCDEE0] bg-white">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5 md:h-[72px] md:px-12">
-        <Link href="/ko" className="text-lg font-extrabold tracking-[-0.4px] md:text-[22px]">
-          스타고시텔
+        <Link href="/ko" aria-label="스타고시텔 노량진" className="flex w-fit flex-col leading-none">
+          <span className="text-xl font-extrabold tracking-[-0.6px] md:text-2xl">스타고시텔</span>
+          <span className="mt-1 flex items-center gap-1.5">
+            <span className="h-px flex-1 bg-[#5A5F63]/50" />
+            <span className="whitespace-nowrap text-[11px] font-semibold tracking-[3px] text-[#5A5F63] md:text-xs">
+              노량진
+            </span>
+            <span className="h-px flex-1 bg-[#5A5F63]/50" />
+          </span>
         </Link>
 
         <nav className="hidden items-center gap-8 text-[15px] font-semibold md:flex" aria-label="주요 메뉴">
