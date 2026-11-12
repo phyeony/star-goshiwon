@@ -1,3 +1,5 @@
+import { KoHeader } from "@/components/ko/ko-header";
+import { KoFooter } from "@/components/ko/ko-footer";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { siteConfig, stayTimes } from "@/lib/site-data";
@@ -15,10 +17,10 @@ export const metadata: Metadata = {
   description:
     "스타고시원 서울점의 예약, 결제, 취소 및 환불 정책, 하우스 룰, 체크인 안내입니다.",
   alternates: {
-    canonical: "/policies/ko",
+    canonical: "/ko/policy",
     languages: {
       en: "/policies",
-      ko: "/policies/ko",
+      ko: "/ko/policy",
     },
   },
 };
@@ -45,19 +47,21 @@ export default async function PoliciesKoPage() {
   const tier = await getEconomyTier();
   const discountPct = Math.round(tier.discount * 100);
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <>
+      <KoHeader />
+      <main className="mx-auto max-w-3xl px-5 pb-20 pt-8 md:px-0 md:pt-14">
       <div className="mb-8">
-        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+        <h1 className="text-[28px] font-extrabold tracking-[-0.8px] md:text-[40px]">
           이용 약관
         </h1>
-        <p className="mt-2 text-base text-gray-500">
+        <p className="mt-2 text-[15px] leading-[1.7] text-[#3A3F43]">
           예약 전에 반드시 확인해 주세요. 본 페이지의 내용은 스타고시원 서울점의
           하우스 룰, 결제 방식, 환불 정책을 규정합니다.
         </p>
       </div>
 
       <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-[#5A5F63]">
           적용 시작일:{" "}
           <strong>
             {formatPolicyDate(CURRENT_POLICY_VERSION.effectiveFrom, "ko")}
@@ -66,19 +70,19 @@ export default async function PoliciesKoPage() {
         </p>
         <Link
           href="/policies"
-          className="text-sm font-medium text-indigo-600 hover:underline"
+          className="text-sm font-semibold text-[#16181A] underline"
           hrefLang="en"
         >
           View in English →
         </Link>
       </div>
       {ARCHIVED_POLICY_VERSIONS.length > 0 && (
-        <p className="text-sm text-gray-500 mb-8">
+        <p className="mb-8 text-sm text-[#5A5F63]">
           {formatPolicyDate(CURRENT_POLICY_VERSION.effectiveFrom, "ko")} 이전에
           예약하셨나요?{" "}
           <Link
-            href="/policies/ko/archive"
-            className="font-medium text-indigo-600 hover:underline"
+            href="/ko/policy/archive"
+            className="font-semibold text-[#16181A] underline"
           >
             이전 버전 보기 →
           </Link>
@@ -87,12 +91,12 @@ export default async function PoliciesKoPage() {
 
       <nav
         aria-label="약관 목차"
-        className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-10"
+        className="mb-10 border-y border-[#16181A] py-5"
       >
-        <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
+        <h2 className="mb-3 text-[11px] font-semibold tracking-[2px] text-[#5A5F63]">
           목차
         </h2>
-        <ol className="list-decimal pl-5 space-y-1 text-base text-indigo-700">
+        <ol className="list-decimal space-y-1.5 pl-5 text-[15px] md:columns-2 md:gap-10">
           {sections.map((s) => (
             <li key={s.id}>
               <a href={`#${s.id}`} className="hover:underline">
@@ -103,13 +107,13 @@ export default async function PoliciesKoPage() {
         </ol>
       </nav>
 
-      <div className="space-y-10">
+      <div className="divide-y divide-[#DCDEE0] border-t border-[#DCDEE0]">
         <Section id="booking" title="1. 예약 및 확정">
           <p>
             모든 숙박은{" "}
             <Link
               href="/request-to-book"
-              className="text-indigo-600 hover:underline"
+              className="font-semibold text-[#16181A] underline"
             >
               예약 요청 페이지
             </Link>
@@ -158,7 +162,7 @@ export default async function PoliciesKoPage() {
               배상 및 미납 요금을 위한 담보입니다. 객실에 손상이 없는 경우,{" "}
               <strong>퇴실 후 PayPal을 통해</strong> 결제하신 동일 계정으로
               전액 환불해 드립니다. 자세한 내용은{" "}
-              <a href="#deposit" className="text-indigo-600 hover:underline">
+              <a href="#deposit" className="font-semibold text-[#16181A] underline">
                 보증금 및 손해 배상
               </a>
               {" "}항목을 참고해 주세요.
@@ -182,7 +186,7 @@ export default async function PoliciesKoPage() {
             모든 취소는 서면(이메일{" "}
             <a
               href={`mailto:${siteConfig.email}`}
-              className="text-indigo-600 hover:underline"
+              className="font-semibold text-[#16181A] underline"
             >
               {siteConfig.email}
             </a>{" "}
@@ -192,27 +196,27 @@ export default async function PoliciesKoPage() {
             보증금 제외)</strong>를 기준으로 적용됩니다.
           </p>
 
-          <h3 className="text-lg font-semibold text-gray-900 mt-6 mb-3">
+          <h3 className="mb-3 mt-6 text-base font-extrabold text-[#16181A]">
             체크인 전 취소
           </h3>
           <div className="overflow-x-auto -mx-2 sm:mx-0">
             <table className="w-full text-sm border-collapse">
               <thead>
-                <tr className="bg-gray-50 border-y border-gray-200">
-                  <th className="text-left font-semibold text-gray-900 px-3 py-2">
+                <tr className="border-y border-[#16181A] bg-[#F3F4F5]">
+                  <th className="px-3 py-2 text-left font-semibold">
                     취소 시점
                   </th>
-                  <th className="text-left font-semibold text-gray-900 px-3 py-2">
+                  <th className="px-3 py-2 text-left font-semibold">
                     객실료 환불 비율
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-[#DCDEE0]">
                 <tr>
                   <td className="px-3 py-3 align-top">
                     체크인 <strong>30일 이상 전</strong>
                   </td>
-                  <td className="px-3 py-3 align-top text-gray-700">
+                  <td className="px-3 py-3 align-top text-[#3A3F43]">
                     <strong>100%</strong>
                   </td>
                 </tr>
@@ -220,7 +224,7 @@ export default async function PoliciesKoPage() {
                   <td className="px-3 py-3 align-top">
                     체크인 <strong>15~29일 전</strong>
                   </td>
-                  <td className="px-3 py-3 align-top text-gray-700">
+                  <td className="px-3 py-3 align-top text-[#3A3F43]">
                     <strong>90%</strong> (10% 행정 수수료)
                   </td>
                 </tr>
@@ -228,7 +232,7 @@ export default async function PoliciesKoPage() {
                   <td className="px-3 py-3 align-top">
                     체크인 <strong>8~14일 전</strong>
                   </td>
-                  <td className="px-3 py-3 align-top text-gray-700">
+                  <td className="px-3 py-3 align-top text-[#3A3F43]">
                     <strong>70%</strong>
                   </td>
                 </tr>
@@ -236,7 +240,7 @@ export default async function PoliciesKoPage() {
                   <td className="px-3 py-3 align-top">
                     체크인 <strong>1~7일 전</strong>
                   </td>
-                  <td className="px-3 py-3 align-top text-gray-700">
+                  <td className="px-3 py-3 align-top text-[#3A3F43]">
                     <strong>50%</strong>
                   </td>
                 </tr>
@@ -244,20 +248,20 @@ export default async function PoliciesKoPage() {
                   <td className="px-3 py-3 align-top">
                     <strong>체크인 당일 / 노쇼</strong>
                   </td>
-                  <td className="px-3 py-3 align-top text-gray-700">
+                  <td className="px-3 py-3 align-top text-[#3A3F43]">
                     <strong>0%</strong>
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
-          <p className="mt-3 text-sm text-gray-600">
+          <p className="mt-3 text-sm text-[#5A5F63]">
             <strong>$70 보증금은 어떤 경우에도 100% 환불됩니다</strong> —
             취소 시 객실료 공제 후 보증금 전액과 함께 PayPal로 환불해
             드립니다.
           </p>
 
-          <h3 className="text-lg font-semibold text-gray-900 mt-8 mb-3">
+          <h3 className="mb-3 mt-8 text-base font-extrabold text-[#16181A]">
             입실 후 조기 퇴실
           </h3>
           <p>
@@ -270,7 +274,7 @@ export default async function PoliciesKoPage() {
               <strong>$70 보증금</strong>은 영향을 받지 않으며, 객실에 손상이
               없고 청결하게 정리된 경우 퇴실 후 PayPal로 전액 환불됩니다.
               자세한 내용은{" "}
-              <a href="#deposit" className="text-indigo-600 hover:underline">
+              <a href="#deposit" className="font-semibold text-[#16181A] underline">
                 보증금 및 손해 배상
               </a>
               {" "}항목을 참고해 주세요.
@@ -278,14 +282,14 @@ export default async function PoliciesKoPage() {
             <li>
               증빙 가능한 의료 응급 상황, 불가항력, 기타 본인의 통제 범위를
               벗어난 중대한 사유는 사안별로 검토됩니다. {" "}
-              <a href="#force-majeure" className="text-indigo-600 hover:underline">
+              <a href="#force-majeure" className="font-semibold text-[#16181A] underline">
                 불가항력
               </a>
               {" "}항목을 참고해 주세요.
             </li>
           </ul>
 
-          <h3 className="text-lg font-semibold text-gray-900 mt-8 mb-3">
+          <h3 className="mb-3 mt-8 text-base font-extrabold text-[#16181A]">
             환불 불가 항목
           </h3>
           <ul className="list-disc pl-6 space-y-1.5">
@@ -300,7 +304,7 @@ export default async function PoliciesKoPage() {
             <li>이미 제공된 부가 서비스 (예: 공항 픽업).</li>
           </ul>
 
-          <h3 className="text-lg font-semibold text-gray-900 mt-8 mb-3">
+          <h3 className="mb-3 mt-8 text-base font-extrabold text-[#16181A]">
             환불 방법 및 지급 시기
           </h3>
           <ul className="list-disc pl-6 space-y-1.5">
@@ -324,14 +328,14 @@ export default async function PoliciesKoPage() {
             </li>
           </ul>
 
-          <h3 className="text-lg font-semibold text-gray-900 mt-8 mb-3">
+          <h3 className="mb-3 mt-8 text-base font-extrabold text-[#16181A]">
             예외적인 상황
           </h3>
           <p>
             의료 응급 상황, 비자 거부, 기타 본인의 통제 범위를 벗어난 중대한
             사유의 경우, 가능한 한 빨리 연락 주십시오. 증빙 서류를 제출해
             주시면 사안별로 검토하여 패널티를 면제하는 경우가 많습니다. {" "}
-            <a href="#force-majeure" className="text-indigo-600 hover:underline">
+            <a href="#force-majeure" className="font-semibold text-[#16181A] underline">
               불가항력
             </a>
             {" "}항목도 함께 참고해 주세요.
@@ -605,7 +609,7 @@ export default async function PoliciesKoPage() {
               숙박 종료 후 예약 정보 삭제를 원하시는 경우{" "}
               <a
                 href={`mailto:${siteConfig.email}`}
-                className="text-indigo-600 hover:underline"
+                className="font-semibold text-[#16181A] underline"
               >
                 {siteConfig.email}
               </a>
@@ -623,32 +627,21 @@ export default async function PoliciesKoPage() {
         </Section>
       </div>
 
-      <div className="mt-12 bg-indigo-50 rounded-2xl border border-indigo-100 p-8 text-center">
-        <h3 className="text-xl font-bold text-gray-900 mb-2">
-          특정 상황에 대해 문의하고 싶으신가요?
-        </h3>
-        <p className="text-base text-gray-600 mb-6">
-          예정 일정과 상황을 알려 주시면 예약 전에 명확하게 안내해
-          드리겠습니다.
+      <div className="mt-12 bg-[#F3F4F5] p-6 text-center md:p-8">
+        <h3 className="mb-2 text-xl font-extrabold">궁금한 점이 있으신가요?</h3>
+        <p className="mb-5 text-[15px] text-[#3A3F43]">
+          예약 요청에 상황을 적어 주시면 확인 후 카카오톡으로 안내해 드립니다.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <a
-            href={`mailto:${siteConfig.email}`}
-            className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition duration-150 ease-in-out"
-          >
-            이메일 문의
-          </a>
-          <a
-            href={siteConfig.whatsapp}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center px-6 py-3 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition duration-150 ease-in-out"
-          >
-            WhatsApp
-          </a>
-        </div>
+        <Link
+          href="/ko#booking"
+          className="inline-flex h-12 items-center justify-center bg-[#16181A] px-8 text-[15px] font-extrabold text-white"
+        >
+          예약 요청하기
+        </Link>
       </div>
-    </div>
+    </main>
+      <KoFooter />
+    </>
   );
 }
 
@@ -664,12 +657,12 @@ function Section({
   return (
     <section
       id={id}
-      className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8 scroll-mt-24"
+      className="scroll-mt-20 py-8 md:py-10"
     >
-      <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
+      <h2 className="mb-4 text-xl font-extrabold tracking-[-0.4px] md:text-2xl">
         {title}
       </h2>
-      <div className="text-base text-gray-700 space-y-4 leading-relaxed">
+      <div className="space-y-4 text-[15px] leading-[1.75] text-[#3A3F43]">
         {children}
       </div>
     </section>

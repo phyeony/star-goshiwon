@@ -133,21 +133,13 @@ export default async function KoRoomPage({ params }: { params: Params }) {
                   slug: r.slug,
                   name: koRoomName(r),
                   priceLabel: priceLabel(r),
+                  monthlyKrw: r.monthly_rate_krw ?? null,
+                  depositKrw: r.deposit_krw ?? null,
                 }))}
                 initialRoom={room.slug}
                 kakaoChatUrl={koSite.kakaoChatUrl}
                 singleRoom
               />
-              <div className="mt-5 border-t border-[#DCDEE0] pt-4">
-                <a
-                  href={koSite.kakaoChatUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex h-11 w-full items-center justify-center border border-[#C9CCCF] text-sm font-semibold"
-                >
-                  카카오톡으로 먼저 물어보기
-                </a>
-              </div>
             </div>
           </aside>
         </div>

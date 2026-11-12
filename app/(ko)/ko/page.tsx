@@ -331,6 +331,8 @@ export default async function KoHomePage({
                   slug: r.slug,
                   name: koRoomName(r),
                   priceLabel: priceLabel(r),
+                  monthlyKrw: r.monthly_rate_krw ?? null,
+                  depositKrw: r.deposit_krw ?? null,
                 }))}
                 initialRoom={initialRoom}
                 kakaoChatUrl={koSite.kakaoChatUrl}

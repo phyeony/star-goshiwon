@@ -1,11 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { formatManwon } from "@/lib/ko-site";
 
 export interface KoRoomOption {
   slug: string;
   name: string;
   priceLabel: string;
+  monthlyKrw?: number | null;
+  depositKrw?: number | null;
 }
 
 interface Props {
@@ -46,6 +49,10 @@ export function KoBookingForm({ rooms, initialRoom, kakaoChatUrl, singleRoom }: 
   const [error, setError] = useState("");
   const [sent, setSent] = useState<Sent | null>(null);
   const [copied, setCopied] = useState(false);
+
+  const selectedRoom = rooms.find((r) => r.slug === roomSlug);
+  const monthly = selectedRoom?.monthlyKrw ?? null;
+  const deposit = selectedRoom?.depositKrw ?? null;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -185,6 +192,21 @@ export function KoBookingForm({ rooms, initialRoom, kakaoChatUrl, singleRoom }: 
             ))}
           </select>
         </label>
+        {monthly ? (
+          <div className="col-span-2 bg-[#F3F4F5] px-4 py-3" aria-live="polite">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-[13px] font-semibold text-[#3A3F43] md:text-sm">예상 이용료</span>
+              <span className="text-lg font-extrabold md:text-xl">
+                {formatManwon(monthly * months)}
+              </span>
+            </div>
+            <p className="mt-0.5 text-xs leading-relaxed text-[#5A5F63]">
+              월 {formatManwon(monthly)} × {months}개월
+              {deposit ? ` · 보증금 ${formatManwon(deposit)} 별도` : " · 보증금 별도"}. 정확한 금액은
+              확인 후 안내드려요.
+            </p>
+          </div>
+        ) : null}
         <label className="col-span-2 block md:col-span-1">
           <span className={labelClass}>이름</span>
           <input
@@ -244,7 +266,7 @@ export function KoBookingForm({ rooms, initialRoom, kakaoChatUrl, singleRoom }: 
           />
           <span>
             <a
-              href="/policies/ko"
+              href="/ko/policy"
               target="_blank"
               rel="noopener noreferrer"
               className="font-semibold underline"
@@ -300,7 +322,7 @@ export function KoBookingForm({ rooms, initialRoom, kakaoChatUrl, singleRoom }: 
         {submitting ? "보내는 중…" : "예약 요청 보내기"}
       </button>
       <p className="mt-3 text-xs leading-relaxed text-[#5A5F63]">
-        요청만으로는 결제되지 않습니다. 보내고 나면 카카오톡으로 같은 내용을 보낼 수 있어요.
+        요청만으로는 결제되지 않습니다. 빈 방을 확인한 뒤 남겨주신 번호로 연락드려요.
       </p>
     </form>
   );

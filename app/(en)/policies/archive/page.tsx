@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     canonical: "/policies/archive",
     languages: {
       en: "/policies/archive",
-      ko: "/policies/ko/archive",
+      ko: "/ko/policy/archive",
     },
   },
 };
@@ -35,7 +35,7 @@ export default function PolicyArchivePage() {
           ← Back to current policy
         </Link>
         <Link
-          href="/policies/ko/archive"
+          href="/ko/policy/archive"
           className="text-sm font-medium text-indigo-600 hover:underline"
           hrefLang="ko"
         >

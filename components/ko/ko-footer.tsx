@@ -13,8 +13,8 @@ export function KoFooter() {
           </a>
         </div>
         <div className="flex gap-4 md:items-start">
-          <Link href="/policies/ko">이용 약관</Link>
-          <Link href="/policies/ko#privacy">개인정보 처리</Link>
+          <Link href="/ko/policy">이용 약관</Link>
+          <Link href="/ko/policy#privacy">개인정보 처리</Link>
           <Link href="/" hrefLang="en">English</Link>
         </div>
       </div>

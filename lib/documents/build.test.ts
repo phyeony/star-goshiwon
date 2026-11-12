@@ -232,7 +232,7 @@ describe("contract terms vs. /policies", () => {
   it("links the Korean contract to the Korean policy page", () => {
     const model = buildContract(fixtureBooking, fixtureForm, ISSUER, "ko");
     const clause = model.sections.find((s) => s.heading === "약관의 적용");
-    expect(clause?.paragraphs[0]).toContain(`${siteConfig.url}/policies/ko`);
+    expect(clause?.paragraphs[0]).toContain(`${siteConfig.url}/ko/policy`);
   });
 
   it("quotes the shared check-in and check-out times", () => {

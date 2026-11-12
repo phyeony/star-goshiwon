@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     canonical: "/policies",
     languages: {
       en: "/policies",
-      ko: "/policies/ko",
+      ko: "/ko/policy",
     },
   },
 };
@@ -61,7 +61,7 @@ export default async function PoliciesPage() {
           . By submitting a booking request you agree to the policies below.
         </p>
         <Link
-          href="/policies/ko"
+          href="/ko/policy"
           className="text-sm font-medium text-indigo-600 hover:underline"
           hrefLang="ko"
         >
