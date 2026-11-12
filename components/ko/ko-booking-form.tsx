@@ -186,36 +186,30 @@ export function KoBookingForm({ rooms, initialRoom, kakaoChatUrl, singleRoom }: 
         </label>
         {monthly ? (
           <div className="col-span-2 bg-[#F3F4F5] px-4 py-4 text-sm" aria-live="polite">
-            <p className="mb-2 text-[13px] font-extrabold">입실 전 입금</p>
-            <div className="flex justify-between gap-3 py-1">
-              <span className="text-[#5A5F63]">첫 달 이용료</span>
-              <span className="font-semibold">{won(monthly)}</span>
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-[15px] font-extrabold">월 이용료</span>
+              <span className="text-2xl font-extrabold tracking-[-0.5px]">{won(monthly)}</span>
             </div>
-            <div className="flex justify-between gap-3 py-1">
-              <span className="text-[#5A5F63]">관리비 (전기 · 수도 · 가스 · 인터넷)</span>
-              <span className="font-semibold">포함</span>
-            </div>
-            {deposit ? (
-              <div className="flex justify-between gap-3 py-1">
-                <span className="text-[#5A5F63]">보증금 (퇴실할 때 반환)</span>
-                <span className="font-semibold">{won(deposit)}</span>
+            <p className="mt-0.5 text-right text-xs text-[#5A5F63]">
+              전기 · 수도 · 가스 · 인터넷 포함, 추가 관리비 없음
+            </p>
+
+            <div className="mt-3 border-t border-[#DCDEE0] pt-3 text-[13px] text-[#5A5F63]">
+              <div className="flex justify-between gap-3 py-0.5">
+                <span>보증금 (퇴실할 때 돌려드려요)</span>
+                <span>{deposit ? won(deposit) : "별도"}</span>
               </div>
-            ) : null}
-            <div className="mt-2 flex items-baseline justify-between gap-3 border-t border-[#16181A] pt-3">
-              <span className="text-[15px] font-extrabold">입실 전 입금 금액</span>
-              <span className="text-xl font-extrabold">{won(monthly + (deposit ?? 0))}</span>
+              <div className="flex justify-between gap-3 py-0.5">
+                <span>입실 전 입금 (첫 달 + 보증금)</span>
+                <span>{won(monthly + (deposit ?? 0))}</span>
+              </div>
+              {months > 1 ? (
+                <div className="flex justify-between gap-3 py-0.5">
+                  <span>{months}개월 이용료 합계</span>
+                  <span>{won(monthly * months)}</span>
+                </div>
+              ) : null}
             </div>
-            <div className="mt-3 flex justify-between gap-3 border-t border-[#DCDEE0] pt-3">
-              <span className="text-[#5A5F63]">다음 달부터</span>
-              <span className="font-semibold">매달 {won(monthly)}</span>
-            </div>
-            {months > 1 ? (
-              <p className="mt-1 text-xs text-[#5A5F63]">
-                {months}개월 이용 시 이용료 합계 {won(monthly * months)}.
-              </p>
-            ) : (
-              <p className="mt-1 text-xs text-[#5A5F63]">연장하면 매달 입실일 전에 다음 달 이용료를 입금해요.</p>
-            )}
           </div>
         ) : null}
         <label className="col-span-2 block md:col-span-1">
