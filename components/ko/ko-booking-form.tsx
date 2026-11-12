@@ -141,16 +141,7 @@ export function KoBookingForm({ rooms, initialRoom, kakaoChatUrl, singleRoom }: 
   return (
     <form onSubmit={submit} noValidate className={singleRoom ? "" : "md:border md:border-[#DCDEE0] md:bg-white md:p-9"}>
       <div className="grid grid-cols-2 gap-x-2.5 gap-y-3.5 md:gap-x-4 md:gap-y-[18px]">
-        {singleRoom ? (
-          <div className="col-span-2 flex items-baseline justify-between border-b border-[#DCDEE0] pb-3">
-            <span className="text-base font-extrabold">
-              {rooms.find((r) => r.slug === roomSlug)?.name}
-            </span>
-            <span className="text-base font-extrabold">
-              {rooms.find((r) => r.slug === roomSlug)?.priceLabel}
-            </span>
-          </div>
-        ) : (
+        {singleRoom ? null : (
         <label className="col-span-2 block">
           <span className={labelClass}>방 종류</span>
           <select

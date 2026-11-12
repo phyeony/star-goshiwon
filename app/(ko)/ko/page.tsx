@@ -195,10 +195,9 @@ export default async function KoHomePage({
                       </Link>
                       <Link
                         href={`/ko?room=${room.slug}#booking`}
-                        scroll={false}
                         className="flex h-11 flex-1 items-center justify-center bg-[#16181A] text-sm font-extrabold text-white md:h-[46px] md:text-[15px]"
                       >
-                        이 방 예약하기
+                        예약하기
                       </Link>
                     </div>
                   </div>
