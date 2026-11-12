@@ -24,7 +24,7 @@ function updateConsent(granted: boolean) {
 // Google Analytics 4 with Consent Mode v2. gtag.js is NOT loaded until the
 // user accepts cookies — until then only the consent defaults (all denied)
 // are registered. No-op when the measurement ID is absent (staging/dev).
-export function GoogleAnalytics() {
+export function GoogleAnalytics({ lang = "en" }: { lang?: "en" | "ko" } = {}) {
   const [mounted, setMounted] = useState(false);
   const [choice, setChoice] = useState<Choice>(null);
 
@@ -79,8 +79,9 @@ export function GoogleAnalytics() {
         <div className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-white/95 px-4 py-4 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] backdrop-blur sm:px-6">
           <div className="mx-auto flex max-w-4xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-gray-700">
-              We use cookies to understand how visitors use our site and improve
-              your experience. You can accept or decline analytics cookies.
+              {lang === "ko"
+                ? "방문 통계를 위해 쿠키를 사용합니다. 동의하지 않아도 사이트를 이용할 수 있습니다."
+                : "We use cookies to understand how visitors use our site and improve your experience. You can accept or decline analytics cookies."}
             </p>
             <div className="flex shrink-0 gap-2">
               <button
@@ -88,14 +89,14 @@ export function GoogleAnalytics() {
                 onClick={() => decide(false)}
                 className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
               >
-                Decline
+                {lang === "ko" ? "거부" : "Decline"}
               </button>
               <button
                 type="button"
                 onClick={() => decide(true)}
                 className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
               >
-                Accept
+                {lang === "ko" ? "동의" : "Accept"}
               </button>
             </div>
           </div>

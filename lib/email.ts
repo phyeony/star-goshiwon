@@ -527,3 +527,64 @@ export async function sendEmail(
     throw error;
   }
 }
+
+function escapeHtmlKo(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+export interface KoBookingAdminEmailData {
+  request_id: string;
+  guest_name: string;
+  guest_phone: string;
+  room_name: string;
+  move_in_date: string;
+  stay_months: number;
+  monthly_rate_krw: number | null;
+  notes: string;
+}
+
+/** Admin alert for a booking request from the Korean site (/ko). The guest
+ * gets no email: they left a phone number and are answered by phone or SMS. */
+export async function sendKoAdminNotification(data: KoBookingAdminEmailData) {
+  const subject = `[한국어] 새 예약 요청 - ${data.guest_name}님`;
+  const price =
+    data.monthly_rate_krw != null
+      ? `월 ${data.monthly_rate_krw.toLocaleString("ko-KR")}원`
+      : "가격 미입력";
+  const rows: [string, string][] = [
+    ["이름", data.guest_name],
+    ["휴대폰", data.guest_phone],
+    ["방", `${data.room_name} (${price})`],
+    ["입실 희망일", data.move_in_date],
+    ["기간", `${data.stay_months}개월`],
+  ];
+  const adminUrl = `${siteConfig.url}/admin/requests/${data.request_id}`;
+  const html = `
+<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; color: #1f2937;">
+  <h2 style="margin: 0 0 16px;">한국어 사이트 예약 요청</h2>
+  <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+    ${rows
+      .map(
+        ([k, v]) =>
+          `<tr><td style="padding: 6px 0; color: #6b7280; width: 110px;">${k}</td><td style="padding: 6px 0; font-weight: 600;">${escapeHtmlKo(v)}</td></tr>`
+      )
+      .join("\n    ")}
+  </table>
+  ${data.notes ? `<p style="margin: 16px 0 0; padding: 12px; background: #f9fafb; border-radius: 8px; font-size: 14px;"><strong>요청 사항:</strong> ${escapeHtmlKo(data.notes)}</p>` : ""}
+  <p style="margin: 16px 0 0; font-size: 14px; color: #374151;">손님이 카카오톡 채널로 같은 내용을 보낼 수 있습니다. 카카오톡 채널 관리자에서 확인하고 답장해 주세요.</p>
+  <p style="margin-top: 20px;"><a href="${adminUrl}" style="display: inline-block; background: #16181A; color: #fff; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600;">관리자 화면에서 보기</a></p>
+</div>`.trim();
+  const text = `한국어 사이트에서 예약 요청이 들어왔습니다.
+
+${rows.map(([k, v]) => `${k}: ${v}`).join("\n")}
+${data.notes ? `\n요청 사항: ${data.notes}\n` : ""}
+손님이 카카오톡 채널로 같은 내용을 보낼 수 있습니다.
+
+관리자 화면: ${adminUrl}`;
+
+  await sendEmail(adminEmail, subject, text, html);
+}

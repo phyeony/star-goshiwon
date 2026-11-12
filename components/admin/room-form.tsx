@@ -20,6 +20,8 @@ export function RoomForm({ room }: RoomFormProps) {
     description: room?.description || "",
     nightly_rate_usd: room?.nightly_rate_usd || 0,
     long_stay_discount: room?.long_stay_discount ?? 0.4,
+    monthly_rate_krw: room?.monthly_rate_krw?.toString() ?? "",
+    deposit_krw: room?.deposit_krw?.toString() ?? "",
     capacity: room?.capacity || 1,
     size_sqm: room?.size_sqm || "",
     amenities: room?.amenities.join(", ") || "",
@@ -48,6 +50,8 @@ export function RoomForm({ room }: RoomFormProps) {
       ...form,
       name_ko: form.name_ko.trim() || null,
       size_sqm: form.size_sqm ? Number(form.size_sqm) : null,
+      monthly_rate_krw: form.monthly_rate_krw ? Number(form.monthly_rate_krw) : null,
+      deposit_krw: form.deposit_krw ? Number(form.deposit_krw) : null,
       amenities: form.amenities
         .split(",")
         .map((a) => a.trim())
@@ -221,6 +225,48 @@ export function RoomForm({ room }: RoomFormProps) {
             }
             className="block w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             required
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label
+            htmlFor="monthly_rate_krw"
+            className="block text-xs font-bold text-gray-700 uppercase mb-1"
+          >
+            한국어 사이트 월 이용료 (원)
+          </label>
+          <input
+            id="monthly_rate_krw"
+            type="number"
+            min={0}
+            step={10000}
+            value={form.monthly_rate_krw}
+            onChange={(e) => updateField("monthly_rate_krw", e.target.value)}
+            placeholder="예: 350000"
+            className="block w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          />
+          <p className="mt-1 text-xs text-gray-500">
+            /ko 페이지에 &quot;월 35만원&quot;처럼 표시됩니다. 비워두면 &quot;가격 문의&quot;로 나옵니다.
+          </p>
+        </div>
+        <div>
+          <label
+            htmlFor="deposit_krw"
+            className="block text-xs font-bold text-gray-700 uppercase mb-1"
+          >
+            한국어 사이트 보증금 (원)
+          </label>
+          <input
+            id="deposit_krw"
+            type="number"
+            min={0}
+            step={10000}
+            value={form.deposit_krw}
+            onChange={(e) => updateField("deposit_krw", e.target.value)}
+            placeholder="예: 100000"
+            className="block w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
         </div>
       </div>

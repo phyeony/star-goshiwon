@@ -188,11 +188,14 @@ export async function getOpenBookingRequestsByGuestEmail(
   guestEmail: string,
   limit = 10
 ): Promise<BookingRequest[]> {
+  // Korean-site requests have no email (guest_email = ''); never match them.
+  const email = guestEmail.trim().toLowerCase();
+  if (!email) return [];
   const supabase = getSupabaseServiceClient();
   const { data, error } = await supabase
     .from("booking_requests")
     .select("*")
-    .ilike("guest_email", guestEmail.trim().toLowerCase())
+    .ilike("guest_email", email)
     .not("status", "in", "(closed,declined,expired)")
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -884,12 +887,15 @@ export async function getEmailReceivesForRequest(
 ): Promise<EmailReceive[]> {
   const supabase = getSupabaseServiceClient();
   const normalizedEmail = guestEmail.trim().toLowerCase();
+  // Korean-site requests have no email; match by request id only so an empty
+  // pattern can't pull in unrelated mail.
+  const filter = normalizedEmail
+    ? `booking_request_id.eq.${bookingRequestId},from_email.ilike.${normalizedEmail}`
+    : `booking_request_id.eq.${bookingRequestId}`;
   const { data, error } = await supabase
     .from("email_receives")
     .select("*")
-    .or(
-      `booking_request_id.eq.${bookingRequestId},from_email.ilike.${normalizedEmail}`
-    )
+    .or(filter)
     .order("received_at", { ascending: false });
   if (error) throw error;
   return (data as EmailReceive[]) ?? [];

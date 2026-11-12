@@ -75,19 +75,43 @@ export default async function RequestDetailPage({ params }: Props) {
                   {request.guest_name}
                 </dd>
               </div>
-              <div>
-                <dt className="text-xs font-bold text-gray-500 uppercase">
-                  이메일
-                </dt>
-                <dd className="text-base text-gray-900 mt-1">
-                  <a
-                    href={`mailto:${request.guest_email}`}
-                    className="text-indigo-600 hover:text-indigo-700"
-                  >
-                    {request.guest_email}
-                  </a>
-                </dd>
-              </div>
+              {request.locale === "ko" ? (
+                <div>
+                  <dt className="text-xs font-bold text-gray-500 uppercase">
+                    휴대폰 · 한국어 사이트
+                  </dt>
+                  <dd className="text-base text-gray-900 mt-1">
+                    <a
+                      href={`tel:${request.guest_phone}`}
+                      className="text-indigo-600 hover:text-indigo-700"
+                    >
+                      {request.guest_phone}
+                    </a>
+                    {request.stay_months ? (
+                      <span className="ml-2 text-sm text-gray-500">
+                        {request.stay_months}개월
+                      </span>
+                    ) : null}
+                    <p className="mt-1 text-xs text-gray-500">
+                      이메일이 없는 요청입니다. 카카오톡 채널이나 문자로 답장해 주세요.
+                    </p>
+                  </dd>
+                </div>
+              ) : (
+                <div>
+                  <dt className="text-xs font-bold text-gray-500 uppercase">
+                    이메일
+                  </dt>
+                  <dd className="text-base text-gray-900 mt-1">
+                    <a
+                      href={`mailto:${request.guest_email}`}
+                      className="text-indigo-600 hover:text-indigo-700"
+                    >
+                      {request.guest_email}
+                    </a>
+                  </dd>
+                </div>
+              )}
               <div>
                 <dt className="text-xs font-bold text-gray-500 uppercase">
                   인원
@@ -156,12 +180,31 @@ export default async function RequestDetailPage({ params }: Props) {
                 <dt className="text-xs font-bold text-gray-500 uppercase">
                   예상 총액
                 </dt>
-                <dd className="text-2xl font-extrabold text-gray-900 mt-1">
-                  {formatUSD(request.estimated_total)}
-                  <span className="ml-3 text-base font-normal text-gray-500">
-                    {formatApproxKRW(request.estimated_total)}
-                  </span>
-                </dd>
+                {request.locale === "ko" ? (
+                  <dd className="mt-1 text-gray-900">
+                    <span className="text-2xl font-extrabold">
+                      {request.estimated_total_krw != null
+                        ? `₩${request.estimated_total_krw.toLocaleString("ko-KR")}`
+                        : "가격 미입력"}
+                    </span>
+                    <span className="mt-1 block text-sm text-gray-500">
+                      {request.monthly_rate_krw != null
+                        ? `월 ₩${request.monthly_rate_krw.toLocaleString("ko-KR")} × ${request.stay_months ?? 1}개월`
+                        : ""}
+                      {request.deposit_krw != null
+                        ? ` · 보증금 ₩${request.deposit_krw.toLocaleString("ko-KR")} 별도`
+                        : ""}
+                      {" · 매달 계좌이체 (PayPal 아님)"}
+                    </span>
+                  </dd>
+                ) : (
+                  <dd className="text-2xl font-extrabold text-gray-900 mt-1">
+                    {formatUSD(request.estimated_total)}
+                    <span className="ml-3 text-base font-normal text-gray-500">
+                      {formatApproxKRW(request.estimated_total)}
+                    </span>
+                  </dd>
+                )}
               </div>
               <div>
                 <dt className="text-xs font-bold text-gray-500 uppercase">

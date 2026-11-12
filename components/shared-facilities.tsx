@@ -4,15 +4,18 @@ import { useState, useEffect, useCallback } from "react";
 import { OptimizedPhoto } from "./optimized-photo";
 
 const facilities = [
-  { src: "/images/guides/shared-kitchen/kitchen.jpg", label: "Shared Kitchen" },
-  { src: "/images/common/balcony.jpg", label: "Balcony" },
-  { src: "/images/common/laundry.png", label: "Laundry" },
-  { src: "/images/common/microwave.jpg", label: "Microwave" },
-  { src: "/images/common/rice-cooker.jpg", label: "Rice Cooker" },
-  { src: "/images/common/filtered-water-dispenser.jpg", label: "Filtered Water Dispenser" },
+  { src: "/images/guides/shared-kitchen/kitchen.jpg", label: "Shared Kitchen", ko: "공용 주방" },
+  { src: "/images/common/balcony.jpg", label: "Balcony", ko: "발코니" },
+  { src: "/images/common/laundry.png", label: "Laundry", ko: "세탁실" },
+  { src: "/images/common/microwave.jpg", label: "Microwave", ko: "전자레인지" },
+  { src: "/images/common/rice-cooker.jpg", label: "Rice Cooker", ko: "밥솥 (밥 제공)" },
+  { src: "/images/common/filtered-water-dispenser.jpg", label: "Filtered Water Dispenser", ko: "정수기" },
 ];
 
-export function SharedFacilities() {
+/** lang="ko" uses Korean labels and the square-cornered /ko look (3 columns). */
+export function SharedFacilities({ lang = "en" }: { lang?: "en" | "ko" }) {
+  const ko = lang === "ko";
+  const label = (item: (typeof facilities)[number]) => (ko ? item.ko : item.label);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const isOpen = lightboxIndex !== null;
 
@@ -50,25 +53,25 @@ export function SharedFacilities() {
 
   return (
     <>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className={ko ? "grid grid-cols-2 gap-1.5 md:grid-cols-3 md:gap-3" : "grid grid-cols-2 md:grid-cols-4 gap-4"}>
         {facilities.map((item, i) => (
           <button
             key={item.label}
             type="button"
             onClick={() => setLightboxIndex(i)}
-            className="relative aspect-square overflow-hidden rounded-2xl border border-gray-200 group cursor-pointer"
-            aria-label={`View ${item.label} photo`}
+            className={`relative aspect-square overflow-hidden group cursor-pointer ${ko ? "" : "rounded-2xl border border-gray-200"}`}
+            aria-label={ko ? `${item.ko} 사진 크게 보기` : `View ${item.label} photo`}
           >
             <OptimizedPhoto
               src={item.src}
-              alt={item.label}
+              alt={label(item)}
               sizes="(min-width: 768px) 25vw, 50vw"
               className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0" />
             <div className="absolute bottom-0 left-0 right-0 p-3 text-left">
               <p className="text-white text-sm font-semibold drop-shadow">
-                {item.label}
+                {label(item)}
               </p>
             </div>
           </button>
@@ -80,7 +83,7 @@ export function SharedFacilities() {
           className="fixed inset-0 z-[100] bg-black flex items-center justify-center"
           role="dialog"
           aria-modal="true"
-          aria-label="Shared facility photo"
+          aria-label={ko ? "공용 공간 사진" : "Shared facility photo"}
           onClick={close}
         >
           <button
@@ -90,7 +93,7 @@ export function SharedFacilities() {
               close();
             }}
             className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition"
-            aria-label="Close (press X or Escape)"
+            aria-label={ko ? "닫기 (Esc)" : "Close (press X or Escape)"}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -108,7 +111,7 @@ export function SharedFacilities() {
               goPrev();
             }}
             className="absolute left-4 z-10 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition"
-            aria-label="Previous image"
+            aria-label={ko ? "이전 사진" : "Previous image"}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -118,7 +121,7 @@ export function SharedFacilities() {
           <div className="relative w-full h-full p-16" onClick={(e) => e.stopPropagation()}>
             <OptimizedPhoto
               src={facilities[lightboxIndex!].src}
-              alt={facilities[lightboxIndex!].label}
+              alt={label(facilities[lightboxIndex!])}
               className="absolute inset-0 h-full w-full object-contain"
               sizes="100vw"
               loading="eager"
@@ -133,7 +136,7 @@ export function SharedFacilities() {
               goNext();
             }}
             className="absolute right-4 z-10 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition"
-            aria-label="Next image"
+            aria-label={ko ? "다음 사진" : "Next image"}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -141,7 +144,7 @@ export function SharedFacilities() {
           </button>
 
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 text-white/60 text-sm font-medium drop-shadow">
-            {facilities[lightboxIndex!].label}
+            {label(facilities[lightboxIndex!])}
           </div>
         </div>
       )}

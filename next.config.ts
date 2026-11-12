@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["worker-mailer", "cloudflare:sockets"],
+  // The Korean policy moved under the Korean site. Keep old links (emails,
+  // signed documents) working.
   images: {
     unoptimized: true,
     remotePatterns: [

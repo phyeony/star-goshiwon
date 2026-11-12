@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { signInWithEmail, signInWithGoogle } from "@/app/login/actions";
+import { signInWithEmail, signInWithGoogle } from "@/app/(en)/login/actions";
 
 export function LoginForm({
   next,
