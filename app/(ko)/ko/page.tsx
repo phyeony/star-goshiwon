@@ -105,7 +105,8 @@ export default async function KoHomePage({
       longitude: siteConfig.coordinates.lng,
     },
     hasMap: siteConfig.naverMapUrl,
-    sameAs: [siteConfig.naverMapUrl, siteConfig.kakao],
+    telephone: "+82-2-822-4336",
+    sameAs: [siteConfig.naverMapUrl],
   };
 
   return (
@@ -288,31 +289,14 @@ export default async function KoHomePage({
                 예약 요청
               </h2>
               <p className="mb-4 text-sm leading-[1.7] text-[#3A3F43] md:mb-0 md:text-[17px] md:leading-[1.8]">
-                요청을 남기면 빈 방을 확인하고 남겨주신 번호로 입금 안내를 드립니다. 카카오톡으로
-                같은 내용을 보내주시면 더 빨리 답장드려요.
+                요청을 남기면 빈 방을 확인하고 남겨주신 번호로 입금 안내를 드립니다. 바로 물어보고
+                싶으시면 전화 주세요.
               </p>
               <div className="mt-10 hidden border-t border-[#16181A] md:block">
-                <a
-                  href={koSite.kakaoChatUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex justify-between border-b border-[#C9CCCF] py-5"
-                >
+                <a href={koSite.phoneHref} className="flex justify-between border-b border-[#C9CCCF] py-5">
                   <span>
-                    <span className="block text-sm text-[#5A5F63]">방을 먼저 보고 싶다면</span>
-                    <span className="mt-1 block text-[22px] font-extrabold">방 보기 예약</span>
-                  </span>
-                  <span className="self-center text-[22px]">→</span>
-                </a>
-                <a
-                  href={koSite.kakaoChatUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex justify-between border-b border-[#C9CCCF] py-5"
-                >
-                  <span>
-                    <span className="block text-sm text-[#5A5F63]">바로 물어보고 싶다면</span>
-                    <span className="mt-1 block text-[22px] font-extrabold">카카오톡 문의</span>
+                    <span className="block text-sm text-[#5A5F63]">방을 먼저 보고 싶거나 바로 물어보고 싶다면</span>
+                    <span className="mt-1 block text-[22px] font-extrabold">전화 {koSite.phone}</span>
                   </span>
                   <span className="self-center text-[22px]">→</span>
                 </a>
@@ -329,25 +313,12 @@ export default async function KoHomePage({
                   depositKrw: koSite.depositKrw,
                 }))}
                 initialRoom={initialRoom}
-                kakaoChatUrl={koSite.kakaoChatUrl}
+                contactPhone={koSite.phone}
+                contactPhoneHref={koSite.phoneHref}
               />
               <div className="mt-6 border-t border-[#C9CCCF] md:hidden">
-                <a
-                  href={koSite.kakaoChatUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex justify-between border-b border-[#DCDEE0] py-4 text-[15px] font-semibold"
-                >
-                  <span>방을 먼저 보고 싶다면 · 방 보기 예약</span>
-                  <span>→</span>
-                </a>
-                <a
-                  href={koSite.kakaoChatUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex justify-between py-4 text-[15px] font-semibold"
-                >
-                  <span>바로 물어보고 싶다면 · 카카오톡 문의</span>
+                <a href={koSite.phoneHref} className="flex justify-between py-4 text-[15px] font-semibold">
+                  <span>바로 물어보고 싶다면 · 전화 {koSite.phone}</span>
                   <span>→</span>
                 </a>
               </div>

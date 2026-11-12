@@ -5,16 +5,14 @@ import { sendKoAdminNotification } from "@/lib/email";
 import { getPostHogClient } from "@/lib/posthog-server";
 import {
   addMonths,
-  buildKakaoMessage,
   koRoomName,
-  koSite,
   normalizeKoreanMobile,
 } from "@/lib/ko-site";
 
 /**
  * Booking request from the Korean site. Saves the request (locale 'ko', phone
- * number, no email), alerts the admin by email, and returns the KakaoTalk
- * message the guest then pastes into the channel chat. No guest email is sent.
+ * number, no email) and alerts the admin by email, like the English site.
+ * The guest is answered by phone/SMS; no guest email is sent.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -102,15 +100,6 @@ export async function POST(req: NextRequest) {
       {
         id: request.id,
         status: "success",
-        kakao_message: buildKakaoMessage({
-          roomName,
-          moveInDate: data.move_in_date,
-          stayMonths: data.stay_months,
-          guestName: data.guest_name,
-          guestPhone: phone,
-          requestId: request.id,
-        }),
-        kakao_chat_url: koSite.kakaoChatUrl,
       },
       { status: 201 }
     );

@@ -548,7 +548,7 @@ export interface KoBookingAdminEmailData {
 }
 
 /** Admin alert for a booking request from the Korean site (/ko). The guest
- * gets no email: they left a phone number and are answered on KakaoTalk. */
+ * gets no email: they left a phone number and are answered by phone or SMS. */
 export async function sendKoAdminNotification(data: KoBookingAdminEmailData) {
   const subject = `[한국어] 새 예약 요청 - ${data.guest_name}님`;
   const price =

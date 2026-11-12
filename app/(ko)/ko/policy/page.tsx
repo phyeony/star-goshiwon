@@ -6,7 +6,7 @@ import { stayTimes } from "@/lib/site-data";
 import { formatManwon, koSite } from "@/lib/ko-site";
 
 // Policy for guests who book through the Korean site (/ko): 계좌이체 in KRW,
-// monthly stays, contact on KakaoTalk. Guests booking through the English site
+// monthly stays, contact by phone/SMS. Guests booking through the English site
 // agree to /policies (and its Korean translation at /policies/ko) instead.
 const EFFECTIVE_FROM = "2026년 11월 12일";
 
@@ -94,7 +94,7 @@ export default function KoPolicyPage() {
               예약 요청
             </Link>
             으로 신청합니다. 요청만으로는 결제되지 않으며 방이 확보되지도
-            않습니다. 빈 방을 확인한 뒤 남겨주신 휴대폰 번호(카카오톡)로
+            않습니다. 빈 방을 확인한 뒤 남겨주신 휴대폰 번호로
             연락드립니다.
           </p>
           <ul className="list-disc space-y-1.5 pl-6">
@@ -119,7 +119,7 @@ export default function KoPolicyPage() {
         <Section id="payment" title="2. 결제">
           <p>
             모든 금액은 <strong>원화(₩)로, 계좌이체로 받습니다</strong>. 입금
-            계좌와 금액은 예약 요청을 확인한 뒤 카카오톡으로 안내드립니다.
+            계좌와 금액은 예약 요청을 확인한 뒤 문자로 안내드립니다.
             안내받은 계좌가 아닌 곳으로는 입금하지 마세요.
           </p>
           <ul className="list-disc space-y-1.5 pl-6">
@@ -141,11 +141,8 @@ export default function KoPolicyPage() {
 
         <Section id="cancellation" title="3. 취소 및 환불">
           <p>
-            취소는 카카오톡{" "}
-            <a href={koSite.kakaoChatUrl} target="_blank" rel="noopener noreferrer" className={linkClass}>
-              1:1 채팅
-            </a>
-            으로 알려주세요. 취소 시점은 저희가 메시지를 받은 시각(한국 시간)
+            취소는 전화나 문자(<a href={koSite.phoneHref} className={linkClass}>{koSite.phone}</a>)로
+            알려주세요. 취소 시점은 저희가 메시지를 받은 시각(한국 시간)
             기준입니다. 아래 환불 비율은 <strong>입금하신 이용료</strong>에
             적용되며, 보증금은 포함되지 않습니다.
           </p>
@@ -231,7 +228,7 @@ export default function KoPolicyPage() {
             <li>
               <strong>퇴실:</strong> 퇴실일 {stayTimes.checkOutKo}까지.
             </li>
-            <li>시간이 맞지 않거나 늦게 도착하면 미리 카카오톡으로 알려주세요.</li>
+            <li>시간이 맞지 않거나 늦게 도착하면 미리 전화나 문자로 알려주세요.</li>
             <li>
               입실할 때 <strong>신분증</strong>(주민등록증, 운전면허증 등)으로
               본인 확인을 합니다.
@@ -423,7 +420,7 @@ export default function KoPolicyPage() {
             </li>
           </ol>
           <p>
-            물품을 폐기하기 전에 남겨주신 휴대폰 번호와 카카오톡으로
+            물품을 폐기하기 전에 남겨주신 휴대폰 번호로
             연락을 시도합니다.
           </p>
         </Section>
@@ -456,11 +453,8 @@ export default function KoPolicyPage() {
             </li>
             <li>개인정보를 마케팅 목적으로 다른 곳에 팔거나 넘기지 않습니다.</li>
             <li>
-              열람이나 삭제를 원하시면 카카오톡{" "}
-              <a href={koSite.kakaoChatUrl} target="_blank" rel="noopener noreferrer" className={linkClass}>
-                1:1 채팅
-              </a>
-              으로 요청해 주세요. 법령상 보관해야 하는 자료는 제외됩니다.
+              열람이나 삭제를 원하시면 전화(<a href={koSite.phoneHref} className={linkClass}>{koSite.phone}</a>)로
+              요청해 주세요. 법령상 보관해야 하는 자료는 제외됩니다.
             </li>
           </ul>
         </Section>
@@ -477,7 +471,7 @@ export default function KoPolicyPage() {
       <div className="mt-12 bg-[#F3F4F5] p-6 text-center md:p-8">
         <h3 className="mb-2 text-xl font-extrabold">궁금한 점이 있으신가요?</h3>
         <p className="mb-5 text-[15px] text-[#3A3F43]">
-          예약 요청에 상황을 적어 주시면 확인 후 카카오톡으로 안내해 드립니다.
+          예약 요청에 상황을 적어 주시면 확인 후 남겨주신 번호로 안내해 드립니다.
         </p>
         <Link
           href="/ko#booking"

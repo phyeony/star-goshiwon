@@ -13,14 +13,15 @@ export interface KoRoomOption {
 interface Props {
   rooms: KoRoomOption[];
   initialRoom?: string;
-  kakaoChatUrl: string;
+  /** Shown after sending, for guests who want to call. */
+  contactPhone: string;
+  contactPhoneHref: string;
   /** Room page: the room is fixed, so show it as text instead of a select. */
   singleRoom?: boolean;
 }
 
 interface Sent {
-  message: string;
-  chatUrl: string;
+  lines: [string, string][];
 }
 
 const won = (krw: number) => `${krw.toLocaleString("ko-KR")}원`;
@@ -33,7 +34,7 @@ const inputClass =
   "block h-12 w-full border border-[#C9CCCF] bg-white px-3.5 text-[15px] text-[#16181A] outline-none focus:border-[#16181A] md:h-[52px] md:text-base";
 const labelClass = "mb-1.5 block text-[13px] font-semibold md:text-sm";
 
-export function KoBookingForm({ rooms, initialRoom, kakaoChatUrl, singleRoom }: Props) {
+export function KoBookingForm({ rooms, initialRoom, contactPhone, contactPhoneHref, singleRoom }: Props) {
   const [roomSlug, setRoomSlug] = useState(
     rooms.some((r) => r.slug === initialRoom) ? initialRoom! : rooms[0]?.slug ?? ""
   );
@@ -49,7 +50,6 @@ export function KoBookingForm({ rooms, initialRoom, kakaoChatUrl, singleRoom }: 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [sent, setSent] = useState<Sent | null>(null);
-  const [copied, setCopied] = useState(false);
 
   const selectedRoom = rooms.find((r) => r.slug === roomSlug);
   const monthly = selectedRoom?.monthlyKrw ?? null;
@@ -93,7 +93,17 @@ export function KoBookingForm({ rooms, initialRoom, kakaoChatUrl, singleRoom }: 
         setError(first || body?.error || "잠시 후 다시 시도해 주세요.");
         return;
       }
-      setSent({ message: body.kakao_message, chatUrl: body.kakao_chat_url || kakaoChatUrl });
+      const room = rooms.find((r) => r.slug === roomSlug);
+      const [, mm, dd] = moveIn.split("-");
+      setSent({
+        lines: [
+          ["방", room ? `${room.name} · ${room.priceLabel}` : roomSlug],
+          ["입실 희망일", moveIn ? `${Number(mm)}월 ${Number(dd)}일` : "-"],
+          ["예상 기간", `${months}개월`],
+          ["이름", name.trim()],
+          ["연락처", phone.trim()],
+        ],
+      });
     } catch {
       setError("인터넷 연결을 확인하고 다시 시도해 주세요.");
     } finally {
@@ -101,40 +111,27 @@ export function KoBookingForm({ rooms, initialRoom, kakaoChatUrl, singleRoom }: 
     }
   }
 
-  async function copyAndOpen() {
-    if (!sent) return;
-    try {
-      await navigator.clipboard.writeText(sent.message);
-      setCopied(true);
-    } catch {
-      setCopied(false);
-    }
-    window.location.href = sent.chatUrl;
-  }
-
   if (sent) {
     return (
       <div className={singleRoom ? "" : "border border-[#DCDEE0] bg-white p-5 md:p-9"} role="status">
         <p className="text-lg font-extrabold md:text-2xl">예약 요청을 받았습니다</p>
         <p className="mt-2 text-sm leading-relaxed text-[#3A3F43] md:text-base">
-          아래 내용을 카카오톡으로 보내주시면 더 빨리 답장드릴 수 있어요. 보내지 않아도 요청은
-          접수되었고, 빈 방을 확인한 뒤 남겨주신 번호로 연락드립니다.
+          빈 방을 확인한 뒤 남겨주신 번호로 입금 안내를 드릴게요. 아직 결제된 것은 없어요.
         </p>
-        <pre className="mt-4 whitespace-pre-wrap bg-[#F3F4F5] p-4 font-sans text-sm leading-relaxed">
-          {sent.message}
-        </pre>
-        <button
-          type="button"
-          onClick={copyAndOpen}
-          className="mt-4 flex h-[54px] w-full items-center justify-center bg-[#FEE500] text-base font-extrabold text-[#191919]"
+        <dl className="mt-4 bg-[#F3F4F5] p-4 text-sm">
+          {sent.lines.map(([k, v]) => (
+            <div key={k} className="flex gap-4 py-1">
+              <dt className="w-20 shrink-0 text-[#5A5F63]">{k}</dt>
+              <dd className="font-semibold">{v}</dd>
+            </div>
+          ))}
+        </dl>
+        <a
+          href={contactPhoneHref}
+          className="mt-4 flex h-[54px] w-full items-center justify-center border border-[#16181A] text-base font-extrabold"
         >
-          메시지 복사하고 카카오톡 열기
-        </button>
-        <p className="mt-2 text-xs text-[#5A5F63]">
-          {copied
-            ? "복사했어요. 카카오톡 채팅창에 붙여넣고 보내 주세요."
-            : "카카오톡이 열리면 채팅창에 붙여넣고 보내 주세요."}
-        </p>
+          급하시면 전화 주세요 · {contactPhone}
+        </a>
       </div>
     );
   }
@@ -308,7 +305,7 @@ export function KoBookingForm({ rooms, initialRoom, kakaoChatUrl, singleRoom }: 
             <br />
             보유 기간: 문의 처리 후 1년. 입실하는 경우 계약 관련 법령이 정한 기간 동안 보관합니다.
             <br />
-            동의하지 않을 수 있으며, 이 경우 카카오톡으로 직접 문의해 주세요.
+            동의하지 않을 수 있으며, 이 경우 전화로 직접 문의해 주세요.
           </div>
         )}
       </div>

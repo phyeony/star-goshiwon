@@ -39,12 +39,10 @@ export function KoHeader() {
           </Link>
           <span className="flex gap-2">
             <a
-              href={koSite.kakaoChatUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-[#FEE500] px-4 py-2.5 text-sm font-extrabold text-[#191919]"
+              href={koSite.phoneHref}
+              className="border border-[#16181A] px-4 py-2.5 text-sm font-extrabold"
             >
-              카카오톡 문의
+              {koSite.phone}
             </a>
             <a href="/ko#booking" className="bg-[#16181A] px-5 py-2.5 text-sm font-extrabold text-white">
               예약하기
@@ -85,12 +83,10 @@ export function KoHeader() {
             </a>
           ))}
           <a
-            href={koSite.kakaoChatUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 flex h-12 items-center justify-center bg-[#FEE500] text-sm font-extrabold text-[#191919]"
+            href={koSite.phoneHref}
+            className="mt-3 flex h-12 items-center justify-center border border-[#16181A] text-sm font-extrabold"
           >
-            카카오톡 문의
+            전화 문의 {koSite.phone}
           </a>
         </nav>
       )}

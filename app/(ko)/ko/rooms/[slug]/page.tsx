@@ -137,7 +137,8 @@ export default async function KoRoomPage({ params }: { params: Params }) {
                   depositKrw: koSite.depositKrw,
                 }))}
                 initialRoom={room.slug}
-                kakaoChatUrl={koSite.kakaoChatUrl}
+                contactPhone={koSite.phone}
+                contactPhoneHref={koSite.phoneHref}
                 singleRoom
               />
             </div>

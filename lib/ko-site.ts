@@ -11,6 +11,9 @@ export const koSite = {
   tagline: "노량진 고시원 · 노량진역 15분 · 남성 전용",
   address: "서울 동작구 만양로12가길 64",
   businessNumber: "495-17-00545",
+  phone: "02-822-4336",
+  phoneHref: "tel:028224336",
+  // KakaoTalk is not live yet (Nov 2026): nothing on /ko links to it for now.
   // 1:1 chat with the KakaoTalk channel. Opens the app on phones.
   kakaoChatUrl: `${siteConfig.kakao.replace(/\/$/, "")}/chat`,
   kakaoChannelUrl: siteConfig.kakao,
@@ -141,11 +144,11 @@ export const koFaqs = [
   },
   {
     q: "결제는 어떻게 하나요?",
-    a: "계좌이체로 받습니다. 예약 요청을 남기시면 카카오톡으로 입금 계좌와 금액을 안내해 드립니다. 현금영수증 발급이 가능합니다.",
+    a: "계좌이체로 받습니다. 예약 요청을 남기시면 남겨주신 번호로 입금 계좌와 금액을 안내해 드립니다. 현금영수증 발급이 가능합니다.",
   },
   {
     q: "방을 먼저 볼 수 있나요?",
-    a: "네. 카카오톡으로 편한 시간을 알려주시면 빈 방을 보여드립니다.",
+    a: "네. 전화(02-822-4336)나 예약 요청의 요청 사항에 편한 시간을 남겨주시면 빈 방을 보여드립니다.",
   },
   {
     q: "월 이용료에 무엇이 포함되나요?",
