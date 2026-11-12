@@ -19,6 +19,8 @@ export interface SitePhoto {
   caption_en: string;
   caption_ko: string;
   original_filename: string | null;
+  /** Room number (room_units row) the photo was taken in, if tagged. */
+  room_unit_id: string | null;
   created_at: string;
 }
 

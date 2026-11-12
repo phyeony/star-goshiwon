@@ -81,7 +81,8 @@ export async function resizeForUpload(file: File): Promise<ResizedPhoto> {
 export function buildUploadForm(
   file: File,
   resized: ResizedPhoto,
-  captions: { caption_en: string; caption_ko: string }
+  captions: { caption_en: string; caption_ko: string },
+  roomUnitId: string | null = null
 ): FormData {
   const form = new FormData();
   form.set("ext", resized.ext);
@@ -90,6 +91,7 @@ export function buildUploadForm(
   form.set("caption_en", captions.caption_en);
   form.set("caption_ko", captions.caption_ko);
   form.set("original_filename", file.name);
+  if (roomUnitId) form.set("room_unit_id", roomUnitId);
   for (const v of resized.variants) {
     form.set(`w${v.width}`, v.blob, `${v.width}.${resized.ext}`);
   }

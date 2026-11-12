@@ -6,6 +6,7 @@ import { PHOTO_WIDTHS, type PhotoExt } from "./site-photos";
 
 export const MAX_VARIANT_BYTES = 8 * 1024 * 1024;
 export const MAX_CAPTION_LENGTH = 200;
+export const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export interface ParsedPhotoUpload {
   ext: PhotoExt;
@@ -14,6 +15,7 @@ export interface ParsedPhotoUpload {
   caption_en: string;
   caption_ko: string;
   original_filename: string | null;
+  room_unit_id: string | null;
   variants: { width: number; bytes: ArrayBuffer }[];
 }
 
@@ -66,6 +68,13 @@ export async function parsePhotoUpload(form: FormData): Promise<ParseResult> {
     variants.push({ width: w, bytes });
   }
 
+  const roomUnit = form.get("room_unit_id");
+  let room_unit_id: string | null = null;
+  if (typeof roomUnit === "string" && roomUnit !== "") {
+    if (!UUID_PATTERN.test(roomUnit)) return { ok: false, error: "invalid_room_unit" };
+    room_unit_id = roomUnit;
+  }
+
   const filename = form.get("original_filename");
   return {
     ok: true,
@@ -77,6 +86,7 @@ export async function parsePhotoUpload(form: FormData): Promise<ParseResult> {
       caption_ko: cleanCaption(form.get("caption_ko")),
       original_filename:
         typeof filename === "string" && filename.trim() ? filename.trim().slice(0, 200) : null,
+      room_unit_id,
       variants,
     },
   };

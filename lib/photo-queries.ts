@@ -53,6 +53,7 @@ export async function insertUploadedPhoto(input: {
   caption_en: string;
   caption_ko: string;
   original_filename: string | null;
+  room_unit_id: string | null;
 }): Promise<SitePhoto> {
   const supabase = getSupabaseServiceClient();
   const { data, error } = await supabase
@@ -64,14 +65,18 @@ export async function insertUploadedPhoto(input: {
   return data as SitePhoto;
 }
 
-export async function updatePhotoCaptions(
+export type SitePhotoPatch = Partial<
+  Pick<SitePhoto, "caption_en" | "caption_ko" | "room_unit_id">
+>;
+
+export async function updateSitePhoto(
   id: string,
-  captions: { caption_en: string; caption_ko: string }
+  patch: SitePhotoPatch
 ): Promise<SitePhoto | null> {
   const supabase = getSupabaseServiceClient();
   const { data, error } = await supabase
     .from("site_photos")
-    .update(captions)
+    .update(patch)
     .eq("id", id)
     .select()
     .maybeSingle();

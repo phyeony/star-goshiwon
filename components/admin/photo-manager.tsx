@@ -2,8 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { photoSrc, type SitePhoto } from "@/lib/site-photos";
-import { thumbSrc, type AdminPhoto, type AdminSection } from "./photo-types";
+import {
+  thumbSrc,
+  type AdminPhoto,
+  type AdminRoomUnit,
+  type AdminSection,
+} from "./photo-types";
 import { PhotoUploader } from "./photo-uploader";
+import { RoomUnitSelect, unitRank } from "./photo-room-unit";
 import { PhotoSectionEditor } from "./photo-section-editor";
 
 const LIBRARY_TAB = "library";
@@ -16,10 +22,12 @@ export function PhotoManager({
   initialPhotos,
   initialSections,
   photosBase,
+  roomUnits,
 }: {
   initialPhotos: AdminPhoto[];
   initialSections: AdminSection[];
   photosBase: string;
+  roomUnits: AdminRoomUnit[];
 }) {
   const [photos, setPhotos] = useState(initialPhotos);
   // What is saved on the site, and the admin's unsaved edits, per section.
@@ -123,6 +131,7 @@ export function PhotoManager({
           key={activeSection.key}
           section={activeSection}
           photos={photos}
+          roomUnits={roomUnits}
           photoById={photoById}
           usage={usage}
           draft={drafts[activeSection.key] ?? []}
@@ -137,6 +146,7 @@ export function PhotoManager({
       ) : (
         <PhotoLibrary
           photos={photos}
+          roomUnits={roomUnits}
           usage={usage}
           onUploaded={addUploaded}
           onChanged={replacePhoto}
@@ -149,19 +159,32 @@ export function PhotoManager({
 
 function PhotoLibrary({
   photos,
+  roomUnits,
   usage,
   onUploaded,
   onChanged,
   onDeleted,
 }: {
   photos: AdminPhoto[];
+  roomUnits: AdminRoomUnit[];
   usage: Map<string, string[]>;
   onUploaded: (photo: SitePhoto) => void;
   onChanged: (photo: SitePhoto) => void;
   onDeleted: (id: string) => void;
 }) {
   const [filter, setFilter] = useState<"all" | "unused">("all");
-  const shown = filter === "unused" ? photos.filter((p) => !usage.get(p.id)?.length) : photos;
+  // "all", "" (no room number) or a room_units id.
+  const [unitFilter, setUnitFilter] = useState("all");
+  const [sort, setSort] = useState<"recent" | "room">("recent");
+  const rankOf = useMemo(() => unitRank(roomUnits), [roomUnits]);
+
+  const shown = photos
+    .filter((p) => filter === "all" || !usage.get(p.id)?.length)
+    .filter((p) => unitFilter === "all" || (p.room_unit_id ?? "") === unitFilter);
+  if (sort === "room") {
+    // Stable sort keeps newest-first within each room number.
+    shown.sort((a, b) => rankOf(a) - rankOf(b));
+  }
   const unusedCount = photos.filter((p) => !usage.get(p.id)?.length).length;
 
   return (
@@ -186,6 +209,24 @@ function PhotoLibrary({
             {label}
           </button>
         ))}
+        <RoomUnitSelect
+          units={roomUnits}
+          value={unitFilter}
+          onChange={setUnitFilter}
+          emptyLabel="방 번호 없음"
+          extraOptions={[{ value: "all", label: "모든 방 번호" }]}
+          ariaLabel="방 번호로 거르기"
+          className="text-sm"
+        />
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value as "recent" | "room")}
+          aria-label="정렬"
+          className="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+        >
+          <option value="recent">최근 올린 순</option>
+          <option value="room">방 번호 순</option>
+        </select>
       </div>
 
       {shown.length === 0 ? (
@@ -198,6 +239,7 @@ function PhotoLibrary({
             <LibraryCard
               key={photo.id}
               photo={photo}
+              roomUnits={roomUnits}
               usedIn={usage.get(photo.id) ?? []}
               onChanged={onChanged}
               onDeleted={onDeleted}
@@ -211,11 +253,13 @@ function PhotoLibrary({
 
 function LibraryCard({
   photo,
+  roomUnits,
   usedIn,
   onChanged,
   onDeleted,
 }: {
   photo: AdminPhoto;
+  roomUnits: AdminRoomUnit[];
   usedIn: string[];
   onChanged: (photo: SitePhoto) => void;
   onDeleted: (id: string) => void;
@@ -245,6 +289,25 @@ function LibraryCard({
       setTimeout(() => setSavedFlash(false), 1500);
     } catch {
       setError("저장하지 못했어요.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function setRoomUnit(value: string) {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/photos/${photo.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ room_unit_id: value || null }),
+      });
+      const body = (await res.json().catch(() => ({}))) as SitePhoto & { error?: string };
+      if (!res.ok) throw new Error(body.error);
+      onChanged(body);
+    } catch {
+      setError("방 번호를 저장하지 못했어요.");
     } finally {
       setBusy(false);
     }
@@ -292,6 +355,18 @@ function LibraryCard({
             <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">사용 안 함</span>
           )}
         </div>
+        <label className="block">
+          <span className="text-xs font-semibold text-gray-500">방 번호</span>
+          <RoomUnitSelect
+            units={roomUnits}
+            value={photo.room_unit_id ?? ""}
+            onChange={setRoomUnit}
+            emptyLabel="없음 (공용 공간 등)"
+            disabled={busy}
+            ariaLabel="방 번호"
+            className="mt-0.5 block w-full"
+          />
+        </label>
         <label className="block">
           <span className="text-xs font-semibold text-gray-500">한국어 설명</span>
           <input

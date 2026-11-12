@@ -15,6 +15,7 @@ function photo(over: Partial<SitePhoto>): SitePhoto {
     caption_en: "Desk",
     caption_ko: "책상",
     original_filename: null,
+    room_unit_id: null,
     created_at: "",
     ...over,
   };

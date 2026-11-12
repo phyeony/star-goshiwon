@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { SitePhoto } from "@/lib/site-photos";
-import { thumbSrc, type AdminPhoto, type AdminSection } from "./photo-types";
+import { thumbSrc, type AdminPhoto, type AdminRoomUnit, type AdminSection } from "./photo-types";
+import { RoomUnitSelect, unitRank } from "./photo-room-unit";
 import { PhotoUploader } from "./photo-uploader";
 
 function move<T>(list: T[], from: number, to: number): T[] {
@@ -16,6 +17,7 @@ function move<T>(list: T[], from: number, to: number): T[] {
 export function PhotoSectionEditor({
   section,
   photos,
+  roomUnits,
   photoById,
   usage,
   draft,
@@ -26,6 +28,7 @@ export function PhotoSectionEditor({
 }: {
   section: AdminSection;
   photos: AdminPhoto[];
+  roomUnits: AdminRoomUnit[];
   photoById: Map<string, AdminPhoto>;
   usage: Map<string, string[]>;
   draft: string[];
@@ -38,13 +41,25 @@ export function PhotoSectionEditor({
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [onlyUnused, setOnlyUnused] = useState(false);
+  // "all", "" (no room number) or a room_units id.
+  const [unitFilter, setUnitFilter] = useState("all");
 
   const isRoom = section.kind === "room";
+  const unitName = useMemo(() => new Map(roomUnits.map((u) => [u.id, u.name])), [roomUnits]);
+  const sectionUnits = roomUnits.filter((u) => u.roomId === section.roomId);
+  const rankOf = useMemo(() => unitRank(roomUnits), [roomUnits]);
   const chosen = draft.map((id) => photoById.get(id)).filter((p): p is AdminPhoto => Boolean(p));
   const dirty = draft.length !== savedIds.length || draft.some((id, i) => id !== savedIds[i]);
-  const available = photos.filter(
-    (p) => !draft.includes(p.id) && (!onlyUnused || !usage.get(p.id)?.length)
-  );
+  const available = photos
+    .filter((p) => !draft.includes(p.id) && (!onlyUnused || !usage.get(p.id)?.length))
+    .filter((p) => !isRoom || unitFilter === "all" || (p.room_unit_id ?? "") === unitFilter);
+  if (isRoom) {
+    // This room type's room numbers first, then other rooms, then untagged.
+    const own = new Set(sectionUnits.map((u) => u.id));
+    const group = (p: AdminPhoto) => (p.room_unit_id && own.has(p.room_unit_id) ? 0 : p.room_unit_id ? 1 : 2);
+    available.sort((a, b) => group(a) - group(b) || rankOf(a) - rankOf(b));
+  }
+  const uploadUnit = isRoom && unitFilter !== "all" && unitFilter !== "" ? unitFilter : null;
 
   function change(ids: string[]) {
     setMessage(null);
@@ -147,6 +162,11 @@ export function PhotoSectionEditor({
                     {index + 1}
                     {isRoom && index === 0 ? " · 대표" : ""}
                   </span>
+                  {photo.room_unit_id && unitName.has(photo.room_unit_id) && (
+                    <span className="absolute right-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-xs font-bold text-gray-800">
+                      {unitName.get(photo.room_unit_id)}호
+                    </span>
+                  )}
                 </div>
                 <div className="p-2">
                   <p className="truncate text-sm text-gray-800" title={photo.caption_ko}>
@@ -195,17 +215,33 @@ export function PhotoSectionEditor({
         <h3 className="mb-3 font-semibold text-gray-900">새 사진 올려서 추가</h3>
         <PhotoUploader
           onUploaded={onUploaded}
-          hint={`올린 사진은 보관함에 저장되고 '${section.title}' 맨 뒤에 추가돼요. 저장을 눌러야 사이트에 보여요.`}
+          roomUnitId={uploadUnit}
+          hint={`올린 사진은 보관함에 저장되고 '${section.title}' 맨 뒤에 추가돼요${
+            uploadUnit ? ` (${unitName.get(uploadUnit)}호로 표시)` : ""
+          }. 저장을 눌러야 사이트에 보여요.`}
         />
       </section>
 
       <section>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h3 className="font-semibold text-gray-900">보관함에서 추가 ({available.length})</h3>
-          <label className="flex items-center gap-2 text-sm text-gray-600">
-            <input type="checkbox" checked={onlyUnused} onChange={(e) => setOnlyUnused(e.target.checked)} />
-            다른 곳에 안 쓰인 사진만
-          </label>
+          <div className="flex flex-wrap items-center gap-3">
+            {isRoom && (
+              <RoomUnitSelect
+                units={sectionUnits}
+                value={unitFilter}
+                onChange={setUnitFilter}
+                emptyLabel="방 번호 없는 사진"
+                extraOptions={[{ value: "all", label: "모든 사진" }]}
+                ariaLabel="방 번호로 거르기"
+                className="text-sm"
+              />
+            )}
+            <label className="flex items-center gap-2 text-sm text-gray-600">
+              <input type="checkbox" checked={onlyUnused} onChange={(e) => setOnlyUnused(e.target.checked)} />
+              다른 곳에 안 쓰인 사진만
+            </label>
+          </div>
         </div>
         {available.length === 0 ? (
           <p className="text-sm text-gray-500">추가할 수 있는 사진이 없어요.</p>
@@ -230,7 +266,10 @@ export function PhotoSectionEditor({
                     className="aspect-square w-full object-cover transition group-hover:opacity-80"
                   />
                   <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 pb-1 pt-4 text-xs text-white">
-                    <span className="block truncate">{photo.caption_ko || photo.caption_en || "설명 없음"}</span>
+                    <span className="block truncate">
+                      {photo.room_unit_id && unitName.has(photo.room_unit_id) ? `${unitName.get(photo.room_unit_id)}호 · ` : ""}
+                      {photo.caption_ko || photo.caption_en || "설명 없음"}
+                    </span>
                     {usedIn.length > 0 && <span className="block truncate text-white/70">{usedIn.join(", ")}</span>}
                   </span>
                   <span className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-lg font-bold leading-none text-white shadow">

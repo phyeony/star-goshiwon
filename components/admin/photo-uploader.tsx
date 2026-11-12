@@ -31,7 +31,11 @@ function errorText(code: string | undefined): string {
   return (code && ERROR_LABEL[code]) || "올리지 못했어요. 다시 시도해 주세요.";
 }
 
-async function uploadOne(file: File, onStatus: (s: ItemStatus) => void): Promise<SitePhoto> {
+async function uploadOne(
+  file: File,
+  roomUnitId: string | null,
+  onStatus: (s: ItemStatus) => void
+): Promise<SitePhoto> {
   onStatus("resizing");
   let resized;
   try {
@@ -42,7 +46,7 @@ async function uploadOne(file: File, onStatus: (s: ItemStatus) => void): Promise
   onStatus("uploading");
   const res = await fetch("/api/admin/photos", {
     method: "POST",
-    body: buildUploadForm(file, resized, { caption_en: "", caption_ko: "" }),
+    body: buildUploadForm(file, resized, { caption_en: "", caption_ko: "" }, roomUnitId),
   });
   const body = (await res.json().catch(() => ({}))) as SitePhoto & { error?: string };
   if (!res.ok) throw new Error(body.error ?? `http_${res.status}`);
@@ -54,9 +58,12 @@ async function uploadOne(file: File, onStatus: (s: ItemStatus) => void): Promise
 export function PhotoUploader({
   onUploaded,
   hint,
+  roomUnitId = null,
 }: {
   onUploaded: (photo: SitePhoto) => void;
   hint?: string;
+  /** Tag every uploaded photo with this room number. */
+  roomUnitId?: string | null;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
@@ -87,7 +94,7 @@ export function PhotoUploader({
       while (next < items.length) {
         const { file, key } = items[next++];
         try {
-          const photo = await uploadOne(file, (status) => update(key, { status }));
+          const photo = await uploadOne(file, roomUnitId, (status) => update(key, { status }));
           update(key, { status: "done" });
           onUploaded(photo);
         } catch (error) {

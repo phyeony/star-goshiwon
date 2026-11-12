@@ -331,9 +331,14 @@ CREATE TABLE IF NOT EXISTS site_photos (
   caption_en TEXT NOT NULL DEFAULT '',
   caption_ko TEXT NOT NULL DEFAULT '',
   original_filename TEXT,
+  -- Which room (by number) the photo was taken in. Optional; used to sort
+  -- and filter the library, and later for per-room-number galleries.
+  room_unit_id UUID REFERENCES room_units(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   CHECK ((source = 'r2') = (ext IS NOT NULL))
 );
+
+CREATE INDEX IF NOT EXISTS idx_site_photos_room_unit ON site_photos (room_unit_id);
 
 CREATE TABLE IF NOT EXISTS site_photo_placements (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -1,21 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminUserOrNull } from "@/lib/supabase-server";
 import { getPhotoBucket } from "@/lib/photo-storage";
-import { deleteSitePhotoRow, getSitePhoto, updatePhotoCaptions } from "@/lib/photo-queries";
-import { MAX_CAPTION_LENGTH } from "@/lib/photo-upload";
+import {
+  deleteSitePhotoRow,
+  getSitePhoto,
+  updateSitePhoto,
+  type SitePhotoPatch,
+} from "@/lib/photo-queries";
+import { MAX_CAPTION_LENGTH, UUID_PATTERN } from "@/lib/photo-upload";
 import { r2VariantKeys } from "@/lib/site-photos";
 
 interface Context {
   params: Promise<{ id: string }>;
 }
 
-const UUID = /^[0-9a-f-]{36}$/i;
+const UUID = UUID_PATTERN;
 
 function caption(value: unknown): string {
   return typeof value === "string" ? value.trim().slice(0, MAX_CAPTION_LENGTH) : "";
 }
 
-/** Update a photo's English/Korean captions. */
+/** Update a photo's captions and/or room number. Only the fields sent change;
+ * room_unit_id: null clears the room number. */
 export async function PATCH(req: NextRequest, context: Context) {
   const admin = await getAdminUserOrNull();
   if (!admin) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -24,19 +30,35 @@ export async function PATCH(req: NextRequest, context: Context) {
   if (!UUID.test(id)) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   const body = (await req.json().catch(() => null)) as
-    | { caption_en?: unknown; caption_ko?: unknown }
+    | { caption_en?: unknown; caption_ko?: unknown; room_unit_id?: unknown }
     | null;
-  if (!body) return NextResponse.json({ error: "invalid_body" }, { status: 400 });
+  if (!body || typeof body !== "object") {
+    return NextResponse.json({ error: "invalid_body" }, { status: 400 });
+  }
+
+  const patch: SitePhotoPatch = {};
+  if ("caption_en" in body) patch.caption_en = caption(body.caption_en);
+  if ("caption_ko" in body) patch.caption_ko = caption(body.caption_ko);
+  if ("room_unit_id" in body) {
+    const unit = body.room_unit_id;
+    if (unit !== null && !(typeof unit === "string" && UUID.test(unit))) {
+      return NextResponse.json({ error: "invalid_room_unit" }, { status: 400 });
+    }
+    patch.room_unit_id = unit;
+  }
+  if (Object.keys(patch).length === 0) {
+    return NextResponse.json({ error: "invalid_body" }, { status: 400 });
+  }
 
   try {
-    const photo = await updatePhotoCaptions(id, {
-      caption_en: caption(body.caption_en),
-      caption_ko: caption(body.caption_ko),
-    });
+    const photo = await updateSitePhoto(id, patch);
     if (!photo) return NextResponse.json({ error: "not_found" }, { status: 404 });
     return NextResponse.json(photo);
   } catch (error) {
-    console.error("Update photo captions error:", error);
+    if ((error as { code?: string }).code === "23503") {
+      return NextResponse.json({ error: "invalid_room_unit" }, { status: 400 });
+    }
+    console.error("Update photo error:", error);
     return NextResponse.json({ error: "internal_error" }, { status: 500 });
   }
 }

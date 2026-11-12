@@ -46,12 +46,16 @@ export async function POST(req: NextRequest) {
       caption_en: upload.caption_en,
       caption_ko: upload.caption_ko,
       original_filename: upload.original_filename,
+      room_unit_id: upload.room_unit_id,
     });
     return NextResponse.json(photo, { status: 201 });
   } catch (error) {
     console.error("Photo upload error:", error);
+    const unknownRoom = (error as { code?: string }).code === "23503";
     // Don't leave files behind for a photo that isn't in the library.
     await bucket.delete(r2VariantKeys(prefix, upload.ext)).catch(() => {});
-    return NextResponse.json({ error: "upload_failed" }, { status: 500 });
+    return unknownRoom
+      ? NextResponse.json({ error: "invalid_room_unit" }, { status: 400 })
+      : NextResponse.json({ error: "upload_failed" }, { status: 500 });
   }
 }

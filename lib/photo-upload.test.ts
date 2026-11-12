@@ -50,6 +50,14 @@ describe("parsePhotoUpload", () => {
     expect(await parsePhotoUpload(form({}, JPEG))).toEqual({ ok: false, error: "invalid_image" });
   });
 
+  it("takes an optional room number", async () => {
+    const none = await parsePhotoUpload(form());
+    expect(none.ok && none.value.room_unit_id).toBe(null);
+    const tagged = await parsePhotoUpload(form({ room_unit_id: "5729d8c6-665b-4a54-a586-408f18e90db8" }));
+    expect(tagged.ok && tagged.value.room_unit_id).toBe("5729d8c6-665b-4a54-a586-408f18e90db8");
+    expect(await parsePhotoUpload(form({ room_unit_id: "402" }))).toEqual({ ok: false, error: "invalid_room_unit" });
+  });
+
   it("rejects unknown formats and bad sizes", async () => {
     expect(await parsePhotoUpload(form({ ext: "png" }))).toEqual({ ok: false, error: "invalid_format" });
     expect(await parsePhotoUpload(form({ width: "0" }))).toEqual({ ok: false, error: "invalid_size" });
