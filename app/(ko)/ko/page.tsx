@@ -3,7 +3,6 @@ import Link from "next/link";
 import { KoHeader } from "@/components/ko/ko-header";
 import { KoFooter } from "@/components/ko/ko-footer";
 import { KoBookingForm } from "@/components/ko/ko-booking-form";
-import { KoMapToggle } from "@/components/ko/ko-map-toggle";
 import { OptimizedPhoto } from "@/components/optimized-photo";
 import { siteConfig } from "@/lib/site-data";
 import {
@@ -258,14 +257,32 @@ export default async function KoHomePage({
             </h2>
           </div>
           <div className="md:order-1 md:col-span-7 md:row-span-2">
-            <KoMapToggle
-              lat={siteConfig.coordinates.lat}
-              lng={siteConfig.coordinates.lng}
-              name={koSite.name}
-              naverUrl={koSite.naverMapUrl}
-              kakaoUrl={siteConfig.kakaoMapUrl}
-              address={koSite.address}
+            <iframe
+              title="스타고시원 위치 지도"
+              src={koSite.googleMapEmbedUrl}
+              className="h-[260px] w-full border-0 bg-[#F3F4F5] md:h-[440px]"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
             />
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <a
+                href={koSite.naverMapUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-11 items-center justify-center border border-[#16181A] text-sm font-semibold"
+              >
+                네이버 지도로 길찾기
+              </a>
+              <a
+                href={siteConfig.kakaoMapUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-11 items-center justify-center border border-[#16181A] text-sm font-semibold"
+              >
+                카카오맵으로 길찾기
+              </a>
+            </div>
           </div>
           <div className="md:order-3 md:col-span-5">
             <div className="mt-3.5 text-[15px] font-semibold md:mt-0 md:text-[19px]">{koSite.address}</div>

@@ -18,6 +18,9 @@ export const koSite = {
   kakaoChatUrl: `${siteConfig.kakao.replace(/\/$/, "")}/chat`,
   kakaoChannelUrl: siteConfig.kakao,
   naverMapUrl: siteConfig.naverMapUrl,
+  // Same Google Maps place embed as the English location page (no API key needed).
+  googleMapEmbedUrl:
+    "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3164.8562384810907!2d126.9483812!3d37.51130870000001!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x357c9f6736793a2b%3A0x7f3263912b31aa4c!2z7Iqk7YOA6rOg7Iuc7JuQc3Rhcmdvc2hpd29u!5e0!3m2!1sko!2s!4v1777449570804!5m2!1sko!2s",
   // Same deposit for every room (set by 현영, Nov 2026).
   depositKrw: 100000,
   minStayMonths: 1,
