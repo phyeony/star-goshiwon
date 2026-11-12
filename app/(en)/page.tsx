@@ -6,6 +6,7 @@ import { GuestReviews } from "@/components/guest-reviews";
 import { HeroSlideshow } from "@/components/hero-slideshow";
 import { SharedFacilities } from "@/components/shared-facilities";
 import { getPublicRooms } from "@/lib/queries";
+import { getSharedSpacePhotos } from "@/lib/photo-queries";
 import { getHighlightedGuestReviews } from "@/lib/review-queries";
 import { siteConfig, amenities, buildFaqs } from "@/lib/site-data";
 import { guides } from "@/lib/guides-data";
@@ -73,9 +74,10 @@ function AmenityIcon({ name }: { name: string }) {
 }
 
 export default async function HomePage() {
-  const [rooms, reviewHighlights] = await Promise.all([
+  const [rooms, reviewHighlights, sharedPhotos] = await Promise.all([
     getPublicRooms(),
     getHighlightedGuestReviews(),
+    getSharedSpacePhotos(),
   ]);
 
   // Landing-page headline pricing is quoted from the cheapest room (economy),
@@ -165,7 +167,7 @@ export default async function HomePage() {
             title="Shared Facilities"
             subtitle="Common-area essentials, free for every guest to use."
           />
-          <SharedFacilities />
+          <SharedFacilities photos={sharedPhotos} />
         </div>
       </section>
 
