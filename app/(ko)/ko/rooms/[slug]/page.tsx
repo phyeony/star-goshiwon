@@ -12,7 +12,6 @@ import {
   koRoomDetail,
   koRoomFeature,
   koRoomName,
-  koRoomStatus,
   koSite,
   sortedImages,
 } from "@/lib/ko-site";
@@ -96,19 +95,13 @@ export default async function KoRoomPage({ params }: { params: Params }) {
             <p className="text-[13px] font-semibold text-[#5A5F63]">{koSite.tagline}</p>
             <div className="mt-1 flex items-start justify-between gap-4">
               <h1 className="text-[28px] font-extrabold tracking-[-0.8px] md:text-[36px]">{name}</h1>
-              <span className="mt-2 whitespace-nowrap text-sm font-semibold text-[#1F7A4D]">
-                {koRoomStatus[room.status]}
+              <span className="whitespace-nowrap text-[28px] font-extrabold tracking-[-0.8px] md:text-[36px]">
+                {priceLabel(room)}
               </span>
             </div>
-            <p className="mt-1 text-2xl font-extrabold md:text-[28px]">
-              {priceLabel(room)}
-              {room.deposit_krw != null && (
-                <span className="ml-2 text-base font-semibold text-[#5A5F63]">
-                  보증금 {formatManwon(room.deposit_krw)}
-                </span>
-              )}
+            <p className="mt-1 text-sm text-[#5A5F63]">
+              보증금 {formatManwon(koSite.depositKrw)} · 공과금 · 인터넷 포함 · 1개월부터
             </p>
-            <p className="mt-1 text-sm text-[#5A5F63]">공과금 · 인터넷 포함 · 1개월부터</p>
             <p className="mt-4 text-[15px] leading-[1.7] text-[#3A3F43]">{koRoomDetail(room)}</p>
 
             <h2 className="mt-8 text-lg font-extrabold">방 안에 있는 것</h2>
@@ -134,7 +127,7 @@ export default async function KoRoomPage({ params }: { params: Params }) {
                   name: koRoomName(r),
                   priceLabel: priceLabel(r),
                   monthlyKrw: r.monthly_rate_krw ?? null,
-                  depositKrw: r.deposit_krw ?? null,
+                  depositKrw: koSite.depositKrw,
                 }))}
                 initialRoom={room.slug}
                 kakaoChatUrl={koSite.kakaoChatUrl}

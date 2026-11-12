@@ -68,7 +68,7 @@ export const koSampleRooms: RoomWithImages[] = [
     slug: "room-with-private-shower-and-toilet",
     sort_order: 3,
     monthly_rate_krw: 500000,
-    deposit_krw: null,
+    deposit_krw: 100000,
     room_images: images("sample-toilet", [
       "/images/private-toilet-and-shower/1.main.jpg",
       "/images/private-toilet-and-shower/2.shower.jpg",

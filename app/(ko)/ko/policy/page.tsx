@@ -3,7 +3,7 @@ import Link from "next/link";
 import { KoHeader } from "@/components/ko/ko-header";
 import { KoFooter } from "@/components/ko/ko-footer";
 import { stayTimes } from "@/lib/site-data";
-import { koSite } from "@/lib/ko-site";
+import { formatManwon, koSite } from "@/lib/ko-site";
 
 // Policy for guests who book through the Korean site (/ko): 계좌이체 in KRW,
 // monthly stays, contact on KakaoTalk. Guests booking through the English site
@@ -243,8 +243,8 @@ export default function KoPolicyPage() {
         <Section id="deposit" title="6. 보증금 및 손해 배상">
           <ul className="list-disc space-y-1.5 pl-6">
             <li>
-              보증금은 방 페이지에 안내된 금액이며, 첫 달 이용료와 함께
-              입금합니다. 방 손상, 분실 물품, 밀린 이용료에 대한 담보로
+              보증금은 모든 방 <strong>{formatManwon(koSite.depositKrw)}</strong>이며,
+              첫 달 이용료와 함께 입금합니다. 방 손상, 분실 물품, 밀린 이용료에 대한 담보로
               보관합니다.
             </li>
             <li>

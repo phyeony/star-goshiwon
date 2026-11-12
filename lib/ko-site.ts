@@ -15,6 +15,8 @@ export const koSite = {
   kakaoChatUrl: `${siteConfig.kakao.replace(/\/$/, "")}/chat`,
   kakaoChannelUrl: siteConfig.kakao,
   naverMapUrl: siteConfig.naverMapUrl,
+  // Same deposit for every room (set by 현영, Nov 2026).
+  depositKrw: 100000,
   minStayMonths: 1,
   maxStayMonths: 12,
 };

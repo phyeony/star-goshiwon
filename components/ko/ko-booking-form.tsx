@@ -202,8 +202,7 @@ export function KoBookingForm({ rooms, initialRoom, kakaoChatUrl, singleRoom }: 
             </div>
             <p className="mt-0.5 text-xs leading-relaxed text-[#5A5F63]">
               월 {formatManwon(monthly)} × {months}개월
-              {deposit ? ` · 보증금 ${formatManwon(deposit)} 별도` : " · 보증금 별도"}. 정확한 금액은
-              확인 후 안내드려요.
+              {deposit ? ` · 보증금 ${formatManwon(deposit)} 별도 (퇴실할 때 돌려드려요)` : " · 보증금 별도"}
             </p>
           </div>
         ) : null}

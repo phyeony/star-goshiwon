@@ -14,7 +14,6 @@ import {
   koRoomStatus,
   koSite,
   koTransit,
-  lowestDepositKrw,
   lowestMonthlyKrw,
   sortedImages,
 } from "@/lib/ko-site";
@@ -79,7 +78,7 @@ export default async function KoHomePage({
   const { room: initialRoom } = await searchParams;
   const rooms = await getKoRooms();
   const lowest = lowestMonthlyKrw(rooms);
-  const deposit = lowestDepositKrw(rooms);
+  const deposit = koSite.depositKrw;
   const base = siteConfig.url.replace(/\/$/, "");
 
   const jsonLd = {
@@ -332,7 +331,7 @@ export default async function KoHomePage({
                   name: koRoomName(r),
                   priceLabel: priceLabel(r),
                   monthlyKrw: r.monthly_rate_krw ?? null,
-                  depositKrw: r.deposit_krw ?? null,
+                  depositKrw: koSite.depositKrw,
                 }))}
                 initialRoom={initialRoom}
                 kakaoChatUrl={koSite.kakaoChatUrl}
