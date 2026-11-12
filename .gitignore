@@ -32,3 +32,6 @@ next-env.d.ts
 # Enforce pnpm — no npm lockfile
 package-lock.json
 yarn.lock
+
+# Local Cloudflare simulator state (e.g. photos uploaded during `pnpm dev`)
+.wrangler/
