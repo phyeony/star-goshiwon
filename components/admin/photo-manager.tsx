@@ -12,6 +12,7 @@ import { PhotoUploader } from "./photo-uploader";
 import { RoomUnitSelect, unitRank } from "./photo-room-unit";
 import { PhotoSectionEditor } from "./photo-section-editor";
 import { downloadPhotos } from "./photo-download";
+import { PhotoViewer } from "./photo-viewer";
 
 const LIBRARY_TAB = "library";
 
@@ -149,6 +150,7 @@ export function PhotoManager({
           photos={photos}
           roomUnits={roomUnits}
           usage={usage}
+          sectionTitles={initialSections.map((s) => s.title)}
           onUploaded={addUploaded}
           onChanged={replacePhoto}
           onDeleted={removePhoto}
@@ -162,6 +164,7 @@ function PhotoLibrary({
   photos,
   roomUnits,
   usage,
+  sectionTitles,
   onUploaded,
   onChanged,
   onDeleted,
@@ -169,18 +172,25 @@ function PhotoLibrary({
   photos: AdminPhoto[];
   roomUnits: AdminRoomUnit[];
   usage: Map<string, string[]>;
+  sectionTitles: string[];
   onUploaded: (photo: SitePhoto) => void;
   onChanged: (photo: SitePhoto) => void;
   onDeleted: (id: string) => void;
 }) {
-  const [filter, setFilter] = useState<"all" | "unused">("all");
+  // "all", "unused", or a section title (photos shown in that section).
+  const [filter, setFilter] = useState<string>("all");
+  const [viewingId, setViewingId] = useState<string | null>(null);
   // "all", "" (no room number) or a room_units id.
   const [unitFilter, setUnitFilter] = useState("all");
   const [sort, setSort] = useState<"recent" | "room">("recent");
   const rankOf = useMemo(() => unitRank(roomUnits), [roomUnits]);
 
   const shown = photos
-    .filter((p) => filter === "all" || !usage.get(p.id)?.length)
+    .filter((p) => {
+      if (filter === "all") return true;
+      const usedIn = usage.get(p.id) ?? [];
+      return filter === "unused" ? usedIn.length === 0 : usedIn.includes(filter);
+    })
     .filter((p) => unitFilter === "all" || (p.room_unit_id ?? "") === unitFilter);
   if (sort === "room") {
     // Stable sort keeps newest-first within each room number.
@@ -238,12 +248,14 @@ function PhotoLibrary({
       <PhotoUploader onUploaded={onUploaded} />
 
       <div className="flex flex-wrap items-center gap-2">
-        {(
-          [
-            ["all", `전체 ${photos.length}`],
-            ["unused", `사용 안 함 ${unusedCount}`],
-          ] as const
-        ).map(([value, label]) => (
+        {[
+          ["all", `전체 ${photos.length}`],
+          ["unused", `사용 안 함 ${unusedCount}`],
+          ...sectionTitles.map((title) => [
+            title,
+            `${title} ${photos.filter((p) => usage.get(p.id)?.includes(title)).length}`,
+          ]),
+        ].map(([value, label]) => (
           <button
             key={value}
             type="button"
@@ -322,7 +334,11 @@ function PhotoLibrary({
 
       {shown.length === 0 ? (
         <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center text-gray-500">
-          {filter === "unused" ? "모든 사진이 사이트에 쓰이고 있어요." : "아직 사진이 없어요."}
+          {filter === "unused"
+            ? "모든 사진이 사이트에 쓰이고 있어요."
+            : photos.length === 0
+              ? "아직 사진이 없어요."
+              : "조건에 맞는 사진이 없어요."}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -334,11 +350,25 @@ function PhotoLibrary({
               usedIn={usage.get(photo.id) ?? []}
               selected={selected.has(photo.id)}
               onToggle={() => toggle(photo.id)}
+              onOpen={() => setViewingId(photo.id)}
               onChanged={onChanged}
               onDeleted={onDeleted}
             />
           ))}
         </div>
+      )}
+
+      {viewingId && shown.some((p) => p.id === viewingId) && (
+        <PhotoViewer
+          photos={shown}
+          currentId={viewingId}
+          unitName={unitName}
+          usage={usage}
+          selected={selected}
+          onToggle={toggle}
+          onNavigate={setViewingId}
+          onClose={() => setViewingId(null)}
+        />
       )}
     </div>
   );
@@ -350,6 +380,7 @@ function LibraryCard({
   usedIn,
   selected,
   onToggle,
+  onOpen,
   onChanged,
   onDeleted,
 }: {
@@ -358,6 +389,7 @@ function LibraryCard({
   usedIn: string[];
   selected: boolean;
   onToggle: () => void;
+  onOpen: () => void;
   onChanged: (photo: SitePhoto) => void;
   onDeleted: (id: string) => void;
 }) {
@@ -437,7 +469,13 @@ function LibraryCard({
       data-testid="library-card"
     >
       <div className="relative">
-        <a href={photo.src} target="_blank" rel="noreferrer" className="block bg-gray-100">
+        <button
+          type="button"
+          onClick={onOpen}
+          aria-label="크게 보기"
+          className="block w-full cursor-zoom-in bg-gray-100"
+          data-testid="open-photo"
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={thumbSrc(photo, 640)}
@@ -445,7 +483,7 @@ function LibraryCard({
             loading="lazy"
             className="aspect-[4/3] w-full object-cover"
           />
-        </a>
+        </button>
         <label
           className="absolute left-2 top-2 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-white/90 shadow"
           title="선택"
