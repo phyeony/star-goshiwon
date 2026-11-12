@@ -11,6 +11,7 @@ import {
 import { PhotoUploader } from "./photo-uploader";
 import { RoomUnitSelect, unitRank } from "./photo-room-unit";
 import { PhotoSectionEditor } from "./photo-section-editor";
+import { downloadPhotos } from "./photo-download";
 
 const LIBRARY_TAB = "library";
 
@@ -187,6 +188,51 @@ function PhotoLibrary({
   }
   const unusedCount = photos.filter((p) => !usage.get(p.id)?.length).length;
 
+  const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  const [downloading, setDownloading] = useState<string | null>(null);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+  const unitName = useMemo(() => new Map(roomUnits.map((u) => [u.id, u.name])), [roomUnits]);
+  // Deleted photos drop out of the selection.
+  const selectedPhotos = photos.filter((p) => selected.has(p.id));
+  const allShownSelected = shown.length > 0 && shown.every((p) => selected.has(p.id));
+
+  function toggle(id: string) {
+    setDownloadError(null);
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAllShown() {
+    setDownloadError(null);
+    setSelected((prev) => {
+      const next = new Set(prev);
+      for (const p of shown) {
+        if (allShownSelected) next.delete(p.id);
+        else next.add(p.id);
+      }
+      return next;
+    });
+  }
+
+  async function download() {
+    setDownloadError(null);
+    setDownloading(`0/${selectedPhotos.length}`);
+    try {
+      const failed = await downloadPhotos(selectedPhotos, unitName, (done, total) =>
+        setDownloading(`${done}/${total}`)
+      );
+      if (failed > 0) setDownloadError(`${failed}장은 받지 못했어요. 나머지는 받았어요.`);
+    } catch {
+      setDownloadError("다운로드하지 못했어요. 다시 시도해 주세요.");
+    } finally {
+      setDownloading(null);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <PhotoUploader onUploaded={onUploaded} />
@@ -227,7 +273,52 @@ function PhotoLibrary({
           <option value="recent">최근 올린 순</option>
           <option value="room">방 번호 순</option>
         </select>
+        {shown.length > 0 && (
+          <button
+            type="button"
+            onClick={toggleAllShown}
+            className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            {allShownSelected ? "보이는 사진 선택 해제" : `보이는 사진 모두 선택 (${shown.length})`}
+          </button>
+        )}
       </div>
+
+      {(selectedPhotos.length > 0 || downloadError) && (
+        <div
+          className="sticky top-16 z-10 -mx-4 flex flex-wrap items-center justify-between gap-3 border-b border-indigo-200 bg-indigo-50/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-2xl sm:border"
+          data-testid="selection-bar"
+        >
+          <span className="text-sm font-semibold text-indigo-900">
+            {selectedPhotos.length > 0 ? `${selectedPhotos.length}장 선택됨` : ""}
+            {downloadError && <span className="ml-2 font-normal text-red-600">{downloadError}</span>}
+          </span>
+          {selectedPhotos.length > 0 && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setSelected(new Set())}
+                disabled={downloading !== null}
+                className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                선택 해제
+              </button>
+              <button
+                type="button"
+                onClick={download}
+                disabled={downloading !== null}
+                className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60"
+              >
+                {downloading
+                  ? `받는 중… ${downloading}`
+                  : selectedPhotos.length === 1
+                    ? "다운로드"
+                    : `다운로드 (ZIP)`}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {shown.length === 0 ? (
         <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center text-gray-500">
@@ -241,6 +332,8 @@ function PhotoLibrary({
               photo={photo}
               roomUnits={roomUnits}
               usedIn={usage.get(photo.id) ?? []}
+              selected={selected.has(photo.id)}
+              onToggle={() => toggle(photo.id)}
               onChanged={onChanged}
               onDeleted={onDeleted}
             />
@@ -255,12 +348,16 @@ function LibraryCard({
   photo,
   roomUnits,
   usedIn,
+  selected,
+  onToggle,
   onChanged,
   onDeleted,
 }: {
   photo: AdminPhoto;
   roomUnits: AdminRoomUnit[];
   usedIn: string[];
+  selected: boolean;
+  onToggle: () => void;
   onChanged: (photo: SitePhoto) => void;
   onDeleted: (id: string) => void;
 }) {
@@ -333,16 +430,36 @@ function LibraryCard({
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm" data-testid="library-card">
-      <a href={photo.src} target="_blank" rel="noreferrer" className="block bg-gray-100">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={thumbSrc(photo, 640)}
-          alt={photo.caption_ko || photo.caption_en || ""}
-          loading="lazy"
-          className="aspect-[4/3] w-full object-cover"
-        />
-      </a>
+    <div
+      className={`overflow-hidden rounded-2xl border bg-white shadow-sm ${
+        selected ? "border-indigo-500 ring-2 ring-indigo-500" : "border-gray-200"
+      }`}
+      data-testid="library-card"
+    >
+      <div className="relative">
+        <a href={photo.src} target="_blank" rel="noreferrer" className="block bg-gray-100">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={thumbSrc(photo, 640)}
+            alt={photo.caption_ko || photo.caption_en || ""}
+            loading="lazy"
+            className="aspect-[4/3] w-full object-cover"
+          />
+        </a>
+        <label
+          className="absolute left-2 top-2 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-white/90 shadow"
+          title="선택"
+        >
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={onToggle}
+            aria-label="사진 선택"
+            className="h-5 w-5 cursor-pointer accent-indigo-600"
+            data-testid="select-photo"
+          />
+        </label>
+      </div>
       <div className="space-y-2 p-3">
         <div className="flex flex-wrap gap-1">
           {usedIn.length ? (
