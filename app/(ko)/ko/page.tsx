@@ -31,7 +31,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const lowest = lowestMonthlyKrw(rooms);
   const priceText = lowest ? `월 ${formatManwon(lowest)}부터` : "1인실 · 공과금 포함";
   const title = `노량진 고시원 스타고시원 | 노량진역 15분 · ${priceText}`;
-  const description = `노량진 고시원 스타고시원. 노량진역 15분, 상도역 대중교통 15분. ${
+  const description = `노량진 고시원 스타고시원. 노량진역 15분, 노들역 10분, 상도역 15분. ${
     lowest ? `월 ${formatManwon(lowest)}부터, ` : ""
   }공과금 · 인터넷 포함, 1개월부터 입실 가능한 남성 전용 고시원(고시텔)입니다.`;
   return {
@@ -44,7 +44,6 @@ export async function generateMetadata(): Promise<Metadata> {
       "노량진 고시원 가격",
       "상도역 고시원",
       "상도동 고시원",
-      "숭실대 고시원",
       "동작구 고시원",
     ],
     alternates: {
@@ -265,7 +264,7 @@ export default async function KoHomePage({
               name={koSite.name}
               naverUrl={koSite.naverMapUrl}
               kakaoUrl={siteConfig.kakaoMapUrl}
-              fallbackImage="/images/hero/optimized/hill-street-night-1280.webp"
+              address={koSite.address}
             />
           </div>
           <div className="md:order-3 md:col-span-5">

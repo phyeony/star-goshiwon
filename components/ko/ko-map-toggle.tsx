@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 //   NEXT_PUBLIC_NAVER_MAP_KEY  - NAVER Cloud Platform > Maps > Application "Client ID"
 //   NEXT_PUBLIC_KAKAO_MAP_KEY  - Kakao Developers app "JavaScript key"
 // Register the site domains (and http://localhost:3000) with each. Without a key
-// the tab shows a photo with a button that opens that map app instead.
+// the tab shows the address with a button that opens that map app instead.
 
 const NAVER_KEY = process.env.NEXT_PUBLIC_NAVER_MAP_KEY ?? "";
 const KAKAO_KEY = process.env.NEXT_PUBLIC_KAKAO_MAP_KEY ?? "";
@@ -20,7 +20,7 @@ interface Props {
   name: string;
   naverUrl: string;
   kakaoUrl: string;
-  fallbackImage: string;
+  address: string;
 }
 
 declare global {
@@ -58,7 +58,14 @@ function loadScript(provider: Provider): Promise<void> {
   return loaded[provider]!;
 }
 
-export function KoMapToggle({ lat, lng, name, naverUrl, kakaoUrl, fallbackImage }: Props) {
+// A black name tag with a pin tail, used as the marker on both maps.
+function pinHtml(name: string) {
+  return `<div style="transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;pointer-events:none">
+<div style="background:#16181A;color:#fff;font:800 13px/1 Pretendard,-apple-system,sans-serif;padding:8px 12px;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.25)">${name}</div>
+<div style="width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:9px solid #16181A"></div></div>`;
+}
+
+export function KoMapToggle({ lat, lng, name, naverUrl, kakaoUrl, address }: Props) {
   const [provider, setProvider] = useState<Provider>("naver");
   const [failed, setFailed] = useState<Partial<Record<Provider, boolean>>>({});
   const naverRef = useRef<HTMLDivElement>(null);
@@ -78,13 +85,13 @@ export function KoMapToggle({ lat, lng, name, naverUrl, kakaoUrl, fallbackImage 
           const { maps } = window.naver;
           const center = new maps.LatLng(lat, lng);
           const map = new maps.Map(naverRef.current, { center, zoom: 16 });
-          new maps.Marker({ position: center, map, title: name });
+          new maps.Marker({ position: center, map, title: name, icon: { content: pinHtml(name), anchor: new maps.Point(0, 0) } });
         }
         if (provider === "kakao" && kakaoRef.current) {
           const { maps } = window.kakao;
           const center = new maps.LatLng(lat, lng);
           const map = new maps.Map(kakaoRef.current, { center, level: 3 });
-          new maps.Marker({ position: center, map, title: name });
+          new maps.CustomOverlay({ position: center, content: pinHtml(name), map, yAnchor: 0, xAnchor: 0 });
         }
         drawn.current[provider] = true;
       })
@@ -124,12 +131,15 @@ export function KoMapToggle({ lat, lng, name, naverUrl, kakaoUrl, fallbackImage 
         <div ref={naverRef} className={`absolute inset-0 ${provider === "naver" && showMap ? "" : "invisible"}`} />
         <div ref={kakaoRef} className={`absolute inset-0 ${provider === "kakao" && showMap ? "" : "invisible"}`} />
         {!showMap && (
-          <a href={appUrl} target="_blank" rel="noopener noreferrer" className="absolute inset-0 block">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={fallbackImage} alt="고시원 앞 골목" loading="lazy" className="h-full w-full object-cover" />
-            <span className="absolute inset-x-0 bottom-0 flex h-12 items-center justify-center bg-[#16181A]/85 text-sm font-semibold text-white">
-              {appLabel} →
-            </span>
+          <a
+            href={appUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center"
+          >
+            <span dangerouslySetInnerHTML={{ __html: pinHtml(name).replace("transform:translate(-50%,-100%);", "") }} />
+            <span className="text-sm text-[#3A3F43]">{address}</span>
+            <span className="border-b border-[#16181A] pb-0.5 text-sm font-semibold">{appLabel} →</span>
           </a>
         )}
       </div>

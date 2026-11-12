@@ -26,9 +26,8 @@ export const koSite = {
 
 export const koTransit = [
   { place: "1 · 9호선 노량진역, 학원가", time: "15분" },
-  { place: "7호선 상도역", time: "대중교통 15분" },
-  { place: "숭실대학교", time: "도보 15분" },
-  { place: "중앙대학교", time: "버스 10분" },
+  { place: "9호선 노들역", time: "10분" },
+  { place: "7호선 상도역", time: "15분" },
 ];
 
 /** Korean name and one-line feature per room type, keyed by slug. The DB's
