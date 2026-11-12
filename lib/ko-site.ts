@@ -10,6 +10,7 @@ export const koSite = {
   keyword: "노량진 고시원",
   tagline: "노량진 고시원 · 상도역 5분 · 남성 전용",
   address: "서울 동작구 만양로12가길 64",
+  businessNumber: "495-17-00545",
   // 1:1 chat with the KakaoTalk channel. Opens the app on phones.
   kakaoChatUrl: `${siteConfig.kakao.replace(/\/$/, "")}/chat`,
   kakaoChannelUrl: siteConfig.kakao,

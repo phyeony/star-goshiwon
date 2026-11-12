@@ -1,36 +1,33 @@
-import { KoHeader } from "@/components/ko/ko-header";
-import { KoFooter } from "@/components/ko/ko-footer";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { siteConfig, stayTimes } from "@/lib/site-data";
-import { getEconomyTier } from "@/lib/queries";
-import {
-  CURRENT_POLICY_VERSION,
-  ARCHIVED_POLICY_VERSIONS,
-  formatPolicyDate,
-} from "@/lib/policy-versions";
+import { KoHeader } from "@/components/ko/ko-header";
+import { KoFooter } from "@/components/ko/ko-footer";
+import { stayTimes } from "@/lib/site-data";
+import { koSite } from "@/lib/ko-site";
 
-export const dynamic = "force-dynamic";
+// Policy for guests who book through the Korean site (/ko): 계좌이체 in KRW,
+// monthly stays, contact on KakaoTalk. Guests booking through the English site
+// agree to /policies (and its Korean translation at /policies/ko) instead.
+const EFFECTIVE_FROM = "2026년 11월 12일";
 
 export const metadata: Metadata = {
-  title: "이용 약관 (Policies)",
+  title: "이용 약관",
   description:
-    "스타고시원 서울점의 예약, 결제, 취소 및 환불 정책, 하우스 룰, 체크인 안내입니다.",
+    "노량진 고시원 스타고시원의 예약, 계좌이체 결제, 취소 및 환불, 보증금, 하우스 룰 안내입니다.",
   alternates: {
     canonical: "/ko/policy",
-    languages: {
-      en: "/policies",
-      ko: "/ko/policy",
-    },
+    languages: { ko: "/ko/policy", en: "/policies" },
   },
 };
+
+const linkClass = "font-semibold text-[#16181A] underline";
 
 const sections = [
   { id: "booking", label: "예약 및 확정" },
   { id: "payment", label: "결제" },
   { id: "cancellation", label: "취소 및 환불" },
   { id: "changes", label: "일정 변경 및 연장" },
-  { id: "checkin", label: "체크인 / 체크아웃" },
+  { id: "checkin", label: "입실 / 퇴실" },
   { id: "deposit", label: "보증금 및 손해 배상" },
   { id: "house-rules", label: "하우스 룰" },
   { id: "men-only", label: "남성 전용 시설" },
@@ -43,9 +40,7 @@ const sections = [
   { id: "updates", label: "약관 변경" },
 ];
 
-export default async function PoliciesKoPage() {
-  const tier = await getEconomyTier();
-  const discountPct = Math.round(tier.discount * 100);
+export default function KoPolicyPage() {
   return (
     <>
       <KoHeader />
@@ -55,17 +50,14 @@ export default async function PoliciesKoPage() {
           이용 약관
         </h1>
         <p className="mt-2 text-[15px] leading-[1.7] text-[#3A3F43]">
-          예약 전에 반드시 확인해 주세요. 본 페이지의 내용은 스타고시원 서울점의
-          하우스 룰, 결제 방식, 환불 정책을 규정합니다.
+          예약 전에 꼭 확인해 주세요. 스타고시원의 예약, 결제, 환불 방법과
+          하우스 룰을 정합니다.
         </p>
       </div>
 
-      <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-[#5A5F63]">
-          적용 시작일:{" "}
-          <strong>
-            {formatPolicyDate(CURRENT_POLICY_VERSION.effectiveFrom, "ko")}
-          </strong>
+          적용 시작일: <strong>{EFFECTIVE_FROM}</strong>
           . 예약 요청 제출 시 아래 약관에 동의하는 것으로 간주됩니다.
         </p>
         <Link
@@ -76,19 +68,6 @@ export default async function PoliciesKoPage() {
           View in English →
         </Link>
       </div>
-      {ARCHIVED_POLICY_VERSIONS.length > 0 && (
-        <p className="mb-8 text-sm text-[#5A5F63]">
-          {formatPolicyDate(CURRENT_POLICY_VERSION.effectiveFrom, "ko")} 이전에
-          예약하셨나요?{" "}
-          <Link
-            href="/ko/policy/archive"
-            className="font-semibold text-[#16181A] underline"
-          >
-            이전 버전 보기 →
-          </Link>
-        </p>
-      )}
-
       <nav
         aria-label="약관 목차"
         className="mb-10 border-y border-[#16181A] py-5"
@@ -110,317 +89,180 @@ export default async function PoliciesKoPage() {
       <div className="divide-y divide-[#DCDEE0] border-t border-[#DCDEE0]">
         <Section id="booking" title="1. 예약 및 확정">
           <p>
-            모든 숙박은{" "}
-            <Link
-              href="/request-to-book"
-              className="font-semibold text-[#16181A] underline"
-            >
-              예약 요청 페이지
+            모든 입실은{" "}
+            <Link href="/ko#booking" className={linkClass}>
+              예약 요청
             </Link>
-            에서 신청하며, 요청만으로는 결제가 발생하지 않으며 객실이 확보되지
-            않습니다. 모든 요청은 담당자가 검토 후 {siteConfig.responseTime}{" "}
-            이내에 답변드립니다.
+            으로 신청합니다. 요청만으로는 결제되지 않으며 방이 확보되지도
+            않습니다. 빈 방을 확인한 뒤 남겨주신 휴대폰 번호(카카오톡)로
+            연락드립니다.
           </p>
-          <ul className="list-disc pl-6 space-y-1.5">
-            <li>요청 승인 후 발송된 PayPal 결제 링크에서 선결제가 완료된 시점에 예약이 확정됩니다.</li>
+          <ul className="list-disc space-y-1.5 pl-6">
             <li>
-              결제 링크 발송 후 <strong>48시간 이내</strong>에 결제가
-              이루어지지 않을 경우, 해당 객실은 다른 손님에게 안내될 수
-              있습니다.
+              안내드린 계좌로 <strong>첫 달 이용료와 보증금 입금이 확인된 때</strong>{" "}
+              예약이 확정됩니다.
             </li>
             <li>
-              객실 미확보, 최소 숙박일 미달, 신원 확인 불가 등의 사유로 요청이
-              반려될 수 있습니다.
+              입금 안내 후 <strong>48시간 이내</strong>에 입금되지 않으면 방이
+              다른 분께 안내될 수 있습니다.
             </li>
             <li>
-              최소 숙박 기간은 <strong>7일 (1주)</strong>입니다.
+              빈 방이 없거나, 최소 이용 기간에 못 미치거나, 신원 확인이 되지
+              않으면 요청을 받지 못할 수 있습니다.
+            </li>
+            <li>
+              최소 이용 기간은 <strong>1개월</strong>입니다.
             </li>
           </ul>
         </Section>
 
         <Section id="payment" title="2. 결제">
           <p>
-            모든 금액은 <strong>USD(미국 달러) 기준으로 PayPal을 통해 결제</strong>
-            됩니다. 사이트에 표시된 원화(₩) 금액은 현재 환율 기준의 참고
-            금액입니다. PayPal 계정 없이 카드 결제가 표시될 수 있으나, 해당
-            옵션은 손님의 위치, PayPal 계정 설정 및 PayPal의 위험 심사에 따라
-            달라질 수 있습니다.
+            모든 금액은 <strong>원화(₩)로, 계좌이체로 받습니다</strong>. 입금
+            계좌와 금액은 예약 요청을 확인한 뒤 카카오톡으로 안내드립니다.
+            안내받은 계좌가 아닌 곳으로는 입금하지 마세요.
           </p>
-          <p>
-            <strong>모든 금액은 예약 승인 후 PayPal 결제 링크로 선결제됩니다</strong> —
-            체크인 시 별도의 현금 결제는 없습니다. 한 번의 PayPal 결제로 다음
-            항목이 모두 처리됩니다:
-          </p>
-          <ul className="list-disc pl-6 space-y-1.5">
-            <li>전체 숙박 객실료 (4주 이상 숙박 시 {discountPct}% 할인 적용 후 금액).</li>
+          <ul className="list-disc space-y-1.5 pl-6">
             <li>
-              <strong>침구 세트 (선택, $15)</strong> — 추가하지 않을 경우
-              침구는 제공되지 않습니다.
+              <strong>입실 전:</strong> 첫 달 이용료와 보증금을 함께 입금합니다.
             </li>
             <li>
-              환불 가능한 <strong>$70 보증금</strong> (약 ₩100,000) — 손해
-              배상 및 미납 요금을 위한 담보입니다. 객실에 손상이 없는 경우,{" "}
-              <strong>퇴실 후 PayPal을 통해</strong> 결제하신 동일 계정으로
-              전액 환불해 드립니다. 자세한 내용은{" "}
-              <a href="#deposit" className="font-semibold text-[#16181A] underline">
-                보증금 및 손해 배상
-              </a>
-              {" "}항목을 참고해 주세요.
+              <strong>이용 중:</strong> 다음 달 이용료는 매달 입실일과 같은
+              날짜 전까지 미리 입금합니다.
             </li>
             <li>
-              저희는 카드 정보를 저장하지 않습니다. 모든 결제는 PayPal에서
-              처리됩니다.
+              월 이용료에 전기, 수도, 가스, 인터넷이 포함됩니다. 입실할 때 따로
+              내는 현금은 없습니다.
             </li>
-            <li>
-              은행 또는 카드사가 부과하는 환전 수수료는 환불 대상이 아닙니다.
-            </li>
-            <li>
-              보증금 결제와 환불 사이의 환율 변동은 보상되지 않습니다 — 모든
-              결제와 환불은 USD로 정산됩니다.
-            </li>
+            <li>현금영수증 발급이 가능합니다. 입금할 때 말씀해 주세요.</li>
+            <li>입금 수수료는 입금하는 분이 부담합니다.</li>
           </ul>
         </Section>
 
-        <Section id="cancellation" title="3. 취소 및 환불 정책">
+        <Section id="cancellation" title="3. 취소 및 환불">
           <p>
-            모든 취소는 서면(이메일{" "}
-            <a
-              href={`mailto:${siteConfig.email}`}
-              className="font-semibold text-[#16181A] underline"
-            >
-              {siteConfig.email}
-            </a>{" "}
-            또는 WhatsApp)으로 접수해 주세요. 취소 시점은 저희가 메시지를
-            수신한 시각(<strong>한국 표준시, KST</strong>) 기준입니다. 아래
-            환불 비율은 <strong>총 객실료(장기 할인 적용 후, 침구비 및
-            보증금 제외)</strong>를 기준으로 적용됩니다.
+            취소는 카카오톡{" "}
+            <a href={koSite.kakaoChatUrl} target="_blank" rel="noopener noreferrer" className={linkClass}>
+              1:1 채팅
+            </a>
+            으로 알려주세요. 취소 시점은 저희가 메시지를 받은 시각(한국 시간)
+            기준입니다. 아래 환불 비율은 <strong>입금하신 이용료</strong>에
+            적용되며, 보증금은 포함되지 않습니다.
           </p>
 
-          <h3 className="mb-3 mt-6 text-base font-extrabold text-[#16181A]">
-            체크인 전 취소
-          </h3>
-          <div className="overflow-x-auto -mx-2 sm:mx-0">
-            <table className="w-full text-sm border-collapse">
+          <h3 className="mb-3 mt-6 text-base font-extrabold text-[#16181A]">입실 전 취소</h3>
+          <div className="-mx-2 overflow-x-auto sm:mx-0">
+            <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="border-y border-[#16181A] bg-[#F3F4F5]">
-                  <th className="px-3 py-2 text-left font-semibold">
-                    취소 시점
-                  </th>
-                  <th className="px-3 py-2 text-left font-semibold">
-                    객실료 환불 비율
-                  </th>
+                  <th className="px-3 py-2 text-left font-semibold">취소 시점</th>
+                  <th className="px-3 py-2 text-left font-semibold">이용료 환불</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#DCDEE0]">
-                <tr>
-                  <td className="px-3 py-3 align-top">
-                    체크인 <strong>30일 이상 전</strong>
-                  </td>
-                  <td className="px-3 py-3 align-top text-[#3A3F43]">
-                    <strong>100%</strong>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="px-3 py-3 align-top">
-                    체크인 <strong>15~29일 전</strong>
-                  </td>
-                  <td className="px-3 py-3 align-top text-[#3A3F43]">
-                    <strong>90%</strong> (10% 행정 수수료)
-                  </td>
-                </tr>
-                <tr>
-                  <td className="px-3 py-3 align-top">
-                    체크인 <strong>8~14일 전</strong>
-                  </td>
-                  <td className="px-3 py-3 align-top text-[#3A3F43]">
-                    <strong>70%</strong>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="px-3 py-3 align-top">
-                    체크인 <strong>1~7일 전</strong>
-                  </td>
-                  <td className="px-3 py-3 align-top text-[#3A3F43]">
-                    <strong>50%</strong>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="px-3 py-3 align-top">
-                    <strong>체크인 당일 / 노쇼</strong>
-                  </td>
-                  <td className="px-3 py-3 align-top text-[#3A3F43]">
-                    <strong>0%</strong>
-                  </td>
-                </tr>
+                {[
+                  ["입실 30일 이상 전", "100%"],
+                  ["입실 15~29일 전", "90%"],
+                  ["입실 8~14일 전", "70%"],
+                  ["입실 1~7일 전", "50%"],
+                  ["입실 당일 / 연락 없이 오지 않음", "0%"],
+                ].map(([when, pct]) => (
+                  <tr key={when}>
+                    <td className="px-3 py-3 align-top">{when}</td>
+                    <td className="px-3 py-3 align-top font-semibold">{pct}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
           <p className="mt-3 text-sm text-[#5A5F63]">
-            <strong>$70 보증금은 어떤 경우에도 100% 환불됩니다</strong> —
-            취소 시 객실료 공제 후 보증금 전액과 함께 PayPal로 환불해
-            드립니다.
+            <strong>보증금은 입실 전 취소라면 언제든 전액 돌려드립니다.</strong>
           </p>
 
-          <h3 className="mb-3 mt-8 text-base font-extrabold text-[#16181A]">
-            입실 후 조기 퇴실
-          </h3>
-          <p>
-            체크인 이후에는 객실료가 <strong>환불되지 않습니다</strong>.
-            어떠한 사유로든 조기 퇴실 시 잔여 숙박일은 환불되지 않으며, 객실료의
-            일부도 반환되지 않습니다.
-          </p>
-          <ul className="list-disc pl-6 space-y-1.5 mt-3">
+          <h3 className="mb-3 mt-8 text-base font-extrabold text-[#16181A]">입실 후 중도 퇴실</h3>
+          <ul className="list-disc space-y-1.5 pl-6">
             <li>
-              <strong>$70 보증금</strong>은 영향을 받지 않으며, 객실에 손상이
-              없고 청결하게 정리된 경우 퇴실 후 PayPal로 전액 환불됩니다.
-              자세한 내용은{" "}
-              <a href="#deposit" className="font-semibold text-[#16181A] underline">
-                보증금 및 손해 배상
-              </a>
-              {" "}항목을 참고해 주세요.
+              이미 시작된 달의 이용료는 <strong>돌려드리지 않습니다</strong>.
             </li>
             <li>
-              증빙 가능한 의료 응급 상황, 불가항력, 기타 본인의 통제 범위를
-              벗어난 중대한 사유는 사안별로 검토됩니다. {" "}
-              <a href="#force-majeure" className="font-semibold text-[#16181A] underline">
+              다음 달을 이어서 쓰지 않으려면 <strong>퇴실 7일 전까지</strong>{" "}
+              알려주세요. 미리 입금하신 다음 달 이용료가 있다면 전액
+              돌려드립니다.
+            </li>
+            <li>
+              병원 입원 등 증빙할 수 있는 급한 사정이나{" "}
+              <a href="#force-majeure" className={linkClass}>
                 불가항력
               </a>
-              {" "}항목을 참고해 주세요.
+              에 해당하면 따로 검토합니다.
             </li>
           </ul>
 
-          <h3 className="mb-3 mt-8 text-base font-extrabold text-[#16181A]">
-            환불 불가 항목
-          </h3>
-          <ul className="list-disc pl-6 space-y-1.5">
+          <h3 className="mb-3 mt-8 text-base font-extrabold text-[#16181A]">환불 방법</h3>
+          <ul className="list-disc space-y-1.5 pl-6">
+            <li>모든 환불은 알려주신 본인 명의 계좌로 이체합니다.</li>
             <li>
-              침구가 준비, 개봉, 또는 사용된 후의{" "}
-              <strong>$15 침구 비용</strong>.
-            </li>
-            <li>
-              PayPal 및 카드사 결제 수수료, 은행의 환전 스프레드, 결제 처리
-              과정에서 원천 징수된 현지 세금.
-            </li>
-            <li>이미 제공된 부가 서비스 (예: 공항 픽업).</li>
-          </ul>
-
-          <h3 className="mb-3 mt-8 text-base font-extrabold text-[#16181A]">
-            환불 방법 및 지급 시기
-          </h3>
-          <ul className="list-disc pl-6 space-y-1.5">
-            <li>
-              취소 환불과 보증금 환불을 포함한 <strong>모든 환불은 PayPal</strong>을
-              통해 결제하신 동일 계정 또는 카드로 지급됩니다. 현금 환불은
-              제공되지 않습니다.
-            </li>
-            <li>
-              보증금 환불은 객실 점검 후{" "}
-              <strong>퇴실일로부터 영업일 기준 3일 이내</strong>에 PayPal에서
-              개시됩니다.
-            </li>
-            <li>
-              PayPal 정산은 일반적으로 <strong>영업일 기준 5~10일</strong>이
-              소요되며, 은행에 따라 추가 시간이 걸릴 수 있습니다.
-            </li>
-            <li>
-              모든 결제와 환불은 <strong>USD</strong>로 정산됩니다. 결제와 환불
-              시점 간의 환율 변동은 보상되지 않습니다.
+              취소 환불은 취소 확인 후 <strong>영업일 기준 3일 이내</strong>에
+              보내드립니다.
             </li>
           </ul>
-
-          <h3 className="mb-3 mt-8 text-base font-extrabold text-[#16181A]">
-            예외적인 상황
-          </h3>
-          <p>
-            의료 응급 상황, 비자 거부, 기타 본인의 통제 범위를 벗어난 중대한
-            사유의 경우, 가능한 한 빨리 연락 주십시오. 증빙 서류를 제출해
-            주시면 사안별로 검토하여 패널티를 면제하는 경우가 많습니다. {" "}
-            <a href="#force-majeure" className="font-semibold text-[#16181A] underline">
-              불가항력
-            </a>
-            {" "}항목도 함께 참고해 주세요.
-          </p>
         </Section>
 
         <Section id="changes" title="4. 일정 변경 및 연장">
-          <ul className="list-disc pl-6 space-y-1.5">
+          <ul className="list-disc space-y-1.5 pl-6">
             <li>
-              <strong>체크인 전 일정 변경:</strong> 체크인 7일 이상 전이고
-              새 일정에 객실이 가능한 경우 무료로 변경됩니다. 체크인 7일
-              이내인 경우, 객실을 다른 손님에게 재배정하지 않고도 변경 가능한
-              경우를 제외하면 위의 취소 일정에 따라 처리됩니다.
+              <strong>입실일 변경:</strong> 입실 7일 이상 전이고 바뀐 날짜에 빈
+              방이 있으면 무료로 바꿔드립니다. 7일 이내라면 다른 분께 방을
+              안내하지 않고 바꿀 수 있는 경우가 아니면 위의 취소 기준을
+              따릅니다.
             </li>
             <li>
-              <strong>숙박 연장:</strong> 예정된 체크아웃일 최소 7일 전에
-              연락 주세요. 연장은 객실 가능 여부와 해당 기간의 요금에 따라
-              결정됩니다.
-            </li>
-            <li>
-              연장으로 인해 총 숙박 기간이 4주 이상이 되는 경우, {discountPct}%
-              장기 할인이 전체 숙박에 소급 적용됩니다.
+              <strong>연장:</strong> 퇴실 예정일 7일 전까지 알려주세요. 빈 방
+              여부와 그때의 요금에 따라 정해집니다.
             </li>
           </ul>
         </Section>
 
-        <Section id="checkin" title="5. 체크인 / 체크아웃">
-          <ul className="list-disc pl-6 space-y-1.5">
+        <Section id="checkin" title="5. 입실 / 퇴실">
+          <ul className="list-disc space-y-1.5 pl-6">
             <li>
-              <strong>체크인:</strong> {stayTimes.checkInKo}.
+              <strong>입실:</strong> {stayTimes.checkInKo}부터.
             </li>
             <li>
-              <strong>늦은 도착:</strong> 가능한 한 빨리 알려주세요.
+              <strong>퇴실:</strong> 퇴실일 {stayTimes.checkOutKo}까지.
             </li>
+            <li>시간이 맞지 않거나 늦게 도착하면 미리 카카오톡으로 알려주세요.</li>
             <li>
-              <strong>체크아웃:</strong> 출발일 {stayTimes.checkOutKo}까지.
+              입실할 때 <strong>신분증</strong>(주민등록증, 운전면허증 등)으로
+              본인 확인을 합니다.
             </li>
-            <li>
-              체크인은 <strong>셀프 체크인</strong>입니다. 맞이하는 프런트
-              데스크가 없으므로 신원 확인은 반드시{" "}
-              <strong>도착 전에</strong> 완료되어야 합니다.
-            </li>
-            <li>
-              도착 전에 <strong>여권</strong>과{" "}
-              <strong>유효한 대한민국 비자</strong>(또는 무비자 입국 도장 등
-              합법적 체류를 증명하는 자료)의 선명한 사진을 보내주세요. 서류
-              확인은 예약 승인의 조건이며, 한국의 외국인 투숙객 등록 의무
-              이행을 위해 필요합니다.
-            </li>
-            <li>
-              개인 방키는 체크인 시 발급되며 체크아웃 시 반환해 주셔야 합니다.{" "}
-              <strong>체크인 시 별도의 현금 결제는 없습니다</strong> — 모든
-              금액은 이미 PayPal로 결제 완료된 상태입니다.
-            </li>
+            <li>방 열쇠는 입실할 때 드리며, 퇴실할 때 돌려주셔야 합니다.</li>
           </ul>
         </Section>
 
         <Section id="deposit" title="6. 보증금 및 손해 배상">
-          <ul className="list-disc pl-6 space-y-1.5">
+          <ul className="list-disc space-y-1.5 pl-6">
             <li>
-              <strong>$70 보증금</strong> (약 ₩100,000)은 예약 확정 시
-              객실료와 함께 <strong>PayPal로 선결제</strong>됩니다. 손해
-              배상, 분실 물품, 미납 요금에 대한 담보로 보관됩니다.
+              보증금은 방 페이지에 안내된 금액이며, 첫 달 이용료와 함께
+              입금합니다. 방 손상, 분실 물품, 밀린 이용료에 대한 담보로
+              보관합니다.
             </li>
             <li>
-              객실에 손상이 없고, 모든 키 및 비품이 반환되며, 객실이 적절한
-              상태로 정리된 경우, 퇴실 후{" "}
-              <strong>영업일 기준 5일 이내</strong>에 결제하신 동일 계정으로{" "}
-              <strong>PayPal을 통해 전액 환불</strong>됩니다. PayPal과
-              은행 처리 시간을 합하여 통상 환불 개시 후 영업일 기준 5~10일
-              내에 입금됩니다.
+              퇴실하는 날 방 상태를 확인하고, 손상이 없고 열쇠와 비품이 모두
+              반환되었다면 <strong>본인 명의 계좌로 바로 전액</strong>{" "}
+              돌려드립니다. 늦어도 <strong>영업일 기준 3일 이내</strong>에
+              보내드립니다.
             </li>
             <li>
-              공제가 발생하는 경우 서면으로 항목별 안내드립니다. 예시: 가구
-              파손 또는 분실, 벽이나 비품 손상, 과도한 청소가 필요한 상태,
-              실내 흡연 등.
+              공제할 금액이 있으면 사진과 함께 항목별로 먼저 알려드립니다. 예:
+              가구 파손이나 분실, 벽이나 비품 손상, 과도한 청소가 필요한 상태,
+              실내 흡연.
             </li>
+            <li>수리나 교체 비용이 보증금보다 크면 차액은 따로 청구합니다.</li>
             <li>
-              수리 또는 교체 비용이 보증금을 초과할 경우 차액은 별도로
-              청구됩니다. 손상 사진은 공제 확정 전에 손님에게 전달됩니다.
-            </li>
-            <li>
-              체크아웃을 이행하지 않는 경우 (객실 무단 방치, 예정된 체크아웃
-              일로부터 7일 이내 연락 두절), 청소비, 키 교체비, 잔여 물품 처리
-              비용을 위해 보증금이 전액 차감될 수 있습니다.
+              퇴실 절차 없이 방을 비우고 퇴실 예정일로부터 7일 넘게 연락이
+              안 되면, 청소비, 열쇠 교체비, 남은 물품 처리 비용으로 보증금이
+              차감될 수 있습니다.
             </li>
           </ul>
         </Section>
@@ -470,8 +312,8 @@ export default async function PoliciesKoPage() {
 
         <Section id="men-only" title="8. 남성 전용 시설">
           <p>
-            스타고시원 서울점은 <strong>남성 전용</strong> 시설입니다. 모든
-            예약은 남성 손님만 가능하며, 객실의 공유, 전대(서브리스), 양도는
+            스타고시원은 <strong>남성 전용</strong> 시설입니다. 남성만 입실할
+            수 있으며, 객실의 공유, 전대(서브리스), 양도는
             불가능합니다. 이는 한국 대부분의 고시원이 공용 욕실 안전 및
             프라이버시를 위해 성별로 건물이나 층을 분리 운영하는 일반적인
             관행에 따른 것입니다.
@@ -487,8 +329,8 @@ export default async function PoliciesKoPage() {
             </li>
             <li>
               건물의 화재 및 구조적 위험에 대한 일반 보험에 가입되어 있으나,
-              이는 손님의 개인 물품을 보장하지 않습니다. 별도의 여행자 보험
-              가입을 권장합니다.
+              이는 손님의 개인 물품을 보장하지 않습니다. 별도의 보험
+              가입을 권합니다.
             </li>
             <li>
               손님(또는 방문객)이 객실, 공용 시설, 다른 입주자의 물품에 끼친
@@ -577,7 +419,7 @@ export default async function PoliciesKoPage() {
             </li>
           </ol>
           <p>
-            물품을 폐기하기 전에 등록된 이메일과 전화번호로 합리적인 범위에서
+            물품을 폐기하기 전에 남겨주신 휴대폰 번호와 카카오톡으로
             연락을 시도합니다.
           </p>
         </Section>
@@ -588,32 +430,33 @@ export default async function PoliciesKoPage() {
             48시간 이내에 복구 불가능한 건물 전체 단전·단수 등 합리적
             통제 범위를 벗어난 사유로 숙박이 불가능하거나 단축될 경우,
             사용하지 않은 숙박일에 대한 요금을 표준 취소 패널티 없이 원가
-            기준으로 환불해 드립니다. 항공편, 비자, 대체 숙소 등 부수적
+            기준으로 환불해 드립니다. 이사, 대체 숙소 등 부수적
             비용에 대해서는 책임지지 않습니다.
           </p>
         </Section>
 
         <Section id="privacy" title="14. 개인정보 처리">
-          <ul className="list-disc pl-6 space-y-1.5">
+          <ul className="list-disc space-y-1.5 pl-6">
             <li>
-              예약 신청을 통해 제출하신 정보(이름, 연락처, 일정, 체크인 시
-              여권 사본)는 예약 관리, 외국인 투숙객 등록 의무 이행, 숙박 관련
-              연락 목적으로만 사용됩니다.
+              <strong>수집 항목:</strong> 이름, 휴대폰 번호, 입실 희망일과 기간,
+              요청 사항. 입실할 때는 신분증으로 본인 확인을 하고, 환불을 위해
+              계좌 정보를 받습니다.
             </li>
             <li>
-              개인정보를 마케팅 목적으로 제3자에게 판매하거나 공유하지
-              않습니다. 결제 정보는 PayPal의 자체 개인정보 처리 방침에 따라
-              처리되며, 저희는 손님의 카드 번호 전체를 확인할 수 없습니다.
+              <strong>이용 목적:</strong> 예약 문의 답변, 빈 방 및 입금 안내,
+              입실 관리, 보증금 환불.
             </li>
             <li>
-              숙박 종료 후 예약 정보 삭제를 원하시는 경우{" "}
-              <a
-                href={`mailto:${siteConfig.email}`}
-                className="font-semibold text-[#16181A] underline"
-              >
-                {siteConfig.email}
+              <strong>보유 기간:</strong> 문의 처리 후 1년. 입실한 경우 계약 및
+              세금 관련 법령이 정한 기간 동안 보관합니다.
+            </li>
+            <li>개인정보를 마케팅 목적으로 다른 곳에 팔거나 넘기지 않습니다.</li>
+            <li>
+              열람이나 삭제를 원하시면 카카오톡{" "}
+              <a href={koSite.kakaoChatUrl} target="_blank" rel="noopener noreferrer" className={linkClass}>
+                1:1 채팅
               </a>
-              로 요청해 주세요. 단, 법령상 보관 의무가 있는 자료는 제외됩니다.
+              으로 요청해 주세요. 법령상 보관해야 하는 자료는 제외됩니다.
             </li>
           </ul>
         </Section>

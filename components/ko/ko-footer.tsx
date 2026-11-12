@@ -8,6 +8,7 @@ export function KoFooter() {
         <div>
           <div className="mb-1 text-[15px] font-extrabold text-[#16181A]">스타고시원</div>
           <div>{koSite.address}</div>
+          <div>사업자등록번호 {koSite.businessNumber}</div>
           <a href={koSite.kakaoChannelUrl} target="_blank" rel="noopener noreferrer" className="underline">
             카카오톡 채널
           </a>

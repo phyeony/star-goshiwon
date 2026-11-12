@@ -402,7 +402,7 @@ function priceFields(
 
 function policyUrl(lang: BaseLang): string {
   return lang === "ko"
-    ? `${siteConfig.url}/ko/policy`
+    ? `${siteConfig.url}/policies/ko`
     : `${siteConfig.url}/policies`;
 }
 
