@@ -11,6 +11,8 @@ import {
 import { PhotoUploader } from "./photo-uploader";
 import { RoomUnitSelect, unitRank } from "./photo-room-unit";
 import { PhotoSectionEditor } from "./photo-section-editor";
+import { downloadPhotos } from "./photo-download";
+import { PhotoViewer } from "./photo-viewer";
 
 const LIBRARY_TAB = "library";
 
@@ -148,6 +150,7 @@ export function PhotoManager({
           photos={photos}
           roomUnits={roomUnits}
           usage={usage}
+          sectionTitles={initialSections.map((s) => s.title)}
           onUploaded={addUploaded}
           onChanged={replacePhoto}
           onDeleted={removePhoto}
@@ -161,6 +164,7 @@ function PhotoLibrary({
   photos,
   roomUnits,
   usage,
+  sectionTitles,
   onUploaded,
   onChanged,
   onDeleted,
@@ -168,18 +172,25 @@ function PhotoLibrary({
   photos: AdminPhoto[];
   roomUnits: AdminRoomUnit[];
   usage: Map<string, string[]>;
+  sectionTitles: string[];
   onUploaded: (photo: SitePhoto) => void;
   onChanged: (photo: SitePhoto) => void;
   onDeleted: (id: string) => void;
 }) {
-  const [filter, setFilter] = useState<"all" | "unused">("all");
+  // "all", "unused", or a section title (photos shown in that section).
+  const [filter, setFilter] = useState<string>("all");
+  const [viewingId, setViewingId] = useState<string | null>(null);
   // "all", "" (no room number) or a room_units id.
   const [unitFilter, setUnitFilter] = useState("all");
   const [sort, setSort] = useState<"recent" | "room">("recent");
   const rankOf = useMemo(() => unitRank(roomUnits), [roomUnits]);
 
   const shown = photos
-    .filter((p) => filter === "all" || !usage.get(p.id)?.length)
+    .filter((p) => {
+      if (filter === "all") return true;
+      const usedIn = usage.get(p.id) ?? [];
+      return filter === "unused" ? usedIn.length === 0 : usedIn.includes(filter);
+    })
     .filter((p) => unitFilter === "all" || (p.room_unit_id ?? "") === unitFilter);
   if (sort === "room") {
     // Stable sort keeps newest-first within each room number.
@@ -187,17 +198,64 @@ function PhotoLibrary({
   }
   const unusedCount = photos.filter((p) => !usage.get(p.id)?.length).length;
 
+  const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  const [downloading, setDownloading] = useState<string | null>(null);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+  const unitName = useMemo(() => new Map(roomUnits.map((u) => [u.id, u.name])), [roomUnits]);
+  // Deleted photos drop out of the selection.
+  const selectedPhotos = photos.filter((p) => selected.has(p.id));
+  const allShownSelected = shown.length > 0 && shown.every((p) => selected.has(p.id));
+
+  function toggle(id: string) {
+    setDownloadError(null);
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAllShown() {
+    setDownloadError(null);
+    setSelected((prev) => {
+      const next = new Set(prev);
+      for (const p of shown) {
+        if (allShownSelected) next.delete(p.id);
+        else next.add(p.id);
+      }
+      return next;
+    });
+  }
+
+  async function download() {
+    setDownloadError(null);
+    setDownloading(`0/${selectedPhotos.length}`);
+    try {
+      const failed = await downloadPhotos(selectedPhotos, unitName, (done, total) =>
+        setDownloading(`${done}/${total}`)
+      );
+      if (failed > 0) setDownloadError(`${failed}장은 받지 못했어요. 나머지는 받았어요.`);
+    } catch {
+      setDownloadError("다운로드하지 못했어요. 다시 시도해 주세요.");
+    } finally {
+      setDownloading(null);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <PhotoUploader onUploaded={onUploaded} />
 
       <div className="flex flex-wrap items-center gap-2">
-        {(
-          [
-            ["all", `전체 ${photos.length}`],
-            ["unused", `사용 안 함 ${unusedCount}`],
-          ] as const
-        ).map(([value, label]) => (
+        {[
+          ["all", `전체 ${photos.length}`],
+          ["unused", `사용 안 함 ${unusedCount}`],
+          ...sectionTitles.map((title) => [
+            title,
+            `${title} ${photos.filter((p) => usage.get(p.id)?.includes(title)).length}`,
+          ]),
+        ].map(([value, label]) => (
           <button
             key={value}
             type="button"
@@ -229,9 +287,67 @@ function PhotoLibrary({
         </select>
       </div>
 
+      {shown.length > 0 && (
+        <div
+          className={`sticky top-16 z-10 -mx-4 flex flex-wrap items-center justify-between gap-3 border-y px-4 py-2.5 backdrop-blur sm:mx-0 sm:rounded-2xl sm:border ${
+            selectedPhotos.length > 0 ? "border-indigo-200 bg-indigo-50/95" : "border-gray-200 bg-white/95"
+          }`}
+          data-testid="selection-bar"
+        >
+          <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-gray-900">
+            <input
+              type="checkbox"
+              checked={allShownSelected}
+              ref={(el) => {
+                if (el) el.indeterminate = !allShownSelected && shown.some((p) => selected.has(p.id));
+              }}
+              onChange={toggleAllShown}
+              className="h-5 w-5 cursor-pointer accent-indigo-600"
+              data-testid="select-all-shown"
+            />
+            <span>
+              {allShownSelected ? "모두 선택됨" : "모두 선택"}{" "}
+              <span className="font-normal text-gray-500">
+                {selectedPhotos.length > 0 ? `${selectedPhotos.length}장 선택 · ` : ""}
+                {shown.length}장 보는 중
+              </span>
+            </span>
+          </label>
+          <div className="flex items-center gap-2">
+            {downloadError && <span className="text-sm text-red-600">{downloadError}</span>}
+            {selectedPhotos.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setSelected(new Set())}
+                disabled={downloading !== null}
+                className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                선택 해제
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={download}
+              disabled={downloading !== null || selectedPhotos.length === 0}
+              className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 disabled:opacity-40"
+            >
+              {downloading
+                ? `받는 중… ${downloading}`
+                : selectedPhotos.length > 1
+                  ? `다운로드 (ZIP)`
+                  : "다운로드"}
+            </button>
+          </div>
+        </div>
+      )}
+
       {shown.length === 0 ? (
         <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center text-gray-500">
-          {filter === "unused" ? "모든 사진이 사이트에 쓰이고 있어요." : "아직 사진이 없어요."}
+          {filter === "unused"
+            ? "모든 사진이 사이트에 쓰이고 있어요."
+            : photos.length === 0
+              ? "아직 사진이 없어요."
+              : "조건에 맞는 사진이 없어요."}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -241,11 +357,27 @@ function PhotoLibrary({
               photo={photo}
               roomUnits={roomUnits}
               usedIn={usage.get(photo.id) ?? []}
+              selected={selected.has(photo.id)}
+              onToggle={() => toggle(photo.id)}
+              onOpen={() => setViewingId(photo.id)}
               onChanged={onChanged}
               onDeleted={onDeleted}
             />
           ))}
         </div>
+      )}
+
+      {viewingId && shown.some((p) => p.id === viewingId) && (
+        <PhotoViewer
+          photos={shown}
+          currentId={viewingId}
+          unitName={unitName}
+          usage={usage}
+          selected={selected}
+          onToggle={toggle}
+          onNavigate={setViewingId}
+          onClose={() => setViewingId(null)}
+        />
       )}
     </div>
   );
@@ -255,12 +387,18 @@ function LibraryCard({
   photo,
   roomUnits,
   usedIn,
+  selected,
+  onToggle,
+  onOpen,
   onChanged,
   onDeleted,
 }: {
   photo: AdminPhoto;
   roomUnits: AdminRoomUnit[];
   usedIn: string[];
+  selected: boolean;
+  onToggle: () => void;
+  onOpen: () => void;
   onChanged: (photo: SitePhoto) => void;
   onDeleted: (id: string) => void;
 }) {
@@ -333,16 +471,42 @@ function LibraryCard({
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm" data-testid="library-card">
-      <a href={photo.src} target="_blank" rel="noreferrer" className="block bg-gray-100">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={thumbSrc(photo, 640)}
-          alt={photo.caption_ko || photo.caption_en || ""}
-          loading="lazy"
-          className="aspect-[4/3] w-full object-cover"
-        />
-      </a>
+    <div
+      className={`overflow-hidden rounded-2xl border bg-white shadow-sm ${
+        selected ? "border-indigo-500 ring-2 ring-indigo-500" : "border-gray-200"
+      }`}
+      data-testid="library-card"
+    >
+      <div className="relative">
+        <button
+          type="button"
+          onClick={onOpen}
+          aria-label="크게 보기"
+          className="block w-full cursor-zoom-in bg-gray-100"
+          data-testid="open-photo"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={thumbSrc(photo, 640)}
+            alt={photo.caption_ko || photo.caption_en || ""}
+            loading="lazy"
+            className="aspect-[4/3] w-full object-cover"
+          />
+        </button>
+        <label
+          className="absolute left-2 top-2 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-white/90 shadow"
+          title="선택"
+        >
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={onToggle}
+            aria-label="사진 선택"
+            className="h-5 w-5 cursor-pointer accent-indigo-600"
+            data-testid="select-photo"
+          />
+        </label>
+      </div>
       <div className="space-y-2 p-3">
         <div className="flex flex-wrap gap-1">
           {usedIn.length ? (
