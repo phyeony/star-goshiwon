@@ -139,7 +139,11 @@ export default async function AdminRequestsPage({
 	                        href={`/admin/requests/${req.id}`}
 	                        className="block px-6 py-4 text-sm font-medium text-gray-900"
 	                      >
-	                        {formatUSD(req.estimated_total)}
+	                        {req.locale === "ko"
+	                          ? req.estimated_total_krw != null
+	                            ? `₩${req.estimated_total_krw.toLocaleString("ko-KR")}`
+	                            : "-"
+	                          : formatUSD(req.estimated_total)}
 	                      </Link>
 	                    </td>
 	                    <td className="p-0">

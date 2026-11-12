@@ -78,10 +78,15 @@ export interface BookingRequest {
   guest_name: string;
   guest_email: string; // '' for Korean-site requests (they leave a phone number)
   // Which site the request came from. 'ko' requests come from /ko and are
-  // answered on KakaoTalk; guest_phone and stay_months are set for them.
+  // answered by phone/SMS; guest_phone and stay_months are set for them.
   locale?: BookingLocale;
   guest_phone?: string;
   stay_months?: number | null;
+  // Korean requests only: KRW prices at the time of the request. Korean stays
+  // are paid monthly by bank transfer, so estimated_total (USD) stays 0.
+  monthly_rate_krw?: number | null;
+  deposit_krw?: number | null;
+  estimated_total_krw?: number | null;
   guest_count: number;
   room_id: string | null;
   assigned_room_unit_id: string | null;
@@ -369,6 +374,11 @@ export type BookingRequestInsert = {
   guest_phone?: string;
   locale?: BookingLocale;
   stay_months?: number | null;
+  // Korean requests only: KRW prices at the time of the request. Korean stays
+  // are paid monthly by bank transfer, so estimated_total (USD) stays 0.
+  monthly_rate_krw?: number | null;
+  deposit_krw?: number | null;
+  estimated_total_krw?: number | null;
   guest_count?: number;
   room_id?: string | null;
   assigned_room_unit_id?: string | null;

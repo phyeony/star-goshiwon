@@ -180,12 +180,31 @@ export default async function RequestDetailPage({ params }: Props) {
                 <dt className="text-xs font-bold text-gray-500 uppercase">
                   예상 총액
                 </dt>
-                <dd className="text-2xl font-extrabold text-gray-900 mt-1">
-                  {formatUSD(request.estimated_total)}
-                  <span className="ml-3 text-base font-normal text-gray-500">
-                    {formatApproxKRW(request.estimated_total)}
-                  </span>
-                </dd>
+                {request.locale === "ko" ? (
+                  <dd className="mt-1 text-gray-900">
+                    <span className="text-2xl font-extrabold">
+                      {request.estimated_total_krw != null
+                        ? `₩${request.estimated_total_krw.toLocaleString("ko-KR")}`
+                        : "가격 미입력"}
+                    </span>
+                    <span className="mt-1 block text-sm text-gray-500">
+                      {request.monthly_rate_krw != null
+                        ? `월 ₩${request.monthly_rate_krw.toLocaleString("ko-KR")} × ${request.stay_months ?? 1}개월`
+                        : ""}
+                      {request.deposit_krw != null
+                        ? ` · 보증금 ₩${request.deposit_krw.toLocaleString("ko-KR")} 별도`
+                        : ""}
+                      {" · 매달 계좌이체 (PayPal 아님)"}
+                    </span>
+                  </dd>
+                ) : (
+                  <dd className="text-2xl font-extrabold text-gray-900 mt-1">
+                    {formatUSD(request.estimated_total)}
+                    <span className="ml-3 text-base font-normal text-gray-500">
+                      {formatApproxKRW(request.estimated_total)}
+                    </span>
+                  </dd>
+                )}
               </div>
               <div>
                 <dt className="text-xs font-bold text-gray-500 uppercase">

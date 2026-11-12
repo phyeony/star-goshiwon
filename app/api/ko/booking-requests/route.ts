@@ -6,6 +6,7 @@ import { getPostHogClient } from "@/lib/posthog-server";
 import {
   addMonths,
   koRoomName,
+  koSite,
   normalizeKoreanMobile,
 } from "@/lib/ko-site";
 
@@ -55,9 +56,13 @@ export async function POST(req: NextRequest) {
       room_slug: room.slug,
       check_in_date: data.move_in_date,
       check_out_date: addMonths(data.move_in_date, data.stay_months),
-      // estimated_total is USD for the English/PayPal flow. Korean stays are
-      // paid by bank transfer in KRW and quoted on KakaoTalk, so leave it 0.
+      // estimated_total is USD and drives the English/PayPal flow, so it stays
+      // 0 here. Korean stays are paid monthly by bank transfer in KRW.
       estimated_total: 0,
+      monthly_rate_krw: room.monthly_rate_krw ?? null,
+      deposit_krw: koSite.depositKrw,
+      estimated_total_krw:
+        room.monthly_rate_krw != null ? room.monthly_rate_krw * data.stay_months : null,
       notes: data.notes,
       status: "new",
       admin_notes: "",
