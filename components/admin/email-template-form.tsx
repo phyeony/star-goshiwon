@@ -14,7 +14,7 @@ import {
   updateTemplateAction,
   deleteTemplateAction,
   type TemplateActionState,
-} from "@/app/admin/email-templates/actions";
+} from "@/app/(en)/admin/email-templates/actions";
 
 const initialState: TemplateActionState = { ok: false };
 

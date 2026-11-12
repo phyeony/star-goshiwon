@@ -12,6 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${base}/`, lastModified: now, changeFrequency: "weekly", priority: 1 },
+    { url: `${base}/ko`, lastModified: now, changeFrequency: "weekly", priority: 1 },
     { url: `${base}/rooms`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
     { url: `${base}/location`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${base}/faq`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
@@ -36,12 +37,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let roomRoutes: MetadataRoute.Sitemap = [];
   try {
     const rooms = await getPublicRooms();
-    roomRoutes = rooms.map((room) => ({
-      url: `${base}/rooms/${room.slug}`,
-      lastModified: now,
-      changeFrequency: "weekly" as const,
-      priority: 0.8,
-    }));
+    roomRoutes = rooms.flatMap((room) => [
+      {
+        url: `${base}/rooms/${room.slug}`,
+        lastModified: now,
+        changeFrequency: "weekly" as const,
+        priority: 0.8,
+      },
+      {
+        url: `${base}/ko/rooms/${room.slug}`,
+        lastModified: now,
+        changeFrequency: "weekly" as const,
+        priority: 0.8,
+      },
+    ]);
   } catch {
     // If DB unreachable at build time, fall back to static routes only.
   }

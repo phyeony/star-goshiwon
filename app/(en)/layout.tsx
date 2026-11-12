@@ -6,7 +6,7 @@ import { PostHogProvider } from "@/components/analytics/posthog-provider";
 import { PostHogPageview } from "@/components/analytics/posthog-pageview";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { siteConfig } from "@/lib/site-data";
-import "./globals.css";
+import "../globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -29,6 +29,7 @@ export const metadata: Metadata = {
   ],
   alternates: {
     canonical: "/",
+    languages: { en: "/", ko: "/ko", "x-default": "/" },
   },
   robots:
     process.env.STAGING === "true"

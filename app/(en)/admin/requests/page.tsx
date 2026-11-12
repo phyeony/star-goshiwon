@@ -108,7 +108,14 @@ export default async function AdminRequestsPage({
 	                        <span className="text-sm font-medium text-indigo-600 group-hover:text-indigo-700">
 	                          {req.guest_name}
 	                        </span>
-	                        <p className="text-xs text-gray-500">{req.guest_email}</p>
+	                        <p className="text-xs text-gray-500">
+                          {req.locale === "ko" && (
+                            <span className="mr-1.5 rounded bg-yellow-100 px-1.5 py-0.5 font-semibold text-yellow-800">
+                              한국어
+                            </span>
+                          )}
+                          {req.locale === "ko" ? req.guest_phone : req.guest_email}
+                        </p>
 	                      </Link>
 	                    </td>
 	                    <td className="p-0">

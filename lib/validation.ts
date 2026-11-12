@@ -85,6 +85,8 @@ export const roomSchema = z.object({
   description: z.string().max(2000).default(""),
   nightly_rate_usd: z.number().min(0),
   long_stay_discount: z.number().min(0).max(1).default(0.4),
+  monthly_rate_krw: z.number().int().min(0).nullable().default(null),
+  deposit_krw: z.number().int().min(0).nullable().default(null),
   capacity: z.number().int().min(1).max(10),
   size_sqm: z.number().min(0).nullable().default(null),
   amenities: z.array(z.string()).default([]),
@@ -133,3 +135,43 @@ export const roomUnitBlockSchema = roomUnitBlockBaseSchema
 export type RoomUnitBlockFormData = z.infer<typeof roomUnitBlockSchema>;
 
 export const roomUnitBlockUpdateSchema = roomUnitBlockBaseSchema.partial();
+
+/** Booking request from the Korean site (/ko): phone instead of email, and a
+ * move-in date plus number of months instead of check-in/check-out dates. */
+export const koBookingRequestSchema = z
+  .object({
+    guest_name: z
+      .string()
+      .trim()
+      .min(1, "이름을 입력해 주세요")
+      .max(50, "이름이 너무 깁니다"),
+    guest_phone: z
+      .string()
+      .trim()
+      .regex(/^01[016789]-?\d{3,4}-?\d{4}$/, "휴대폰 번호를 확인해 주세요"),
+    room_slug: z.string().min(1, "방 종류를 골라 주세요"),
+    move_in_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "입실 희망일을 골라 주세요"),
+    stay_months: z
+      .number()
+      .int()
+      .min(1, "기간을 골라 주세요")
+      .max(12, "12개월 이하로 골라 주세요"),
+    notes: z.string().max(500, "요청 사항이 너무 깁니다").default(""),
+    privacy_accepted: z.literal(true, {
+      errorMap: () => ({ message: "개인정보 수집 · 이용에 동의해 주세요" }),
+    }),
+  })
+  .refine(
+    (data) => {
+      // Compare as Korean calendar dates (the server may run in UTC).
+      const todayKst = new Date(Date.now() + 9 * 60 * 60 * 1000)
+        .toISOString()
+        .slice(0, 10);
+      return data.move_in_date >= todayKst;
+    },
+    { message: "입실 희망일은 오늘 이후로 골라 주세요", path: ["move_in_date"] }
+  );
+
+export type KoBookingFormData = z.infer<typeof koBookingRequestSchema>;

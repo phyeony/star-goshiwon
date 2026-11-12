@@ -35,6 +35,8 @@ CREATE TABLE rooms (
   name TEXT NOT NULL,
   name_ko TEXT,
   slug TEXT UNIQUE NOT NULL,
+  monthly_rate_krw INTEGER CHECK (monthly_rate_krw IS NULL OR monthly_rate_krw >= 0),
+  deposit_krw INTEGER CHECK (deposit_krw IS NULL OR deposit_krw >= 0),
   description TEXT NOT NULL DEFAULT '',
   price_monthly INTEGER NOT NULL,
   price_weekly INTEGER NOT NULL,
@@ -67,6 +69,10 @@ CREATE TABLE booking_requests (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   guest_name TEXT NOT NULL,
   guest_email TEXT NOT NULL,
+  -- 'ko' requests come from /ko with a phone number; guest_email is '' there.
+  locale TEXT NOT NULL DEFAULT 'en' CHECK (locale IN ('en', 'ko')),
+  guest_phone TEXT NOT NULL DEFAULT '',
+  stay_months INTEGER CHECK (stay_months IS NULL OR stay_months BETWEEN 1 AND 24),
   guest_count INTEGER NOT NULL DEFAULT 1,
   room_id UUID REFERENCES rooms(id) ON DELETE SET NULL,
   assigned_room_unit_id UUID,
@@ -101,6 +107,7 @@ CREATE TABLE booking_requests (
 );
 
 CREATE INDEX idx_booking_requests_status ON booking_requests(status);
+CREATE INDEX idx_booking_requests_locale ON booking_requests(locale);
 CREATE INDEX idx_booking_requests_created_at ON booking_requests(created_at DESC);
 CREATE INDEX idx_booking_requests_payment_order_id ON booking_requests(payment_order_id);
 CREATE INDEX idx_booking_requests_payment_status ON booking_requests(payment_status);

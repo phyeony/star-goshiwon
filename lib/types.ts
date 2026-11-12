@@ -29,6 +29,8 @@ export type PaymentOrderStatus =
   | "superseded"
   | "duplicate_paid";
 
+export type BookingLocale = "en" | "ko";
+
 export type RoomUnitStatus = "active" | "inactive" | "maintenance";
 
 export type RoomUnitBlockSource = "direct" | "external";
@@ -43,6 +45,10 @@ export interface Room {
   description: string;
   nightly_rate_usd: number; // flat per-night rate in USD (source of truth)
   long_stay_discount: number; // discount fraction at 28+ nights, e.g. 0.15
+  // Korean site (/ko) prices. Monthly KRW rent and deposit, set in admin.
+  // null until the owner fills them in; the /ko page then shows "문의".
+  monthly_rate_krw?: number | null;
+  deposit_krw?: number | null;
   capacity: number;
   size_sqm: number | null;
   amenities: string[];
@@ -70,7 +76,12 @@ export interface RoomWithImages extends Room {
 export interface BookingRequest {
   id: string;
   guest_name: string;
-  guest_email: string;
+  guest_email: string; // '' for Korean-site requests (they leave a phone number)
+  // Which site the request came from. 'ko' requests come from /ko and are
+  // answered on KakaoTalk; guest_phone and stay_months are set for them.
+  locale?: BookingLocale;
+  guest_phone?: string;
+  stay_months?: number | null;
   guest_count: number;
   room_id: string | null;
   assigned_room_unit_id: string | null;
@@ -332,6 +343,8 @@ export type RoomInsert = {
   description?: string;
   nightly_rate_usd: number;
   long_stay_discount?: number;
+  monthly_rate_krw?: number | null;
+  deposit_krw?: number | null;
   capacity?: number;
   size_sqm?: number | null;
   amenities?: string[];
@@ -353,6 +366,9 @@ export type RoomImageInsert = {
 export type BookingRequestInsert = {
   guest_name: string;
   guest_email: string;
+  guest_phone?: string;
+  locale?: BookingLocale;
+  stay_months?: number | null;
   guest_count?: number;
   room_id?: string | null;
   assigned_room_unit_id?: string | null;

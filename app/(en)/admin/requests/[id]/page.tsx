@@ -75,19 +75,43 @@ export default async function RequestDetailPage({ params }: Props) {
                   {request.guest_name}
                 </dd>
               </div>
-              <div>
-                <dt className="text-xs font-bold text-gray-500 uppercase">
-                  이메일
-                </dt>
-                <dd className="text-base text-gray-900 mt-1">
-                  <a
-                    href={`mailto:${request.guest_email}`}
-                    className="text-indigo-600 hover:text-indigo-700"
-                  >
-                    {request.guest_email}
-                  </a>
-                </dd>
-              </div>
+              {request.locale === "ko" ? (
+                <div>
+                  <dt className="text-xs font-bold text-gray-500 uppercase">
+                    휴대폰 · 한국어 사이트
+                  </dt>
+                  <dd className="text-base text-gray-900 mt-1">
+                    <a
+                      href={`tel:${request.guest_phone}`}
+                      className="text-indigo-600 hover:text-indigo-700"
+                    >
+                      {request.guest_phone}
+                    </a>
+                    {request.stay_months ? (
+                      <span className="ml-2 text-sm text-gray-500">
+                        {request.stay_months}개월
+                      </span>
+                    ) : null}
+                    <p className="mt-1 text-xs text-gray-500">
+                      이메일이 없는 요청입니다. 카카오톡 채널이나 문자로 답장해 주세요.
+                    </p>
+                  </dd>
+                </div>
+              ) : (
+                <div>
+                  <dt className="text-xs font-bold text-gray-500 uppercase">
+                    이메일
+                  </dt>
+                  <dd className="text-base text-gray-900 mt-1">
+                    <a
+                      href={`mailto:${request.guest_email}`}
+                      className="text-indigo-600 hover:text-indigo-700"
+                    >
+                      {request.guest_email}
+                    </a>
+                  </dd>
+                </div>
+              )}
               <div>
                 <dt className="text-xs font-bold text-gray-500 uppercase">
                   인원
