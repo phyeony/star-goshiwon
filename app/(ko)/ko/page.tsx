@@ -381,23 +381,6 @@ export default async function KoHomePage({
       </main>
 
       <KoFooter />
-
-      <div className="fixed inset-x-0 bottom-0 z-30 flex gap-2 border-t border-[#DCDEE0] bg-white px-4 pb-3.5 pt-2.5 md:hidden">
-        <a
-          href="#booking"
-          className="flex h-12 flex-1 items-center justify-center bg-[#16181A] text-sm font-extrabold text-white"
-        >
-          예약하기
-        </a>
-        <a
-          href={koSite.kakaoChatUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex h-12 flex-1 items-center justify-center bg-[#FEE500] text-sm font-extrabold text-[#191919]"
-        >
-          카카오톡 문의
-        </a>
-      </div>
     </>
   );
 }
