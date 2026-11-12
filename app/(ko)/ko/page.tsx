@@ -151,7 +151,7 @@ export default async function KoHomePage({
                 방 · 가격
               </h2>
             </div>
-            <p className="hidden text-sm text-[#5A5F63] md:block">
+            <p className="hidden text-sm leading-[1.7] text-[#5A5F63] md:text-base md:block">
               모든 방에 외창 · 침대 · 책상 · 미니 냉장고 · 냉난방기
             </p>
           </div>
@@ -216,10 +216,10 @@ export default async function KoHomePage({
             <div>
               <SectionLabel>SHARED</SectionLabel>
               <h2 className="mb-4 mt-1.5 text-2xl font-extrabold tracking-[-0.6px] md:mb-0 md:mt-2.5 md:text-[40px] md:tracking-[-1.2px]">
-                같이 쓰는 공간
+                공용 공간
               </h2>
             </div>
-            <p className="text-sm leading-[1.7] text-[#3A3F43] md:max-w-md md:text-right md:text-[17px] md:leading-[1.8]">
+            <p className="text-sm leading-[1.7] text-[#5A5F63] md:text-base md:max-w-md md:text-right">
               주방에는 밥이 준비되어 있습니다. 세탁실, 정수기, 전자레인지, 발코니를 함께
               쓰고, 택배는 대신 보관해 드립니다.
             </p>
