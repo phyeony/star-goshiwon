@@ -285,28 +285,37 @@ function PhotoLibrary({
           <option value="recent">최근 올린 순</option>
           <option value="room">방 번호 순</option>
         </select>
-        {shown.length > 0 && (
-          <button
-            type="button"
-            onClick={toggleAllShown}
-            className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            {allShownSelected ? "보이는 사진 선택 해제" : `보이는 사진 모두 선택 (${shown.length})`}
-          </button>
-        )}
       </div>
 
-      {(selectedPhotos.length > 0 || downloadError) && (
+      {shown.length > 0 && (
         <div
-          className="sticky top-16 z-10 -mx-4 flex flex-wrap items-center justify-between gap-3 border-b border-indigo-200 bg-indigo-50/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-2xl sm:border"
+          className={`sticky top-16 z-10 -mx-4 flex flex-wrap items-center justify-between gap-3 border-y px-4 py-2.5 backdrop-blur sm:mx-0 sm:rounded-2xl sm:border ${
+            selectedPhotos.length > 0 ? "border-indigo-200 bg-indigo-50/95" : "border-gray-200 bg-white/95"
+          }`}
           data-testid="selection-bar"
         >
-          <span className="text-sm font-semibold text-indigo-900">
-            {selectedPhotos.length > 0 ? `${selectedPhotos.length}장 선택됨` : ""}
-            {downloadError && <span className="ml-2 font-normal text-red-600">{downloadError}</span>}
-          </span>
-          {selectedPhotos.length > 0 && (
-            <div className="flex items-center gap-2">
+          <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-gray-900">
+            <input
+              type="checkbox"
+              checked={allShownSelected}
+              ref={(el) => {
+                if (el) el.indeterminate = !allShownSelected && shown.some((p) => selected.has(p.id));
+              }}
+              onChange={toggleAllShown}
+              className="h-5 w-5 cursor-pointer accent-indigo-600"
+              data-testid="select-all-shown"
+            />
+            <span>
+              {allShownSelected ? "모두 선택됨" : "모두 선택"}{" "}
+              <span className="font-normal text-gray-500">
+                {selectedPhotos.length > 0 ? `${selectedPhotos.length}장 선택 · ` : ""}
+                {shown.length}장 보는 중
+              </span>
+            </span>
+          </label>
+          <div className="flex items-center gap-2">
+            {downloadError && <span className="text-sm text-red-600">{downloadError}</span>}
+            {selectedPhotos.length > 0 && (
               <button
                 type="button"
                 onClick={() => setSelected(new Set())}
@@ -315,20 +324,20 @@ function PhotoLibrary({
               >
                 선택 해제
               </button>
-              <button
-                type="button"
-                onClick={download}
-                disabled={downloading !== null}
-                className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60"
-              >
-                {downloading
-                  ? `받는 중… ${downloading}`
-                  : selectedPhotos.length === 1
-                    ? "다운로드"
-                    : `다운로드 (ZIP)`}
-              </button>
-            </div>
-          )}
+            )}
+            <button
+              type="button"
+              onClick={download}
+              disabled={downloading !== null || selectedPhotos.length === 0}
+              className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 disabled:opacity-40"
+            >
+              {downloading
+                ? `받는 중… ${downloading}`
+                : selectedPhotos.length > 1
+                  ? `다운로드 (ZIP)`
+                  : "다운로드"}
+            </button>
+          </div>
         </div>
       )}
 
