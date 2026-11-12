@@ -145,9 +145,12 @@ export default async function KoHomePage({
 
         <section id="rooms" className="mx-auto max-w-6xl scroll-mt-16 px-5 pt-6 md:scroll-mt-20 md:px-12 md:pt-20">
           <div className="md:flex md:items-end md:justify-between">
-            <h2 className="text-[15px] font-extrabold md:text-[40px] md:tracking-[-1.2px]">
-              방 종류와 가격
-            </h2>
+            <div>
+              <SectionLabel>ROOMS</SectionLabel>
+              <h2 className="mt-1 text-xl font-extrabold tracking-[-0.4px] md:mt-2.5 md:text-[40px] md:tracking-[-1.2px]">
+                방 · 가격
+              </h2>
+            </div>
             <p className="hidden text-sm text-[#5A5F63] md:block">
               모든 방에 창문 · 침대 · 책상 · 미니 냉장고 · 냉난방기
             </p>
