@@ -237,6 +237,10 @@ export default function KoPolicyPage() {
               본인 확인을 합니다.
             </li>
             <li>방 열쇠는 입실할 때 드리며, 퇴실할 때 돌려주셔야 합니다.</li>
+            <li>
+              <strong>침구는 제공되지 않습니다.</strong> 이불, 베개 등은 직접
+              준비해 주세요.
+            </li>
           </ul>
         </Section>
 

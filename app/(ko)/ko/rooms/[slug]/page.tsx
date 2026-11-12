@@ -112,6 +112,7 @@ export default async function KoRoomPage({ params }: { params: Params }) {
                 </li>
               ))}
             </ul>
+            <p className="mt-3 text-[13px] text-[#5A5F63]">침구(이불 · 베개)는 제공되지 않아요.</p>
           </div>
 
           <aside id="inquiry" className="w-full scroll-mt-20 lg:w-[38%]">
