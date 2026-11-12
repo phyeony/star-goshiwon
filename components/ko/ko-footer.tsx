@@ -6,7 +6,7 @@ export function KoFooter() {
     <footer className="border-t border-[#DCDEE0] px-5 pb-28 pt-9 text-xs leading-[1.9] text-[#5A5F63] md:px-12 md:pb-12">
       <div className="mx-auto flex max-w-6xl flex-col gap-4 md:flex-row md:justify-between">
         <div>
-          <div className="mb-1 text-[15px] font-extrabold text-[#16181A]">스타고시텔</div>
+          <div className="mb-1 text-[15px] font-extrabold text-[#16181A]">스타고시원</div>
           <div>{koSite.address}</div>
           <div>사업자등록번호 {koSite.businessNumber}</div>
           <a href={koSite.kakaoChannelUrl} target="_blank" rel="noopener noreferrer" className="underline">

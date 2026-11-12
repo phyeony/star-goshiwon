@@ -13,7 +13,7 @@ const EFFECTIVE_FROM = "2026년 11월 12일";
 export const metadata: Metadata = {
   title: "이용 약관",
   description:
-    "노량진 고시원 스타고시텔의 예약, 계좌이체 결제, 취소 및 환불, 보증금, 하우스 룰 안내입니다.",
+    "노량진 고시원 스타고시원의 예약, 계좌이체 결제, 취소 및 환불, 보증금, 하우스 룰 안내입니다.",
   alternates: {
     canonical: "/ko/policy",
     languages: { ko: "/ko/policy", en: "/policies" },
@@ -50,7 +50,7 @@ export default function KoPolicyPage() {
           이용 약관
         </h1>
         <p className="mt-2 text-[15px] leading-[1.7] text-[#3A3F43]">
-          예약 전에 꼭 확인해 주세요. 스타고시텔의 예약, 결제, 환불 방법과
+          예약 전에 꼭 확인해 주세요. 스타고시원의 예약, 결제, 환불 방법과
           하우스 룰을 정합니다.
         </p>
       </div>
@@ -316,7 +316,7 @@ export default function KoPolicyPage() {
 
         <Section id="men-only" title="8. 남성 전용 시설">
           <p>
-            스타고시텔은 <strong>남성 전용</strong> 시설입니다. 남성만 입실할
+            스타고시원은 <strong>남성 전용</strong> 시설입니다. 남성만 입실할
             수 있으며, 객실의 공유, 전대(서브리스), 양도는
             불가능합니다. 이는 한국 대부분의 고시원이 공용 욕실 안전 및
             프라이버시를 위해 성별로 건물이나 층을 분리 운영하는 일반적인

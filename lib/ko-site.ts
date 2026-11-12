@@ -5,7 +5,7 @@ import { siteConfig, stayTimes } from "./site-data";
 import type { RoomStatus, RoomWithImages } from "./types";
 
 export const koSite = {
-  name: "스타고시텔",
+  name: "스타고시원",
   // The main search keyword (Naver: ~5,500 searches/month, Nov 2026).
   keyword: "노량진 고시원",
   tagline: "노량진 고시원 · 상도역 5분 · 남성 전용",
@@ -104,7 +104,7 @@ export function buildKakaoMessage(input: {
 }): string {
   const [, m, d] = input.moveInDate.split("-");
   const lines = [
-    "[스타고시텔 예약 요청]",
+    "[스타고시원 예약 요청]",
     `방: ${input.roomName}`,
     `입실 희망일: ${Number(m)}월 ${Number(d)}일`,
     `기간: ${input.stayMonths}개월`,

@@ -29,8 +29,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const rooms = await getKoRooms().catch(() => []);
   const lowest = lowestMonthlyKrw(rooms);
   const priceText = lowest ? `월 ${formatManwon(lowest)}부터` : "1인실 · 공과금 포함";
-  const title = `노량진 고시원 스타고시텔 | 상도역 5분 · ${priceText}`;
-  const description = `노량진 고시원 스타고시텔. 상도역 도보 5분, 노량진역 도보 10분. ${
+  const title = `노량진 고시원 스타고시원 | 상도역 5분 · ${priceText}`;
+  const description = `노량진 고시원 스타고시원. 상도역 도보 5분, 노량진역 도보 10분. ${
     lowest ? `월 ${formatManwon(lowest)}부터, ` : ""
   }공과금 · 인터넷 포함, 1개월부터 입실 가능한 남성 전용 고시원(고시텔)입니다.`;
   return {
@@ -54,10 +54,10 @@ export async function generateMetadata(): Promise<Metadata> {
       title,
       description,
       url: `${siteConfig.url.replace(/\/$/, "")}/ko`,
-      siteName: "스타고시텔",
+      siteName: "스타고시원",
       locale: "ko_KR",
       type: "website",
-      images: [{ url: "/images/private-shower/7.window-day.jpg", alt: "스타고시텔 외창 있는 방" }],
+      images: [{ url: "/images/private-shower/7.window-day.jpg", alt: "스타고시원 외창 있는 방" }],
     },
   };
 }
@@ -84,7 +84,7 @@ export default async function KoHomePage({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "LodgingBusiness",
-    name: "스타고시텔",
+    name: "스타고시원",
     alternateName: "Star Goshiwon",
     description: "노량진 · 상도역 근처 남성 전용 고시원. 공과금 · 인터넷 포함, 1개월부터 입실.",
     url: `${base}/ko`,
@@ -121,7 +121,7 @@ export default async function KoHomePage({
         <section className="relative md:h-[520px] md:bg-[#16181A]">
           <OptimizedPhoto
             src="/images/private-shower/7.window-day.jpg"
-            alt="스타고시텔 외창 있는 방"
+            alt="스타고시원 외창 있는 방"
             sizes="100vw"
             loading="eager"
             fetchPriority="high"

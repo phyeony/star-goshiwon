@@ -36,8 +36,8 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const name = koRoomName(room);
   const price = room.monthly_rate_krw ? `월 ${formatManwon(room.monthly_rate_krw)}` : "가격 문의";
   return {
-    title: { absolute: `${name} ${price} | 노량진 고시원 스타고시텔` },
-    description: `노량진 고시원 스타고시텔 ${name}. ${koRoomFeature(room)}, ${price}. 공과금 · 인터넷 포함, 상도역 도보 5분.`,
+    title: { absolute: `${name} ${price} | 노량진 고시원 스타고시원` },
+    description: `노량진 고시원 스타고시원 ${name}. ${koRoomFeature(room)}, ${price}. 공과금 · 인터넷 포함, 상도역 도보 5분.`,
     alternates: {
       canonical: `/ko/rooms/${room.slug}`,
       languages: { ko: `/ko/rooms/${room.slug}`, en: `/rooms/${room.slug}` },

@@ -11,8 +11,8 @@ import "../globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: "노량진 고시원 스타고시텔",
-    template: "%s | 스타고시텔",
+    default: "노량진 고시원 스타고시원",
+    template: "%s | 스타고시원",
   },
   robots:
     process.env.STAGING === "true"
