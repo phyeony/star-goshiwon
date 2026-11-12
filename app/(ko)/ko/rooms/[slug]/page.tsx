@@ -55,6 +55,13 @@ const included = [
   "밥 제공",
 ];
 
+/** Base options plus the private bathroom fixtures a room type has. */
+function roomOptions(slug: string) {
+  if (slug === "room-with-private-shower-and-toilet") return ["개인 샤워실", "개인 화장실", ...included];
+  if (slug === "room-with-private-shower") return ["개인 샤워실", ...included];
+  return included;
+}
+
 export default async function KoRoomPage({ params }: { params: Params }) {
   const { slug } = await params;
   const rooms = await getKoRooms();
@@ -105,7 +112,7 @@ export default async function KoRoomPage({ params }: { params: Params }) {
 
             <h2 className="mt-8 text-lg font-extrabold">기본 옵션</h2>
             <ul className="mt-3 grid grid-cols-2 border-t border-[#16181A] text-sm md:grid-cols-3">
-              {included.map((item) => (
+              {roomOptions(room.slug).map((item) => (
                 <li key={item} className="border-b border-[#DCDEE0] py-2.5">
                   {item}
                 </li>
