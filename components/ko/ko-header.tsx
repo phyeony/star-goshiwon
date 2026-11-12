@@ -18,7 +18,7 @@ export function KoHeader() {
     <header className="sticky top-0 z-40 border-b border-[#DCDEE0] bg-white">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5 md:h-[72px] md:px-12">
         <Link href="/ko" className="text-lg font-extrabold tracking-[-0.4px] md:text-[22px]">
-          스타고시원
+          스타고시텔
         </Link>
 
         <nav className="hidden items-center gap-8 text-[15px] font-semibold md:flex" aria-label="주요 메뉴">
