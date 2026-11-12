@@ -17,7 +17,7 @@ export function KoHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-[#DCDEE0] bg-white">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5 md:h-[72px] md:px-12">
-        <Link href="/ko" aria-label="스타고시원 노량진" className="flex w-fit flex-col leading-none">
+        <Link href="/ko" aria-label="스타고시원 노량진" className="flex w-fit shrink-0 flex-col leading-none">
           <span className="text-xl font-extrabold tracking-[-0.6px] md:text-2xl">스타고시원</span>
           <span className="flex items-center gap-1.5">
             <span className="h-px flex-1 bg-[#5A5F63]/50" />
@@ -28,7 +28,7 @@ export function KoHeader() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-8 text-[15px] font-semibold md:flex" aria-label="주요 메뉴">
+        <nav className="hidden items-center gap-5 whitespace-nowrap text-sm font-semibold min-[876px]:flex lg:gap-8 lg:text-[15px]" aria-label="주요 메뉴">
           {nav.map((item) => (
             <a key={item.href} href={item.href} className="hover:text-black">
               {item.label}
@@ -50,7 +50,7 @@ export function KoHeader() {
           </span>
         </nav>
 
-        <div className="flex items-center gap-3.5 text-[13px] md:hidden">
+        <div className="flex items-center gap-3.5 text-[13px] min-[876px]:hidden">
           <Link href="/" hrefLang="en" className="text-[#5A5F63]">
             EN
           </Link>
@@ -71,7 +71,7 @@ export function KoHeader() {
       </div>
 
       {open && (
-        <nav className="border-t border-[#DCDEE0] bg-white px-5 pb-4 md:hidden" aria-label="모바일 메뉴">
+        <nav className="border-t border-[#DCDEE0] bg-white px-5 pb-4 min-[876px]:hidden" aria-label="모바일 메뉴">
           {nav.map((item) => (
             <a
               key={item.href}
