@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { formatManwon } from "@/lib/ko-site";
 
 export interface KoRoomOption {
   slug: string;
@@ -23,6 +22,8 @@ interface Sent {
   message: string;
   chatUrl: string;
 }
+
+const won = (krw: number) => `${krw.toLocaleString("ko-KR")}원`;
 
 function todayKst(): string {
   return new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
@@ -184,17 +185,40 @@ export function KoBookingForm({ rooms, initialRoom, kakaoChatUrl, singleRoom }: 
           </select>
         </label>
         {monthly ? (
-          <div className="col-span-2 bg-[#F3F4F5] px-4 py-3" aria-live="polite">
-            <div className="flex items-baseline justify-between gap-3">
-              <span className="text-[13px] font-semibold text-[#3A3F43] md:text-sm">예상 이용료</span>
-              <span className="text-lg font-extrabold md:text-xl">
-                {formatManwon(monthly * months)}
+          <div className="col-span-2 bg-[#F3F4F5] px-4 py-4 text-sm" aria-live="polite">
+            <div className="flex justify-between gap-3 py-1">
+              <span className="text-[#5A5F63]">
+                이용료 ({won(monthly)} × {months}개월)
               </span>
+              <span className="font-semibold">{won(monthly * months)}</span>
             </div>
-            <p className="mt-0.5 text-xs leading-relaxed text-[#5A5F63]">
-              월 {formatManwon(monthly)} × {months}개월
-              {deposit ? ` · 보증금 ${formatManwon(deposit)} 별도 (퇴실할 때 돌려드려요)` : " · 보증금 별도"}
-            </p>
+            <div className="flex justify-between gap-3 py-1">
+              <span className="text-[#5A5F63]">관리비 (전기 · 수도 · 가스 · 인터넷)</span>
+              <span className="font-semibold">포함</span>
+            </div>
+            <div className="mt-2 flex justify-between gap-3 border-t border-[#DCDEE0] pt-3">
+              <span className="font-extrabold">실 이용 금액</span>
+              <span className="font-extrabold">{won(monthly * months)}</span>
+            </div>
+            {deposit ? (
+              <>
+                <div className="mt-2 flex justify-between gap-3 py-1">
+                  <span className="text-[#5A5F63]">보증금</span>
+                  <span className="font-semibold">{won(deposit)}</span>
+                </div>
+                <p className="text-xs text-[#5A5F63]">보증금은 퇴실하는 날 돌려드려요.</p>
+              </>
+            ) : null}
+            <div className="mt-3 flex items-baseline justify-between gap-3 border-t border-[#16181A] pt-3">
+              <span className="text-[15px] font-extrabold">총 금액</span>
+              <span className="text-xl font-extrabold">{won(monthly * months + (deposit ?? 0))}</span>
+            </div>
+            {months > 1 ? (
+              <p className="mt-2 text-xs leading-relaxed text-[#5A5F63]">
+                입실 전에는 첫 달 이용료와 보증금 {won(monthly + (deposit ?? 0))}만 입금하고, 다음 달부터는
+                매달 {won(monthly)}씩 입금해요.
+              </p>
+            ) : null}
           </div>
         ) : null}
         <label className="col-span-2 block md:col-span-1">

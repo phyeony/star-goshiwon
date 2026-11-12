@@ -92,10 +92,9 @@ export default async function KoRoomPage({ params }: { params: Params }) {
               </>
             )}
 
-            <p className="text-[13px] font-semibold text-[#5A5F63]">{koSite.tagline}</p>
-            <div className="mt-1 flex items-start justify-between gap-4">
+            <div className="flex items-start justify-between gap-4">
               <h1 className="text-[28px] font-extrabold tracking-[-0.8px] md:text-[36px]">{name}</h1>
-              <span className="whitespace-nowrap text-[28px] font-extrabold tracking-[-0.8px] md:text-[36px]">
+              <span className="mt-1 whitespace-nowrap text-[22px] font-extrabold tracking-[-0.5px] md:text-[28px]">
                 {priceLabel(room)}
               </span>
             </div>
@@ -104,7 +103,7 @@ export default async function KoRoomPage({ params }: { params: Params }) {
             </p>
             <p className="mt-4 text-[15px] leading-[1.7] text-[#3A3F43]">{koRoomDetail(room)}</p>
 
-            <h2 className="mt-8 text-lg font-extrabold">방 안에 있는 것</h2>
+            <h2 className="mt-8 text-lg font-extrabold">기본 옵션</h2>
             <ul className="mt-3 grid grid-cols-2 border-t border-[#16181A] text-sm md:grid-cols-3">
               {included.map((item) => (
                 <li key={item} className="border-b border-[#DCDEE0] py-2.5">
