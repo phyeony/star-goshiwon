@@ -29,31 +29,45 @@ import type {
   EmailReceiveInsert,
 } from "./types";
 import { deriveTier, roomTier, type UsdPriceTier } from "./pricing";
+import { ROOM_PHOTOS_SELECT, placementsToRoomImages } from "./photo-queries";
 import type { FirstEmailByRequest, FunnelRequest } from "./funnel";
 
 // ─── Rooms ───
+
+// Room galleries come from the photo library (admin → 사진 관리). They are
+// mapped onto `room_images` so the room pages keep one shape.
+const ROOM_WITH_PHOTOS_SELECT = `*, ${ROOM_PHOTOS_SELECT}`;
+
+type RoomRowWithPlacements = Room & {
+  site_photo_placements?: Parameters<typeof placementsToRoomImages>[0];
+};
+
+function withRoomImages(row: RoomRowWithPlacements): RoomWithImages {
+  const { site_photo_placements, ...room } = row;
+  return { ...room, room_images: placementsToRoomImages(site_photo_placements) };
+}
 
 export async function getRooms(): Promise<RoomWithImages[]> {
   const supabase = getSupabaseServiceClient();
   const { data, error } = await supabase
     .from("rooms")
-    .select("*, room_images(*)")
+    .select(ROOM_WITH_PHOTOS_SELECT)
     .order("sort_order", { ascending: true });
 
   if (error) throw error;
-  return (data as RoomWithImages[]) ?? [];
+  return ((data ?? []) as unknown as RoomRowWithPlacements[]).map(withRoomImages);
 }
 
 export async function getPublicRooms(): Promise<RoomWithImages[]> {
   const supabase = getSupabaseServiceClient();
   const { data, error } = await supabase
     .from("rooms")
-    .select("*, room_images(*)")
+    .select(ROOM_WITH_PHOTOS_SELECT)
     .neq("status", "unavailable")
     .order("sort_order", { ascending: true });
 
   if (error) throw error;
-  return (data as RoomWithImages[]) ?? [];
+  return ((data ?? []) as unknown as RoomRowWithPlacements[]).map(withRoomImages);
 }
 
 // Canonical "from" pricing for site-wide copy (homepage stats, FAQ, guides,
@@ -72,7 +86,7 @@ export async function getRoomBySlug(
   const supabase = getSupabaseServiceClient();
   const { data, error } = await supabase
     .from("rooms")
-    .select("*, room_images(*)")
+    .select(ROOM_WITH_PHOTOS_SELECT)
     .eq("slug", slug)
     .single();
 
@@ -80,7 +94,7 @@ export async function getRoomBySlug(
     if (error.code === "PGRST116") return null;
     throw error;
   }
-  return data as RoomWithImages;
+  return withRoomImages(data as unknown as RoomRowWithPlacements);
 }
 
 export async function getRoomById(id: string): Promise<Room | null> {

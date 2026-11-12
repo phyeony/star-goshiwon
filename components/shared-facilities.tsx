@@ -2,20 +2,20 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { OptimizedPhoto } from "./optimized-photo";
+import type { DisplayPhoto } from "@/lib/site-photos";
 
-const facilities = [
-  { src: "/images/guides/shared-kitchen/kitchen.jpg", label: "Shared Kitchen", ko: "공용 주방" },
-  { src: "/images/common/balcony.jpg", label: "Balcony", ko: "발코니" },
-  { src: "/images/common/laundry.png", label: "Laundry", ko: "세탁실" },
-  { src: "/images/common/microwave.jpg", label: "Microwave", ko: "전자레인지" },
-  { src: "/images/common/rice-cooker.jpg", label: "Rice Cooker", ko: "밥솥 (밥 제공)" },
-  { src: "/images/common/filtered-water-dispenser.jpg", label: "Filtered Water Dispenser", ko: "정수기" },
-];
-
-/** lang="ko" uses Korean labels and the square-cornered /ko look (3 columns). */
-export function SharedFacilities({ lang = "en" }: { lang?: "en" | "ko" }) {
+/** Photos and their order come from admin → 사진 관리 (공용 공간).
+ * lang="ko" uses Korean labels and the square-cornered /ko look (3 columns). */
+export function SharedFacilities({
+  photos: facilities,
+  lang = "en",
+}: {
+  photos: DisplayPhoto[];
+  lang?: "en" | "ko";
+}) {
   const ko = lang === "ko";
-  const label = (item: (typeof facilities)[number]) => (ko ? item.ko : item.label);
+  const label = (item: DisplayPhoto) =>
+    (ko ? item.caption_ko || item.caption_en : item.caption_en || item.caption_ko);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const isOpen = lightboxIndex !== null;
 
@@ -25,13 +25,13 @@ export function SharedFacilities({ lang = "en" }: { lang?: "en" | "ko" }) {
     setLightboxIndex((prev) =>
       prev !== null ? (prev + 1) % facilities.length : null
     );
-  }, []);
+  }, [facilities.length]);
 
   const goPrev = useCallback(() => {
     setLightboxIndex((prev) =>
       prev !== null ? (prev - 1 + facilities.length) % facilities.length : null
     );
-  }, []);
+  }, [facilities.length]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -51,16 +51,18 @@ export function SharedFacilities({ lang = "en" }: { lang?: "en" | "ko" }) {
     };
   }, [isOpen, close, goNext, goPrev]);
 
+  if (facilities.length === 0) return null;
+
   return (
     <>
       <div className={ko ? "grid grid-cols-2 gap-1.5 md:grid-cols-3 md:gap-3" : "grid grid-cols-2 md:grid-cols-4 gap-4"}>
         {facilities.map((item, i) => (
           <button
-            key={item.label}
+            key={item.id}
             type="button"
             onClick={() => setLightboxIndex(i)}
             className={`relative aspect-square overflow-hidden group cursor-pointer ${ko ? "" : "rounded-2xl border border-gray-200"}`}
-            aria-label={ko ? `${item.ko} 사진 크게 보기` : `View ${item.label} photo`}
+            aria-label={ko ? `${label(item)} 사진 크게 보기` : `View ${label(item)} photo`}
           >
             <OptimizedPhoto
               src={item.src}

@@ -4,6 +4,7 @@ import { KoHeader } from "@/components/ko/ko-header";
 import { KoFooter } from "@/components/ko/ko-footer";
 import { KoBookingForm } from "@/components/ko/ko-booking-form";
 import { SharedFacilities } from "@/components/shared-facilities";
+import { getSharedSpacePhotos } from "@/lib/photo-queries";
 import { OptimizedPhoto } from "@/components/optimized-photo";
 import { siteConfig } from "@/lib/site-data";
 import {
@@ -76,7 +77,7 @@ export default async function KoHomePage({
   searchParams: Promise<{ room?: string }>;
 }) {
   const { room: initialRoom } = await searchParams;
-  const rooms = await getKoRooms();
+  const [rooms, sharedPhotos] = await Promise.all([getKoRooms(), getSharedSpacePhotos()]);
   const lowest = lowestMonthlyKrw(rooms);
   const deposit = koSite.depositKrw;
   const base = siteConfig.url.replace(/\/$/, "");
@@ -225,7 +226,7 @@ export default async function KoHomePage({
             </p>
           </div>
           <div className="mt-4 md:mt-8">
-            <SharedFacilities lang="ko" />
+            <SharedFacilities photos={sharedPhotos} lang="ko" />
           </div>
         </section>
 

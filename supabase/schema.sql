@@ -317,3 +317,68 @@ CREATE TABLE IF NOT EXISTS document_templates (
 );
 
 ALTER TABLE document_templates ENABLE ROW LEVEL SECURITY;
+
+-- Website photo library (admin → 사진 관리). See migrations/2026-11-12-site-photos.sql.
+CREATE TABLE IF NOT EXISTS site_photos (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  source TEXT NOT NULL CHECK (source IN ('static', 'r2')),
+  -- static: path under /public, e.g. "/images/economy/1.main.jpg"
+  -- r2: object key prefix, e.g. "photos/2f1c…"; files are "<path>-<width>.<ext>"
+  path TEXT NOT NULL UNIQUE,
+  ext TEXT CHECK (ext IN ('webp', 'jpg')),
+  width INTEGER,
+  height INTEGER,
+  caption_en TEXT NOT NULL DEFAULT '',
+  caption_ko TEXT NOT NULL DEFAULT '',
+  original_filename TEXT,
+  -- Which room (by number) the photo was taken in. Optional; used to sort
+  -- and filter the library, and later for per-room-number galleries.
+  room_unit_id UUID REFERENCES room_units(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CHECK ((source = 'r2') = (ext IS NOT NULL))
+);
+
+CREATE INDEX IF NOT EXISTS idx_site_photos_room_unit ON site_photos (room_unit_id);
+
+CREATE TABLE IF NOT EXISTS site_photo_placements (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  section TEXT NOT NULL CHECK (section IN ('room', 'shared')),
+  room_id UUID REFERENCES rooms(id) ON DELETE CASCADE,
+  photo_id UUID NOT NULL REFERENCES site_photos(id) ON DELETE CASCADE,
+  sort_order INTEGER NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CHECK ((section = 'room') = (room_id IS NOT NULL)),
+  UNIQUE NULLS NOT DISTINCT (section, room_id, photo_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_site_photo_placements_section
+  ON site_photo_placements (section, room_id, sort_order);
+CREATE INDEX IF NOT EXISTS idx_site_photo_placements_photo
+  ON site_photo_placements (photo_id);
+
+-- Server code uses the service role; no client reads these tables directly.
+ALTER TABLE site_photos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE site_photo_placements ENABLE ROW LEVEL SECURITY;
+
+-- Replace one section's photos (in order) in a single transaction.
+CREATE OR REPLACE FUNCTION set_photo_section(
+  p_section TEXT,
+  p_room_id UUID,
+  p_photo_ids UUID[]
+) RETURNS void
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
+BEGIN
+  DELETE FROM site_photo_placements
+  WHERE section = p_section
+    AND room_id IS NOT DISTINCT FROM p_room_id;
+
+  INSERT INTO site_photo_placements (section, room_id, photo_id, sort_order)
+  SELECT p_section, p_room_id, t.photo_id, t.ord
+  FROM unnest(p_photo_ids) WITH ORDINALITY AS t(photo_id, ord);
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION set_photo_section(TEXT, UUID, UUID[]) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION set_photo_section(TEXT, UUID, UUID[]) TO service_role;
