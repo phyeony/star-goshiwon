@@ -3,6 +3,7 @@ import Link from "next/link";
 import { KoHeader } from "@/components/ko/ko-header";
 import { KoFooter } from "@/components/ko/ko-footer";
 import { KoBookingForm } from "@/components/ko/ko-booking-form";
+import { SharedFacilities } from "@/components/shared-facilities";
 import { OptimizedPhoto } from "@/components/optimized-photo";
 import { siteConfig } from "@/lib/site-data";
 import {
@@ -210,42 +211,21 @@ export default async function KoHomePage({
           </p>
         </section>
 
-        <section id="shared" className="mx-auto max-w-6xl scroll-mt-16 px-5 pt-14 md:grid md:scroll-mt-20 md:grid-cols-12 md:items-end md:gap-14 md:px-12 md:pt-28">
-          <div className="md:col-span-5">
-            <SectionLabel>SHARED</SectionLabel>
-            <h2 className="mb-4 mt-1.5 text-2xl font-extrabold tracking-[-0.6px] md:mb-5 md:mt-2.5 md:text-[40px] md:tracking-[-1.2px]">
-              같이 쓰는 공간
-            </h2>
-            <p className="text-sm leading-[1.7] text-[#3A3F43] md:mb-7 md:text-[17px] md:leading-[1.8]">
+        <section id="shared" className="mx-auto max-w-6xl scroll-mt-16 px-5 pt-14 md:scroll-mt-20 md:px-12 md:pt-28">
+          <div className="md:flex md:items-end md:justify-between md:gap-14">
+            <div>
+              <SectionLabel>SHARED</SectionLabel>
+              <h2 className="mb-4 mt-1.5 text-2xl font-extrabold tracking-[-0.6px] md:mb-0 md:mt-2.5 md:text-[40px] md:tracking-[-1.2px]">
+                같이 쓰는 공간
+              </h2>
+            </div>
+            <p className="text-sm leading-[1.7] text-[#3A3F43] md:max-w-md md:text-right md:text-[17px] md:leading-[1.8]">
               주방에는 밥이 준비되어 있습니다. 세탁실, 정수기, 전자레인지, 발코니를 함께
               쓰고, 택배는 대신 보관해 드립니다.
             </p>
-            <OptimizedPhoto
-              src="/images/common/rice-cooker.jpg"
-              alt="공용 주방 밥솥"
-              sizes="40vw"
-              className="hidden h-[300px] w-full object-cover md:block"
-            />
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-1.5 md:col-span-7 md:mt-0 md:grid-cols-5 md:gap-5">
-            <OptimizedPhoto
-              src="/images/common/balcony.jpg"
-              alt="공용 발코니"
-              sizes="(min-width: 768px) 35vw, 100vw"
-              className="col-span-2 h-[170px] w-full object-cover md:col-span-3 md:h-[480px]"
-            />
-            <OptimizedPhoto
-              src="/images/common/rice-cooker.jpg"
-              alt="공용 주방 밥솥"
-              sizes="50vw"
-              className="h-[130px] w-full object-cover md:hidden"
-            />
-            <OptimizedPhoto
-              src="/images/economy/2.desk.jpg"
-              alt="방 안 책상"
-              sizes="(min-width: 768px) 25vw, 50vw"
-              className="h-[130px] w-full object-cover md:col-span-2 md:h-[480px]"
-            />
+          <div className="mt-4 md:mt-8">
+            <SharedFacilities lang="ko" />
           </div>
         </section>
 
