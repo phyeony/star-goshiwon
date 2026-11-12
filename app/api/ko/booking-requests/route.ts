@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { koBookingRequestSchema } from "@/lib/validation";
 import { getRoomBySlug, createBookingRequest } from "@/lib/queries";
 import { sendKoAdminNotification } from "@/lib/email";
+import { getPostHogClient } from "@/lib/posthog-server";
 import {
   addMonths,
   buildKakaoMessage,
@@ -65,6 +66,23 @@ export async function POST(req: NextRequest) {
     });
 
     const roomName = koRoomName(room);
+    try {
+      const posthog = getPostHogClient();
+      posthog.capture({
+        distinctId: `ko-request-${request.id}`,
+        event: "booking_request_created",
+        properties: {
+          locale: "ko",
+          room_slug: room.slug,
+          check_in_date: data.move_in_date,
+          stay_months: data.stay_months,
+          request_id: request.id,
+        },
+      });
+      await posthog.shutdown();
+    } catch (err) {
+      console.error("PostHog capture failed:", err);
+    }
     try {
       await sendKoAdminNotification({
         request_id: request.id,

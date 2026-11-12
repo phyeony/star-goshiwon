@@ -9,9 +9,32 @@ import type { RoomImage } from "@/lib/types";
 interface ImageLightboxProps {
   images: RoomImage[];
   roomName: string;
+  /** "ko" uses Korean labels and the square-cornered Korean-site look. */
+  lang?: "en" | "ko";
 }
 
-export function ImageGallery({ images, roomName }: ImageLightboxProps) {
+const labels = {
+  en: {
+    viewAll: (n: number) => `View all ${n} photos`,
+    dialog: "Image gallery",
+    close: "Close gallery (press X or Escape)",
+    prev: "Previous image",
+    next: "Next image",
+    hint: "Use arrow keys to navigate · Press X or Esc to close",
+  },
+  ko: {
+    viewAll: (n: number) => `사진 ${n}장 모두 보기`,
+    dialog: "사진 크게 보기",
+    close: "닫기 (Esc)",
+    prev: "이전 사진",
+    next: "다음 사진",
+    hint: "화살표 키로 넘기기 · Esc로 닫기",
+  },
+};
+
+export function ImageGallery({ images, roomName, lang = "en" }: ImageLightboxProps) {
+  const t = labels[lang];
+  const ko = lang === "ko";
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const isOpen = lightboxIndex !== null;
   // Photo engagement is a strong booking-intent signal; fire once per visit
@@ -23,9 +46,10 @@ export function ImageGallery({ images, roomName }: ImageLightboxProps) {
       posthog.capture("room_photos_viewed", {
         room_name: roomName,
         photo_count: images.length,
+        locale: lang,
       });
     }
-  }, [isOpen, roomName, images.length]);
+  }, [isOpen, roomName, images.length, lang]);
 
   const close = useCallback(() => setLightboxIndex(null), []);
 
@@ -68,7 +92,7 @@ export function ImageGallery({ images, roomName }: ImageLightboxProps) {
         <button
           type="button"
           onClick={() => setLightboxIndex(0)}
-          className="relative h-80 sm:h-96 w-full rounded-2xl overflow-hidden cursor-pointer group"
+          className={`relative h-80 sm:h-96 w-full overflow-hidden cursor-pointer group ${ko ? "" : "rounded-2xl"}`}
         >
           <OptimizedPhoto
             src={images[0].url}
@@ -80,8 +104,14 @@ export function ImageGallery({ images, roomName }: ImageLightboxProps) {
           />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition duration-300" />
           {images.length > 1 && (
-            <span className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm text-gray-900 text-sm font-medium px-3 py-1.5 rounded-lg shadow-sm">
-              View all {images.length} photos
+            <span
+              className={
+                ko
+                  ? "absolute bottom-3 right-3 bg-[#16181A]/80 text-white text-[13px] font-semibold px-3 py-1.5"
+                  : "absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm text-gray-900 text-sm font-medium px-3 py-1.5 rounded-lg shadow-sm"
+              }
+            >
+              {t.viewAll(images.length)}
             </span>
           )}
         </button>
@@ -93,7 +123,7 @@ export function ImageGallery({ images, roomName }: ImageLightboxProps) {
                 key={img.id}
                 type="button"
                 onClick={() => setLightboxIndex(i + 1)}
-                className="relative h-32 rounded-lg overflow-hidden cursor-pointer group"
+                className={`relative h-24 sm:h-32 overflow-hidden cursor-pointer group ${ko ? "" : "rounded-lg"}`}
               >
                 <OptimizedPhoto
                   src={img.url}
@@ -114,14 +144,14 @@ export function ImageGallery({ images, roomName }: ImageLightboxProps) {
           className="fixed inset-0 z-[100] bg-black flex items-center justify-center"
           role="dialog"
           aria-modal="true"
-          aria-label="Image gallery"
+          aria-label={t.dialog}
         >
           {/* Close button */}
           <button
             type="button"
             onClick={close}
             className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition duration-150 ease-in-out"
-            aria-label="Close gallery (press X or Escape)"
+            aria-label={t.close}
           >
             <svg
               className="w-6 h-6"
@@ -150,7 +180,7 @@ export function ImageGallery({ images, roomName }: ImageLightboxProps) {
               type="button"
               onClick={goPrev}
               className="absolute left-4 z-10 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition duration-150 ease-in-out"
-              aria-label="Previous image"
+              aria-label={t.prev}
             >
               <svg
                 className="w-6 h-6"
@@ -187,7 +217,7 @@ export function ImageGallery({ images, roomName }: ImageLightboxProps) {
               type="button"
               onClick={goNext}
               className="absolute right-4 z-10 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition duration-150 ease-in-out"
-              aria-label="Next image"
+              aria-label={t.next}
             >
               <svg
                 className="w-6 h-6"
@@ -208,7 +238,7 @@ export function ImageGallery({ images, roomName }: ImageLightboxProps) {
 
           {/* Keyboard hint */}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 text-white/40 text-xs">
-            Use arrow keys to navigate &middot; Press X or Esc to close
+            {t.hint}
           </div>
         </div>
       )}

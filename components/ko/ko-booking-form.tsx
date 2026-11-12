@@ -12,6 +12,8 @@ interface Props {
   rooms: KoRoomOption[];
   initialRoom?: string;
   kakaoChatUrl: string;
+  /** Room page: the room is fixed, so show it as text instead of a select. */
+  singleRoom?: boolean;
 }
 
 interface Sent {
@@ -27,7 +29,7 @@ const inputClass =
   "block h-12 w-full border border-[#C9CCCF] bg-white px-3.5 text-[15px] text-[#16181A] outline-none focus:border-[#16181A] md:h-[52px] md:text-base";
 const labelClass = "mb-1.5 block text-[13px] font-semibold md:text-sm";
 
-export function KoBookingForm({ rooms, initialRoom, kakaoChatUrl }: Props) {
+export function KoBookingForm({ rooms, initialRoom, kakaoChatUrl, singleRoom }: Props) {
   const [roomSlug, setRoomSlug] = useState(
     rooms.some((r) => r.slug === initialRoom) ? initialRoom! : rooms[0]?.slug ?? ""
   );
@@ -37,6 +39,8 @@ export function KoBookingForm({ rooms, initialRoom, kakaoChatUrl }: Props) {
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [agreed, setAgreed] = useState(false);
+  const [menOnly, setMenOnly] = useState(false);
+  const [policies, setPolicies] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -46,6 +50,14 @@ export function KoBookingForm({ rooms, initialRoom, kakaoChatUrl }: Props) {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    if (!menOnly) {
+      setError("남성 전용 고시원임을 확인해 주세요.");
+      return;
+    }
+    if (!policies) {
+      setError("이용 약관을 읽고 동의해 주세요.");
+      return;
+    }
     if (!agreed) {
       setError("개인정보 수집 · 이용에 동의해 주세요.");
       return;
@@ -63,6 +75,8 @@ export function KoBookingForm({ rooms, initialRoom, kakaoChatUrl }: Props) {
           guest_phone: phone,
           notes,
           privacy_accepted: agreed,
+          men_only_acknowledged: menOnly,
+          policies_accepted: policies,
         }),
       });
       const body = await res.json().catch(() => ({}));
@@ -92,7 +106,7 @@ export function KoBookingForm({ rooms, initialRoom, kakaoChatUrl }: Props) {
 
   if (sent) {
     return (
-      <div className="border border-[#DCDEE0] bg-white p-5 md:p-9" role="status">
+      <div className={singleRoom ? "" : "border border-[#DCDEE0] bg-white p-5 md:p-9"} role="status">
         <p className="text-lg font-extrabold md:text-2xl">예약 요청을 받았습니다</p>
         <p className="mt-2 text-sm leading-relaxed text-[#3A3F43] md:text-base">
           아래 내용을 카카오톡으로 보내주시면 더 빨리 답장드릴 수 있어요. 보내지 않아도 요청은
@@ -118,8 +132,18 @@ export function KoBookingForm({ rooms, initialRoom, kakaoChatUrl }: Props) {
   }
 
   return (
-    <form onSubmit={submit} noValidate className="md:border md:border-[#DCDEE0] md:bg-white md:p-9">
+    <form onSubmit={submit} noValidate className={singleRoom ? "" : "md:border md:border-[#DCDEE0] md:bg-white md:p-9"}>
       <div className="grid grid-cols-2 gap-x-2.5 gap-y-3.5 md:gap-x-4 md:gap-y-[18px]">
+        {singleRoom ? (
+          <div className="col-span-2 flex items-baseline justify-between border-b border-[#DCDEE0] pb-3">
+            <span className="text-base font-extrabold">
+              {rooms.find((r) => r.slug === roomSlug)?.name}
+            </span>
+            <span className="text-base font-extrabold">
+              {rooms.find((r) => r.slug === roomSlug)?.priceLabel}
+            </span>
+          </div>
+        ) : (
         <label className="col-span-2 block">
           <span className={labelClass}>방 종류</span>
           <select
@@ -135,6 +159,7 @@ export function KoBookingForm({ rooms, initialRoom, kakaoChatUrl }: Props) {
             ))}
           </select>
         </label>
+        )}
         <label className="block">
           <span className={labelClass}>입실 희망일</span>
           <input
@@ -200,7 +225,35 @@ export function KoBookingForm({ rooms, initialRoom, kakaoChatUrl }: Props) {
         </label>
       </div>
 
-      <div className="mt-4 text-[13px] leading-relaxed text-[#3A3F43] md:text-sm">
+      <div className="mt-4 space-y-2.5 text-[13px] leading-relaxed text-[#3A3F43] md:text-sm">
+        <label className="flex cursor-pointer items-start gap-2.5">
+          <input
+            type="checkbox"
+            checked={menOnly}
+            onChange={(e) => setMenOnly(e.target.checked)}
+            className="mt-0.5 h-[18px] w-[18px] shrink-0 accent-[#16181A]"
+          />
+          <span>남성 전용 고시원임을 확인했습니다. (필수)</span>
+        </label>
+        <label className="flex cursor-pointer items-start gap-2.5">
+          <input
+            type="checkbox"
+            checked={policies}
+            onChange={(e) => setPolicies(e.target.checked)}
+            className="mt-0.5 h-[18px] w-[18px] shrink-0 accent-[#16181A]"
+          />
+          <span>
+            <a
+              href="/policies/ko"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold underline"
+            >
+              이용 약관
+            </a>
+            을 읽었고 동의합니다. (필수)
+          </span>
+        </label>
         <label className="flex cursor-pointer items-start gap-2.5">
           <input
             type="checkbox"

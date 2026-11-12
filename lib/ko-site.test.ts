@@ -61,14 +61,16 @@ describe("koBookingRequestSchema", () => {
     move_in_date: "2099-01-01",
     stay_months: 3,
     privacy_accepted: true,
+    men_only_acknowledged: true,
+    policies_accepted: true,
   };
   it("accepts a complete request", () => {
     expect(koBookingRequestSchema.safeParse(valid).success).toBe(true);
   });
-  it("requires privacy consent", () => {
-    expect(
-      koBookingRequestSchema.safeParse({ ...valid, privacy_accepted: false }).success
-    ).toBe(false);
+  it("requires privacy, men-only and policy consent", () => {
+    for (const key of ["privacy_accepted", "men_only_acknowledged", "policies_accepted"]) {
+      expect(koBookingRequestSchema.safeParse({ ...valid, [key]: false }).success).toBe(false);
+    }
   });
   it("rejects past move-in dates and bad phones", () => {
     expect(

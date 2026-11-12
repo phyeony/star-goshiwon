@@ -58,7 +58,7 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: "스타고시원",
       locale: "ko_KR",
       type: "website",
-      images: [{ url: "/images/private-shower/7.window-day.jpg", alt: "스타고시원 창문 있는 방" }],
+      images: [{ url: "/images/private-shower/7.window-day.jpg", alt: "스타고시원 외창 있는 방" }],
     },
   };
 }
@@ -122,7 +122,7 @@ export default async function KoHomePage({
         <section className="relative md:h-[520px] md:bg-[#16181A]">
           <OptimizedPhoto
             src="/images/private-shower/7.window-day.jpg"
-            alt="스타고시원 창문 있는 방"
+            alt="스타고시원 외창 있는 방"
             sizes="100vw"
             loading="eager"
             fetchPriority="high"
@@ -152,7 +152,7 @@ export default async function KoHomePage({
               </h2>
             </div>
             <p className="hidden text-sm text-[#5A5F63] md:block">
-              모든 방에 창문 · 침대 · 책상 · 미니 냉장고 · 냉난방기
+              모든 방에 외창 · 침대 · 책상 · 미니 냉장고 · 냉난방기
             </p>
           </div>
           <div className="mt-3 grid gap-5 md:mt-8 md:grid-cols-3">
@@ -208,7 +208,7 @@ export default async function KoHomePage({
             })}
           </div>
           <p className="mt-4 text-[13px] leading-relaxed text-[#5A5F63] md:hidden">
-            모든 방에 창문, 침대, 책상 · 의자, 미니 냉장고, 냉난방기, 와이파이가 있습니다.
+            모든 방에 외창, 침대, 책상 · 의자, 미니 냉장고, 냉난방기, 와이파이가 있습니다.
           </p>
         </section>
 
@@ -219,7 +219,7 @@ export default async function KoHomePage({
               같이 쓰는 공간
             </h2>
             <p className="text-sm leading-[1.7] text-[#3A3F43] md:mb-7 md:text-[17px] md:leading-[1.8]">
-              주방에는 밥과 김치가 준비되어 있습니다. 세탁실, 정수기, 전자레인지, 발코니를 함께
+              주방에는 밥이 준비되어 있습니다. 세탁실, 정수기, 전자레인지, 발코니를 함께
               쓰고, 택배는 대신 보관해 드립니다.
             </p>
             <OptimizedPhoto

@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { KoHeader } from "@/components/ko/ko-header";
 import { KoFooter } from "@/components/ko/ko-footer";
-import { OptimizedPhoto } from "@/components/optimized-photo";
+import { ImageGallery } from "@/components/image-lightbox";
+import { TrackEvent } from "@/components/analytics/track-event";
 import { KoBookingForm } from "@/components/ko/ko-booking-form";
 import {
   formatManwon,
@@ -46,14 +47,13 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 }
 
 const included = [
-  "창문",
+  "외창",
   "침대",
   "책상 · 의자",
   "미니 냉장고",
   "냉난방기",
   "와이파이",
-  "전기 · 수도 · 가스 포함",
-  "밥 · 김치 제공",
+  "밥 제공",
 ];
 
 export default async function KoRoomPage({ params }: { params: Params }) {
@@ -67,94 +67,90 @@ export default async function KoRoomPage({ params }: { params: Params }) {
 
   return (
     <>
+      <TrackEvent
+        event="room_viewed"
+        properties={{ room_slug: room.slug, room_name: name, room_status: room.status, locale: "ko" }}
+      />
       <KoHeader />
-      <main className="mx-auto max-w-6xl px-5 pb-16 pt-5 md:px-12 md:pt-10">
-        <Link href="/ko#rooms" className="text-sm text-[#5A5F63]">
-          ← 방 종류 전체 보기
-        </Link>
+      <main className="mx-auto max-w-6xl px-5 pb-16 pt-5 md:px-12 md:pt-8">
+        <nav className="mb-4 text-sm text-[#5A5F63]">
+          <Link href="/ko#rooms">방 · 가격</Link>
+          <span className="mx-2">/</span>
+          <span className="text-[#16181A]">{name}</span>
+        </nav>
 
-        <div className="mt-4 md:grid md:grid-cols-12 md:gap-12">
-          <div className="md:col-span-5 md:order-2">
-            <div className="md:sticky md:top-28">
-              <p className="text-[13px] font-semibold text-[#5A5F63]">{koSite.tagline}</p>
-              <h1 className="mt-1 text-[28px] font-extrabold tracking-[-0.8px] md:text-[40px]">
-                {name}
-              </h1>
-              <p className="mt-1 text-2xl font-extrabold md:text-3xl">
-                {room.monthly_rate_krw ? `월 ${formatManwon(room.monthly_rate_krw)}` : "가격 문의"}
-                {room.deposit_krw != null && (
-                  <span className="ml-2 text-base font-semibold text-[#5A5F63]">
-                    보증금 {formatManwon(room.deposit_krw)}
-                  </span>
-                )}
+        <div className="flex flex-col gap-10 lg:flex-row lg:gap-12">
+          <div className="w-full lg:w-[62%]">
+            {images.length > 0 && (
+              <>
+                <ImageGallery images={images} roomName={name} lang="ko" />
+                <p className="-mt-5 mb-7 text-[13px] leading-relaxed text-[#5A5F63]">
+                  사진은 예시입니다. 방은 같은 종류 안에서 배정되며,{" "}
+                  <strong className="font-semibold text-[#16181A]">
+                    같은 종류의 방은 크기와 시설이 같습니다.
+                  </strong>
+                </p>
+              </>
+            )}
+
+            <p className="text-[13px] font-semibold text-[#5A5F63]">{koSite.tagline}</p>
+            <div className="mt-1 flex items-start justify-between gap-4">
+              <h1 className="text-[28px] font-extrabold tracking-[-0.8px] md:text-[36px]">{name}</h1>
+              <span className="mt-2 whitespace-nowrap text-sm font-semibold text-[#1F7A4D]">
+                {koRoomStatus[room.status]}
+              </span>
+            </div>
+            <p className="mt-1 text-2xl font-extrabold md:text-[28px]">
+              {priceLabel(room)}
+              {room.deposit_krw != null && (
+                <span className="ml-2 text-base font-semibold text-[#5A5F63]">
+                  보증금 {formatManwon(room.deposit_krw)}
+                </span>
+              )}
+            </p>
+            <p className="mt-1 text-sm text-[#5A5F63]">공과금 · 인터넷 포함 · 1개월부터</p>
+            <p className="mt-4 text-[15px] leading-[1.7] text-[#3A3F43]">{koRoomDetail(room)}</p>
+
+            <h2 className="mt-8 text-lg font-extrabold">방 안에 있는 것</h2>
+            <ul className="mt-3 grid grid-cols-2 border-t border-[#16181A] text-sm md:grid-cols-3">
+              {included.map((item) => (
+                <li key={item} className="border-b border-[#DCDEE0] py-2.5">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <aside id="inquiry" className="w-full scroll-mt-20 lg:w-[38%]">
+            <div className="border border-[#DCDEE0] bg-white p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] md:p-6 lg:sticky lg:top-24">
+              <h2 className="text-xl font-extrabold">입실 문의</h2>
+              <p className="mb-5 mt-1 text-sm text-[#5A5F63]">
+                입실일과 기간을 남겨주세요.{" "}
+                <strong className="font-semibold text-[#16181A]">요청만으로는 결제되지 않아요.</strong>
               </p>
-              <p className="mt-3 text-[15px] leading-[1.7] text-[#3A3F43]">{koRoomDetail(room)}</p>
-              <p className="mt-2 text-sm font-semibold text-[#1F7A4D]">{koRoomStatus[room.status]}</p>
-
-              <ul className="mt-5 grid grid-cols-2 border-t border-[#16181A] text-sm">
-                {included.map((item) => (
-                  <li key={item} className="border-b border-[#DCDEE0] py-2.5">
-                    {item}
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mt-6 flex gap-2">
-                <a
-                  href="#inquiry"
-                  className="flex h-12 flex-1 items-center justify-center bg-[#16181A] text-[15px] font-extrabold text-white"
-                >
-                  입실 문의하기
-                </a>
+              <KoBookingForm
+                rooms={rooms.map((r) => ({
+                  slug: r.slug,
+                  name: koRoomName(r),
+                  priceLabel: priceLabel(r),
+                }))}
+                initialRoom={room.slug}
+                kakaoChatUrl={koSite.kakaoChatUrl}
+                singleRoom
+              />
+              <div className="mt-5 border-t border-[#DCDEE0] pt-4">
                 <a
                   href={koSite.kakaoChatUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-12 flex-1 items-center justify-center bg-[#FEE500] text-[15px] font-extrabold text-[#191919]"
+                  className="flex h-11 w-full items-center justify-center border border-[#C9CCCF] text-sm font-semibold"
                 >
-                  카카오톡 문의
+                  카카오톡으로 먼저 물어보기
                 </a>
               </div>
             </div>
-          </div>
-
-          <div className="mt-8 grid gap-2 md:order-1 md:col-span-7 md:mt-0 md:grid-cols-2">
-            {images.map((img, i) => (
-              <OptimizedPhoto
-                key={img.id}
-                src={img.url}
-                alt={`${name} 사진 ${i + 1}`}
-                sizes="(min-width: 768px) 30vw, 100vw"
-                loading={i < 2 ? "eager" : "lazy"}
-                className={`w-full object-cover ${i === 0 ? "h-[260px] md:col-span-2 md:h-[420px]" : "h-[220px] md:h-[240px]"}`}
-              />
-            ))}
-          </div>
+          </aside>
         </div>
-
-        <section id="inquiry" className="mt-12 scroll-mt-16 bg-[#F3F4F5] px-5 py-8 -mx-5 md:mx-0 md:mt-20 md:grid md:scroll-mt-24 md:grid-cols-12 md:gap-12 md:px-10 md:py-12">
-          <div className="md:col-span-5">
-            <p className="text-[11px] font-semibold tracking-[2px] text-[#5A5F63]">BOOKING</p>
-            <h2 className="mb-2 mt-1.5 text-2xl font-extrabold tracking-[-0.6px] md:text-[32px]">
-              {name} 입실 문의
-            </h2>
-            <p className="mb-4 text-sm leading-[1.7] text-[#3A3F43] md:text-base">
-              입실 희망일과 기간을 남겨주시면 빈 방을 확인하고 입금 안내를 드립니다. 요청만으로는
-              결제되지 않습니다.
-            </p>
-          </div>
-          <div className="md:col-span-7">
-            <KoBookingForm
-              rooms={rooms.map((r) => ({
-                slug: r.slug,
-                name: koRoomName(r),
-                priceLabel: priceLabel(r),
-              }))}
-              initialRoom={room.slug}
-              kakaoChatUrl={koSite.kakaoChatUrl}
-            />
-          </div>
-        </section>
       </main>
       <KoFooter />
     </>

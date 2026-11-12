@@ -162,6 +162,12 @@ export const koBookingRequestSchema = z
     privacy_accepted: z.literal(true, {
       errorMap: () => ({ message: "개인정보 수집 · 이용에 동의해 주세요" }),
     }),
+    men_only_acknowledged: z.literal(true, {
+      errorMap: () => ({ message: "남성 전용 고시원임을 확인해 주세요" }),
+    }),
+    policies_accepted: z.literal(true, {
+      errorMap: () => ({ message: "이용 약관을 읽고 동의해 주세요" }),
+    }),
   })
   .refine(
     (data) => {
