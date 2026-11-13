@@ -31,7 +31,7 @@ function todayKst(): string {
 }
 
 const inputClass =
-  "block h-12 w-full border border-[#C9CCCF] bg-white px-3.5 text-[15px] text-[#16181A] outline-none focus:border-[#16181A] md:h-[52px] md:text-base";
+  "block h-12 w-full min-w-0 border border-[#C9CCCF] bg-white px-3.5 text-[15px] text-[#16181A] outline-none focus:border-[#16181A] md:h-[52px] md:text-base";
 const labelClass = "mb-1.5 block text-[13px] font-semibold md:text-sm";
 
 export function KoBookingForm({ rooms, initialRoom, contactPhone, contactPhoneHref, singleRoom }: Props) {
@@ -138,7 +138,7 @@ export function KoBookingForm({ rooms, initialRoom, contactPhone, contactPhoneHr
 
   return (
     <form onSubmit={submit} noValidate className={singleRoom ? "" : "md:border md:border-[#DCDEE0] md:bg-white md:p-9"}>
-      <div className="grid grid-cols-2 gap-x-2.5 gap-y-3.5 md:gap-x-4 md:gap-y-[18px]">
+      <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-x-2.5 gap-y-3.5 md:gap-x-4 md:gap-y-[18px]">
         {singleRoom ? null : (
         <label className="col-span-2 block">
           <span className={labelClass}>방 종류</span>
@@ -156,18 +156,19 @@ export function KoBookingForm({ rooms, initialRoom, contactPhone, contactPhoneHr
           </select>
         </label>
         )}
-        <label className="block">
+        <label className="block min-w-0">
           <span className={labelClass}>입실 희망일</span>
           <input
             type="date"
             value={moveIn}
             min={todayKst()}
             onChange={(e) => setMoveIn(e.target.value)}
-            className={inputClass}
+            // iOS Safari gives date inputs a wide intrinsic width; reset it so the field fits its column.
+            className={`${inputClass} appearance-none text-left [&::-webkit-date-and-time-value]:text-left`}
             required
           />
         </label>
-        <label className="block">
+        <label className="block min-w-0">
           <span className={labelClass}>예상 이용 기간</span>
           <select
             value={months}
