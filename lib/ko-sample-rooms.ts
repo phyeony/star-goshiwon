@@ -36,7 +36,7 @@ export const koSampleRooms: RoomWithImages[] = [
     name_ko: "기본 방",
     slug: "economy-room",
     sort_order: 1,
-    monthly_rate_krw: 380000,
+    monthly_rate_krw: 300000,
     deposit_krw: 100000,
     room_images: images("sample-economy", [
       "/images/economy/1.main.jpg",
@@ -52,7 +52,7 @@ export const koSampleRooms: RoomWithImages[] = [
     slug: "room-with-private-shower",
     sort_order: 2,
     status: "limited",
-    monthly_rate_krw: 500000,
+    monthly_rate_krw: 350000,
     deposit_krw: 100000,
     room_images: images("sample-shower", [
       "/images/private-shower/2.main-2.jpg",
@@ -67,7 +67,7 @@ export const koSampleRooms: RoomWithImages[] = [
     name_ko: "원룸(샤워&화장실)",
     slug: "room-with-private-shower-and-toilet",
     sort_order: 3,
-    monthly_rate_krw: 500000,
+    monthly_rate_krw: 400000,
     deposit_krw: 100000,
     room_images: images("sample-toilet", [
       "/images/private-toilet-and-shower/1.main.jpg",
