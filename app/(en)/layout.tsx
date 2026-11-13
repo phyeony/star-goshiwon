@@ -6,6 +6,7 @@ import { PostHogProvider } from "@/components/analytics/posthog-provider";
 import { PostHogPageview } from "@/components/analytics/posthog-pageview";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { siteConfig } from "@/lib/site-data";
+import { caveat, inter } from "@/lib/fonts";
 import "../globals.css";
 
 export const metadata: Metadata = {
@@ -121,7 +122,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${inter.variable} ${caveat.variable}`}>
       <body className="bg-gray-50 text-gray-900 antialiased font-sans">
         <script
           type="application/ld+json"

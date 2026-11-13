@@ -35,6 +35,7 @@ const labels = {
 export function ImageGallery({ images, roomName, lang = "en" }: ImageLightboxProps) {
   const t = labels[lang];
   const ko = lang === "ko";
+  const altOf = (img: RoomImage) => (ko ? img.alt_ko || img.alt : img.alt) || roomName;
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const isOpen = lightboxIndex !== null;
   // Photo engagement is a strong booking-intent signal; fire once per visit
@@ -96,7 +97,7 @@ export function ImageGallery({ images, roomName, lang = "en" }: ImageLightboxPro
         >
           <OptimizedPhoto
             src={images[0].url}
-            alt={images[0].alt || roomName}
+            alt={altOf(images[0])}
             className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition duration-300"
             sizes="(max-width: 1024px) 100vw, 66vw"
             loading="eager"
@@ -127,7 +128,7 @@ export function ImageGallery({ images, roomName, lang = "en" }: ImageLightboxPro
               >
                 <OptimizedPhoto
                   src={img.url}
-                  alt={img.alt || roomName}
+                  alt={altOf(img)}
                   className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition duration-300"
                   sizes="(max-width: 1024px) 33vw, 22vw"
                 />
@@ -203,7 +204,7 @@ export function ImageGallery({ images, roomName, lang = "en" }: ImageLightboxPro
           <div className="relative w-full h-full p-16">
             <OptimizedPhoto
               src={images[lightboxIndex!].url}
-              alt={images[lightboxIndex!].alt || roomName}
+              alt={altOf(images[lightboxIndex!])}
               className="absolute inset-0 h-full w-full object-contain"
               sizes="100vw"
               loading="eager"

@@ -65,6 +65,8 @@ export interface RoomImage {
   room_id: string;
   url: string;
   alt: string;
+  /** Korean caption, from the photo library. */
+  alt_ko?: string;
   sort_order: number;
   created_at: string;
 }
