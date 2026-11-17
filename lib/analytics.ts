@@ -17,3 +17,9 @@ export const gaEnabled = GA_ID.length > 0;
 // localStorage key holding the visitor's cookie-consent choice
 // ("granted" | "denied"). Shared by the consent banner and the GA event helper.
 export const GA_CONSENT_STORAGE_KEY = "ga-consent";
+
+/** Fired on window when the visitor answers the cookie banner. */
+export const ANALYTICS_CONSENT_EVENT = "analytics-consent";
+
+/** Naver Analytics (analytics.naver.com) site ID. Public, like a GA measurement ID. */
+export const NAVER_ANALYTICS_ID = "88ad17e53cc670";
