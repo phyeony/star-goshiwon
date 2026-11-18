@@ -72,7 +72,7 @@ export const buildFaqs = (longStayDiscountPct: number) => [
   {
     question: "Can I see the room before booking?",
     answer:
-      "Yes! We encourage room visits. Send us a booking request or contact us via WhatsApp to schedule a viewing. Walk-ins are also welcome during business hours (9 AM - 9 PM).",
+      "Yes — viewings are by appointment. Message us on WhatsApp to arrange a time.",
   },
   // {
   //   question: "Is there a curfew or house rules?",
