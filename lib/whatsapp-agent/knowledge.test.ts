@@ -3,6 +3,7 @@ import { deriveTier } from "@/lib/pricing";
 import { guides } from "@/lib/guides";
 import { buildKnowledgePack } from "./knowledge";
 import { policiesPlainText } from "./policies-text";
+import { policiesText } from "./policies-plain";
 
 const rooms = [{ name: "Economy Room", slug: "economy-room", nightly_rate_usd: 11, long_stay_discount: 0.4 }];
 
@@ -26,5 +27,12 @@ describe("knowledge pack", () => {
   it("policies text keeps the discount from the page", () => {
     expect(policiesPlainText(40)).toContain("40% long-stay discount");
     expect(policiesPlainText(40)).not.toContain("<");
+  });
+});
+
+describe("pre-rendered policies (used by the live agent)", () => {
+  it("matches the /policies page; run `pnpm gen:policies-text` if this fails", () => {
+    expect(policiesText(40)).toBe(policiesPlainText(40));
+    expect(policiesText(35)).toBe(policiesPlainText(35));
   });
 });
