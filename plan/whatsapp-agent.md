@@ -392,3 +392,21 @@ knowledge pack, tools) can start once this spec and the implementation plan are 
     Luna), switchable by setting. Chinese models only through non-Chinese hosts.
     Gemini needs a paid key for live use. Anthropic adapter deferred (needs the SDK).
   **Next: user runs `pnpm eval:whatsapp` and shares the summary.**
+- 2026-11-18 (later): go-live details decided.
+  - **After-hours handoff notice:** when a turn is handed off outside 9 AM – 11 PM
+    KST, send one fixed line saying the manager will reply in the morning (at most
+    once per conversation per night). The message stays unread for the manager.
+    Inside those hours handoffs stay silent.
+  - **Manager reply pauses the bot:** after the manager replies from the WhatsApp
+    app, the agent stays quiet in that chat for 12 hours.
+  - **Message bursts:** the queue waits 30–60 s after a guest's last message and
+    answers everything pending in one reply.
+  - **Model outage / budget exhausted:** every turn becomes a handoff; the admin
+    page shows a banner so the manager watches the app.
+  - **Ratings:** the admin page gets ✓/✗ per auto-sent reply and per draft; ✗ items
+    become eval cases. Manager rates every reply in the first live week.
+  - **Manager-only fees** stay in `lib/whatsapp-agent/facts.ts` (they rarely change).
+  - **Privacy policy:** add a section naming the model provider (overseas
+    processing of guest messages) to /policies and /ko/policy before go-live.
+  - Coexistence check on the +82 number still to do (user, §6 step 7) before the
+    webhook is built.
