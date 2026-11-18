@@ -7,6 +7,7 @@
     "dev": "next dev",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "eval:whatsapp": "dotenv -e .env.local -- tsx --tsconfig tsconfig.scripts.json scripts/whatsapp-eval/run.ts",
     "verify": "pnpm run test && pnpm run build && pnpm run test:e2e",
     "start": "next start",
     "lint": "next lint",

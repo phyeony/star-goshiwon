@@ -79,7 +79,7 @@ export default function ContactPage() {
         <p className="text-lg font-semibold text-gray-800">Star Goshiwon</p>
         <p className="text-base text-gray-600 mt-1">{siteConfig.address}</p>
         <p className="text-sm text-gray-500 mt-2">
-          Walk-ins welcome during business hours: 9 AM – 9 PM KST
+          Viewings by appointment — message us on WhatsApp to arrange a time.
         </p>
         <div className="flex flex-wrap gap-x-5 gap-y-2 mt-4">
           <a
