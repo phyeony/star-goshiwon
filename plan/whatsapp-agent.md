@@ -408,5 +408,11 @@ knowledge pack, tools) can start once this spec and the implementation plan are 
   - **Manager-only fees** stay in `lib/whatsapp-agent/facts.ts` (they rarely change).
   - **Privacy policy:** add a section naming the model provider (overseas
     processing of guest messages) to /policies and /ko/policy before go-live.
-  - Coexistence check on the +82 number still to do (user, §6 step 7) before the
-    webhook is built.
+  - Coexistence check on the +82 number still to do before the webhook is built.
+    Meta's coexistence onboarding (Embedded Signup, featureType
+    `whatsapp_business_app_onboarding`) is only available through a Solution
+    Partner / Tech Provider, not self-serve. Options: sign up via a provider that
+    supports coexistence (fast; markup + extra processor) or register our own app
+    as a Tech Provider (free; business verification + app review). Business app
+    must be v2.24.17+. Meta's page doesn't mention Korea. Compare 2–3 providers at
+    the webhook step.
