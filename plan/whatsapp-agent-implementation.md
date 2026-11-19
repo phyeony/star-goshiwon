@@ -197,7 +197,7 @@ API keys (action 3) to *run*; the harness and adversarial cases can be written f
       (ordering: send fails ⇒ markRead never called).
 - [ ] Booking-submit hook: opt-in → utility template + linked conversation
       (`men_only_state='asked'`). Template sending gated until approved (Task 16).
-- [ ] Retention cron: delete conversations idle 12 months (query unit tested).
+- [ ] ~~Retention cron~~ deferred 2026-11-19 (user: no cleanup yet).
 - [ ] Local: signed fake payloads via curl script `scripts/wa-fake-webhook.ts`.
 - [ ] **Needs user:** Meta app, test number, secrets in staging (actions 5–6).
 
@@ -235,3 +235,24 @@ API keys (action 3) to *run*; the harness and adversarial cases can be written f
   run with `pnpm eval:whatsapp [--provider X --model Y --effort low --only a,b]`.
   Results go to `scripts/whatsapp-eval/results/` (git-ignored).
 - Phase 6–7: no shadow mode; go live once the eval passes.
+
+## Phase 3 as built (2026-11-19)
+
+- Tables: `supabase/migrations/2026-11-19-whatsapp.sql` (applied to dev). Agent
+  output lives in `whatsapp_agent_runs` (one row per turn, rated there), not on
+  messages. `booking_requests.whatsapp_number` / `whatsapp_opt_in` added now so
+  phone linking works; the form fields are Phase 2.
+- `worker.ts` wraps OpenNext's worker. Its queue handler calls
+  `/api/whatsapp/process` through `WORKER_SELF_REFERENCE`
+  with `WHATSAPP_INTERNAL_TOKEN`, so all app code runs inside Next.js.
+- Webhook queues each guest message with a 45 s delay; a run only starts once the
+  newest message is 30 s old (burst wait). A DB claim (`processing_until`) stops
+  two runs answering the same messages.
+- Manager echo (`smb_message_echoes`) pauses the chat for 12 h and marks its
+  pending guest messages handled.
+- After-hours line (outside 9 AM – 11 PM KST) on handoffs, once per 12 h.
+- Next.js refuses `react-dom/server` in app code, so the live agent reads a
+  pre-rendered policies text (`pnpm gen:policies-text`; a test catches drift).
+- Before the first deploy: `pnpm wrangler queues create goshiwon-whatsapp` (and
+  `-staging`), WhatsApp secrets in `.env.*.secrets`, migration on prod.
+- Local test: `pnpm dev` + `pnpm wa:fake "message"`.

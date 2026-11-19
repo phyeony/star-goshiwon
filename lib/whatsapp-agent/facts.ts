@@ -32,3 +32,8 @@ export const RESIDENCE_DOCUMENT_PENDING =
 // How the agent describes itself when asked whether it is a bot.
 export const ASSISTANT_DISCLOSURE =
   "I'm Star Goshiwon's assistant: I answer common questions any time, and the manager personally handles bookings and anything special.";
+
+// Sent once a night with a handoff outside 9 AM – 11 PM Korea time, so the
+// guest knows a person will answer. The question itself stays with the manager.
+export const AFTER_HOURS_NOTICE =
+  "Thanks for your message! The manager will get back to you in the morning, after 9 AM Korea time.";

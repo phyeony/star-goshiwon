@@ -1,6 +1,8 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"main": ".open-next/worker.js",
+	// worker.ts wraps OpenNext's .open-next/worker.js and adds the WhatsApp
+	// queue consumer (plan/whatsapp-agent.md §2.1).
+	"main": "worker.ts",
 	"name": "goshiwon",
 	"compatibility_date": "2026-04-10",
 	"compatibility_flags": [
@@ -54,6 +56,12 @@
 	"observability": {
 		"enabled": true
 	},
+	// WhatsApp agent jobs. Create once per account before the first deploy:
+	//   pnpm wrangler queues create goshiwon-whatsapp
+	"queues": {
+		"producers": [{ "binding": "WHATSAPP_QUEUE", "queue": "goshiwon-whatsapp" }],
+		"consumers": [{ "queue": "goshiwon-whatsapp", "max_batch_size": 5, "max_batch_timeout": 1, "max_retries": 5 }]
+	},
 	"env": {
 		"staging": {
 			"name": "goshiwon-staging",
@@ -97,7 +105,12 @@
 					"binding": "PHOTOS",
 					"bucket_name": "goshiwon-photos-staging"
 				}
-			]
+			],
+			// pnpm wrangler queues create goshiwon-whatsapp-staging
+			"queues": {
+				"producers": [{ "binding": "WHATSAPP_QUEUE", "queue": "goshiwon-whatsapp-staging" }],
+				"consumers": [{ "queue": "goshiwon-whatsapp-staging", "max_batch_size": 5, "max_batch_timeout": 1, "max_retries": 5 }]
+			}
 		}
 	}
 }

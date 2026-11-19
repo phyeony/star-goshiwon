@@ -3,7 +3,8 @@ import { siteConfig, stayTimes } from "@/lib/site-data";
 
 // The 15 policy sections, shared by /policies and the WhatsApp agent's
 // knowledge pack (lib/whatsapp-agent/policies-text.ts renders this to plain
-// text), so the agent quotes exactly what the page says.
+// text), so the agent quotes exactly what the page says. After editing, run
+// `pnpm gen:policies-text` to refresh the agent's copy (a test checks it).
 export function PoliciesContent({ discountPct }: { discountPct: number }) {
   return (
     <div className="space-y-10">
