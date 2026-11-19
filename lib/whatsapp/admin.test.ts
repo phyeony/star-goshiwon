@@ -64,9 +64,17 @@ describe("booking form WhatsApp number", () => {
     men_only_acknowledged: true,
   };
 
-  it("is optional", () => {
-    const r = bookingRequestSchema.safeParse(base);
-    expect(r.success && r.data.whatsapp_number).toBe(null);
+  it("is required", () => {
+    for (const whatsapp_number of [undefined, "", "   "]) {
+      const r = bookingRequestSchema.safeParse({ ...base, whatsapp_number });
+      expect(r.success).toBe(false);
+      expect(!r.success && r.error.issues[0].path).toEqual(["whatsapp_number"]);
+    }
+  });
+
+  it("opt-in defaults to off", () => {
+    const r = bookingRequestSchema.safeParse({ ...base, whatsapp_number: "+44 7700 900123" });
+    expect(r.success && r.data.whatsapp_opt_in).toBe(false);
   });
 
   it("is stored as E.164, matching Meta's sender id with a +", () => {

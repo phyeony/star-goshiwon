@@ -41,6 +41,7 @@ export function RequestForm({
     guest_name: "",
     guest_email: "",
     whatsapp_number: "",
+    whatsapp_opt_in: false,
     guest_count: 1,
     room_slug: preselectedSlug || rooms[0]?.slug || "",
     check_in_date: "",
@@ -273,19 +274,31 @@ export function RequestForm({
           <input
             type="tel"
             id="whatsapp_number"
-            placeholder="WhatsApp number (optional), e.g. +44 7700 900123"
+            placeholder="WhatsApp number, e.g. +44 7700 900123"
             autoComplete="tel"
             value={form.whatsapp_number}
             onChange={(e) => updateField("whatsapp_number", e.target.value)}
             className="block w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            required
           />
           {errors.whatsapp_number ? (
             <p className="text-xs text-red-600 mt-1">{errors.whatsapp_number}</p>
           ) : (
             <p className="text-xs text-gray-500 mt-1">
-              So we recognise you when you message us on WhatsApp.
+              Include your country code. We use it to reach you about this booking.
             </p>
           )}
+          <label className="flex items-start gap-2.5 cursor-pointer mt-2">
+            <input
+              type="checkbox"
+              checked={form.whatsapp_opt_in}
+              onChange={(e) => updateField("whatsapp_opt_in", e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+            />
+            <span className="text-sm text-gray-700">
+              Message me on WhatsApp about this booking.
+            </span>
+          </label>
         </div>
         <div>
           <textarea

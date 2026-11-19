@@ -25,15 +25,18 @@ export const bookingRequestSchema = z
       message: "Invalid check-out date",
     }),
     notes: z.string().max(1000, "Notes are too long").default(""),
-    // Optional. Lets the WhatsApp assistant recognise the guest's chat.
+    // Required: how we reach the guest, and how the WhatsApp assistant
+    // recognises their chat. Stored as E.164.
     whatsapp_number: z
-      .string()
+      .string({ required_error: "Please enter your WhatsApp number" })
       .max(40)
-      .default("")
+      .refine((v) => v.trim() !== "", { message: "Please enter your WhatsApp number" })
       .refine((v) => v.trim() === "" || normalizeE164(v) !== null, {
         message: "Enter your WhatsApp number with the country code, e.g. +44 7700 900123",
       })
-      .transform((v) => (v.trim() === "" ? null : normalizeE164(v))),
+      .transform((v) => normalizeE164(v) as string),
+    // Consent for us to message first (the booking-received message).
+    whatsapp_opt_in: z.boolean().default(false),
     bedding_prepaid: z.boolean().default(false),
     policies_accepted: z.literal(true, {
       errorMap: () => ({

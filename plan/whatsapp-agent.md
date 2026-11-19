@@ -348,8 +348,10 @@ The production WhatsApp number is not connected before step 5.
 
 **Steps 5–6**
 8. Manager tries `/admin/whatsapp`; tell Claude whether the manager's phone is iPhone or Android.
-9. Submit the booking-received template in WhatsApp Manager (Claude writes the text);
-   add a payment method for template charges.
+9. Submit the booking-received template in WhatsApp Manager: text in
+   `lib/whatsapp/booking-received.ts` (`BOOKING_RECEIVED_TEMPLATE_TEXT`, category Utility,
+   English). Once approved, set `WHATSAPP_BOOKING_TEMPLATE` to its name; add a payment
+   method for template charges (about $0.003–0.055 per message by country).
 10. Update the WhatsApp business profile description to mention the assistant.
 
 Only 1–3 block starting. Work not depending on them (policies data file, FAQ fix,
@@ -419,3 +421,6 @@ knowledge pack, tools) can start once this spec and the implementation plan are 
     must be v2.24.17+. Meta's page doesn't mention Korea. Compare 2–3 providers at
     the webhook step.
 - 2026-11-19: 12-month chat cleanup deferred (user); no cron for now (§2.7).
+- 2026-11-19: Booking form: WhatsApp number is now **required** (email stays required too);
+  a separate unticked "Message me on WhatsApp about this booking" checkbox is the opt-in.
+  The booking-received template is sent only when ticked and `WHATSAPP_BOOKING_TEMPLATE` is set.

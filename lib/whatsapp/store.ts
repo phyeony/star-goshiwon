@@ -87,6 +87,44 @@ export async function pauseForManager(conversationId: string, until: Date): Prom
   );
 }
 
+/**
+ * After the booking-received template went out: the chat for that number is
+ * linked to the booking, the men-only question counts as asked (unless the
+ * guest already answered it), and the message is stored as the agent's.
+ */
+export async function recordBookingReceived(args: {
+  waPhone: string;
+  bookingId: string;
+  waMessageId: string;
+  body: string;
+  sentAt: Date;
+}): Promise<void> {
+  const conversationId = await upsertConversation(args.waPhone, "", args.sentAt);
+  must(
+    await db()
+      .from("whatsapp_conversations")
+      .update({ booking_request_id: args.bookingId, match_source: "phone" })
+      .eq("id", conversationId),
+  );
+  must(
+    await db()
+      .from("whatsapp_conversations")
+      .update({ men_only_state: "asked" })
+      .eq("id", conversationId)
+      .eq("men_only_state", "unasked"),
+  );
+  await insertMessage({
+    conversationId,
+    waMessageId: args.waMessageId,
+    direction: "out",
+    sender: "bot",
+    messageType: "template",
+    body: args.body,
+    sentAt: args.sentAt,
+    handled: true,
+  });
+}
+
 // ─── Queue side ───
 
 function toSettings(row: Record<string, unknown> | null): Settings {
