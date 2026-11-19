@@ -252,9 +252,11 @@ store as draft with error, visible in admin.
   ✓ drafts and ✗ drafts).
 - Drafts live only on the admin page (the API cannot fill the WhatsApp app's input box).
 
-### 2.7 Retention
+### 2.7 Retention (deferred 2026-11-19)
 
-Daily cron deletes conversations (and their messages) with no activity for 12 months.
+User: no cleanup for now; chats are kept. Revisit later.
+
+~~Daily cron deletes conversations (and their messages) with no activity for 12 months.~~
 
 ### 2.8 Site content fixes
 
@@ -416,3 +418,4 @@ knowledge pack, tools) can start once this spec and the implementation plan are 
     as a Tech Provider (free; business verification + app review). Business app
     must be v2.24.17+. Meta's page doesn't mention Korea. Compare 2–3 providers at
     the webhook step.
+- 2026-11-19: 12-month chat cleanup deferred (user); no cron for now (§2.7).

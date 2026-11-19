@@ -197,7 +197,7 @@ API keys (action 3) to *run*; the harness and adversarial cases can be written f
       (ordering: send fails ⇒ markRead never called).
 - [ ] Booking-submit hook: opt-in → utility template + linked conversation
       (`men_only_state='asked'`). Template sending gated until approved (Task 16).
-- [ ] Retention cron: delete conversations idle 12 months (query unit tested).
+- [ ] ~~Retention cron~~ deferred 2026-11-19 (user: no cleanup yet).
 - [ ] Local: signed fake payloads via curl script `scripts/wa-fake-webhook.ts`.
 - [ ] **Needs user:** Meta app, test number, secrets in staging (actions 5–6).
 
@@ -242,8 +242,8 @@ API keys (action 3) to *run*; the harness and adversarial cases can be written f
   output lives in `whatsapp_agent_runs` (one row per turn, rated there), not on
   messages. `booking_requests.whatsapp_number` / `whatsapp_opt_in` added now so
   phone linking works; the form fields are Phase 2.
-- `worker.ts` wraps OpenNext's worker. Its queue and cron handlers call
-  `/api/whatsapp/process` and `/api/whatsapp/cron` through `WORKER_SELF_REFERENCE`
+- `worker.ts` wraps OpenNext's worker. Its queue handler calls
+  `/api/whatsapp/process` through `WORKER_SELF_REFERENCE`
   with `WHATSAPP_INTERNAL_TOKEN`, so all app code runs inside Next.js.
 - Webhook queues each guest message with a 45 s delay; a run only starts once the
   newest message is 30 s old (burst wait). A DB claim (`processing_until`) stops

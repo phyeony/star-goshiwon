@@ -87,16 +87,6 @@ export async function pauseForManager(conversationId: string, until: Date): Prom
   );
 }
 
-/** Conversations with no message for 12 months, and their messages and runs. */
-export async function deleteIdleConversations(now: Date): Promise<number> {
-  const cutoff = new Date(now);
-  cutoff.setUTCFullYear(cutoff.getUTCFullYear() - 1);
-  const rows = must(
-    await db().from("whatsapp_conversations").delete().lt("last_message_at", cutoff.toISOString()).select("id"),
-  );
-  return (rows ?? []).length;
-}
-
 // ─── Queue side ───
 
 function toSettings(row: Record<string, unknown> | null): Settings {
