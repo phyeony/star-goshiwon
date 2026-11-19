@@ -40,6 +40,7 @@ export function RequestForm({
   const [form, setForm] = useState({
     guest_name: "",
     guest_email: "",
+    whatsapp_number: "",
     guest_count: 1,
     room_slug: preselectedSlug || rooms[0]?.slug || "",
     check_in_date: "",
@@ -266,6 +267,24 @@ export function RequestForm({
           />
           {errors.guest_email && (
             <p className="text-xs text-red-600 mt-1">{errors.guest_email}</p>
+          )}
+        </div>
+        <div>
+          <input
+            type="tel"
+            id="whatsapp_number"
+            placeholder="WhatsApp number (optional), e.g. +44 7700 900123"
+            autoComplete="tel"
+            value={form.whatsapp_number}
+            onChange={(e) => updateField("whatsapp_number", e.target.value)}
+            className="block w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          />
+          {errors.whatsapp_number ? (
+            <p className="text-xs text-red-600 mt-1">{errors.whatsapp_number}</p>
+          ) : (
+            <p className="text-xs text-gray-500 mt-1">
+              So we recognise you when you message us on WhatsApp.
+            </p>
           )}
         </div>
         <div>

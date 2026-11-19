@@ -256,3 +256,22 @@ API keys (action 3) to *run*; the harness and adversarial cases can be written f
 - Before the first deploy: `pnpm wrangler queues create goshiwon-whatsapp` (and
   `-staging`), WhatsApp secrets in `.env.*.secrets`, migration on prod.
 - Local test: `pnpm dev` + `pnpm wa:fake "message"`.
+
+## Phase 2 + 5 as built (2026-11-19)
+
+- Booking form: optional WhatsApp number (no opt-in checkbox yet: it only matters
+  once the booking-received template exists). Normalised by `lib/phone.ts`
+  (needs a country code unless it's a Korean 0… number) and stored as E.164;
+  `store.getLinkedBooking` matches `+<Meta sender id>`. Shown on the request page.
+- `/admin/whatsapp` (nav: WhatsApp): chat list with 답변 필요 / AI 처리 중 /
+  답변함, AI off/paused, not-eligible and linked-booking badges; outage banner when
+  2+ runs failed in the last hour.
+- `/admin/whatsapp/[id]`: messages with each agent run placed after the messages
+  it handled (Korean translation, summary, handoff reasons, draft with copy,
+  ✓/✗ rating), per-chat AI on/off / end pause, wa.me link, residence-document
+  callout linking to the booking's document card (`#documents`).
+- `/admin/whatsapp/settings`: global on/off (confirm before turning on) and
+  per-topic switches with ✓/✗ counts.
+- Residence confirmation goes out through the existing document card (email),
+  not as a WhatsApp attachment; sending the file over WhatsApp needs Meta media
+  upload and can come later.

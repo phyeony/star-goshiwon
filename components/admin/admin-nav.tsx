@@ -11,6 +11,7 @@ type NavEntry = NavLink | NavGroup;
 const navItems: NavEntry[] = [
   { href: "/admin/availability", label: "예약 현황" },
   { href: "/admin/requests", label: "예약 요청" },
+  { href: "/admin/whatsapp", label: "WhatsApp" },
   { href: "/admin/reviews", label: "후기 관리" },
   { href: "/admin/photos", label: "사진 관리" },
   {

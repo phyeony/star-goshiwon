@@ -394,6 +394,8 @@ function makeBooking(
     notes: "",
     status: "approved",
     admin_notes: "",
+    whatsapp_number: null,
+    whatsapp_opt_in: false,
     created_at: "2026-05-17T00:00:00.000Z",
     updated_at: "2026-05-17T00:00:00.000Z",
     rooms: {
