@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizeE164 } from "./phone";
 
 /** Minimum booking length in nights (1 week). Shared by the API validator and
  * the date-range picker so the calendar disables anything shorter. */
@@ -24,6 +25,15 @@ export const bookingRequestSchema = z
       message: "Invalid check-out date",
     }),
     notes: z.string().max(1000, "Notes are too long").default(""),
+    // Optional. Lets the WhatsApp assistant recognise the guest's chat.
+    whatsapp_number: z
+      .string()
+      .max(40)
+      .default("")
+      .refine((v) => v.trim() === "" || normalizeE164(v) !== null, {
+        message: "Enter your WhatsApp number with the country code, e.g. +44 7700 900123",
+      })
+      .transform((v) => (v.trim() === "" ? null : normalizeE164(v))),
     bedding_prepaid: z.boolean().default(false),
     policies_accepted: z.literal(true, {
       errorMap: () => ({

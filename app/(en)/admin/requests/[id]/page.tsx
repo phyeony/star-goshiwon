@@ -112,6 +112,23 @@ export default async function RequestDetailPage({ params }: Props) {
                   </dd>
                 </div>
               )}
+              {request.whatsapp_number && (
+                <div>
+                  <dt className="text-xs font-bold text-gray-500 uppercase">
+                    WhatsApp
+                  </dt>
+                  <dd className="text-base text-gray-900 mt-1">
+                    <a
+                      href={`https://wa.me/${request.whatsapp_number.replace(/^\+/, "")}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-indigo-600 hover:text-indigo-700"
+                    >
+                      {request.whatsapp_number}
+                    </a>
+                  </dd>
+                </div>
+              )}
               <div>
                 <dt className="text-xs font-bold text-gray-500 uppercase">
                   인원
@@ -310,7 +327,9 @@ export default async function RequestDetailPage({ params }: Props) {
             request={request}
             units={roomUnitAvailability}
           />
-          <DocumentsCard request={request} templates={documentTemplates} />
+          <div id="documents" className="scroll-mt-24">
+            <DocumentsCard request={request} templates={documentTemplates} />
+          </div>
           <RequestActions request={request} templates={templates} />
           {(request.payment_status === "paid" ||
             request.status === "confirmed") && (

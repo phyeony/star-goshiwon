@@ -35,3 +35,4 @@ yarn.lock
 
 # Local Cloudflare simulator state (e.g. photos uploaded during `pnpm dev`)
 .wrangler/
+scripts/whatsapp-eval/results/

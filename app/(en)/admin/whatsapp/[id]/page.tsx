@@ -1,0 +1,173 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { BotStateControl, RunActions } from "@/components/admin/whatsapp-controls";
+import { getConversationDetail, type AdminMessage, type AdminRun } from "@/lib/whatsapp/admin-queries";
+import { CATEGORY_LABEL, MEN_ONLY_LABEL, OUTCOME_LABEL, SENDER_LABEL, reasonLabel } from "@/lib/whatsapp/admin-labels";
+import { WhatsAppOutageBanner } from "../banner";
+
+export const dynamic = "force-dynamic";
+
+function formatDate(iso: string) {
+  try {
+    return new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
+  } catch {
+    return iso;
+  }
+}
+
+type Entry = { kind: "message"; m: AdminMessage } | { kind: "run"; r: AdminRun };
+
+// Each agent run goes right after the guest messages it handled, so the
+// manager reads: guest messages → what the AI made of them → what was sent.
+function timeline(messages: AdminMessage[], runs: AdminRun[]): Entry[] {
+  const byId = new Map(runs.map((r) => [r.id, r]));
+  const placed = new Set<string>();
+  const out: Entry[] = [];
+  messages.forEach((m, i) => {
+    out.push({ kind: "message", m });
+    const next = messages[i + 1];
+    if (m.run_id && byId.has(m.run_id) && !placed.has(m.run_id) && next?.run_id !== m.run_id) {
+      out.push({ kind: "run", r: byId.get(m.run_id)! });
+      placed.add(m.run_id);
+    }
+  });
+  for (const r of runs) if (!placed.has(r.id)) out.push({ kind: "run", r });
+  return out;
+}
+
+const BUBBLE: Record<string, string> = {
+  guest: "bg-white border-gray-200 mr-12",
+  bot: "bg-emerald-50 border-emerald-200 ml-12",
+  manager: "bg-indigo-50 border-indigo-200 ml-12",
+};
+
+export default async function WhatsAppChatPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const detail = await getConversationDetail(id);
+  if (!detail) notFound();
+  const { conversation: c, messages, runs, booking } = detail;
+  const wantsDocument = runs.some((r) => r.outcome === "send_document_pending");
+
+  return (
+    <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+      <div className="xl:col-span-2 space-y-4">
+        <Link href="/admin/whatsapp" className="text-sm font-medium text-indigo-700 hover:text-indigo-800">
+          WhatsApp으로 돌아가기
+        </Link>
+        <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">
+          {c.profile_name || "(이름 없음)"} <span className="text-base font-normal text-gray-500">+{c.wa_phone}</span>
+        </h1>
+        <WhatsAppOutageBanner />
+
+        {timeline(messages, runs).map((e) =>
+          e.kind === "message" ? (
+            <div key={e.m.id} className={`rounded-xl border p-3 ${BUBBLE[e.m.sender]}`}>
+              <div className="flex justify-between gap-3 text-xs text-gray-500">
+                <span className="font-medium">{SENDER_LABEL[e.m.sender]}</span>
+                <span>{formatDate(e.m.sent_at)}</span>
+              </div>
+              <p className="mt-1 whitespace-pre-wrap text-sm text-gray-900">
+                {e.m.body || <span className="text-gray-500">[{e.m.message_type}]</span>}
+              </p>
+            </div>
+          ) : (
+            <RunCard key={e.r.id} r={e.r} />
+          ),
+        )}
+        {messages.length === 0 && <p className="text-gray-500">메시지가 없습니다.</p>}
+      </div>
+
+      <aside className="space-y-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 space-y-3">
+          <h2 className="font-bold text-gray-900">AI 답변</h2>
+          <BotStateControl conversationId={c.id} botState={c.bot_state} pausedUntil={c.paused_until} />
+        </div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 space-y-2 text-sm">
+          <h2 className="font-bold text-gray-900">손님</h2>
+          <p className="text-gray-700">{MEN_ONLY_LABEL[c.men_only_state]}</p>
+          {booking ? (
+            <p>
+              <Link href={`/admin/requests/${booking.id}`} className="font-medium text-indigo-700 hover:text-indigo-800">
+                예약: {booking.guest_name} ({booking.check_in_date} – {booking.check_out_date}, {booking.status})
+              </Link>
+            </p>
+          ) : (
+            <p className="text-gray-500">연결된 예약 없음 (예약 폼의 WhatsApp 번호로 자동 연결됩니다)</p>
+          )}
+          <a
+            href={`https://wa.me/${c.wa_phone}`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex rounded-lg border border-gray-300 px-3 py-1.5 font-medium text-gray-700 hover:bg-gray-50"
+          >
+            WhatsApp에서 열기
+          </a>
+        </div>
+        {wantsDocument && (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900 space-y-2">
+            <h2 className="font-bold">거주 확인서 요청</h2>
+            <p>AI가 손님에게 &quot;준비해서 보내드리겠다&quot;고 답했습니다. 예약 페이지의 문서 카드에서 확인 후 보내 주세요.</p>
+            {booking && (
+              <Link
+                href={`/admin/requests/${booking.id}#documents`}
+                className="inline-flex rounded-lg border border-amber-400 bg-white px-3 py-1.5 font-medium text-amber-900 hover:bg-amber-100"
+              >
+                확인서 보내러 가기
+              </Link>
+            )}
+          </div>
+        )}
+      </aside>
+    </div>
+  );
+}
+
+function RunCard({ r }: { r: AdminRun }) {
+  const u = r.understanding;
+  const handedOff = r.outcome === "draft" || r.outcome === "send_check_only";
+  return (
+    <div className={`rounded-xl border p-4 text-sm ${handedOff ? "border-amber-300 bg-amber-50" : "border-gray-200 bg-gray-50"}`}>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="font-bold text-gray-900">AI: {OUTCOME_LABEL[r.outcome] ?? r.outcome}</span>
+        {r.after_hours_notice && <span className="text-xs text-gray-600">(야간 안내 보냄)</span>}
+        {u?.categories.map((c) => (
+          <span key={c} className="rounded-full border border-gray-300 bg-white px-2 py-0.5 text-xs text-gray-700">
+            {CATEGORY_LABEL[c] ?? c}
+          </span>
+        ))}
+      </div>
+      {u?.guest_message_ko && (
+        <p className="mt-2 text-gray-800">
+          <span className="text-xs font-medium text-gray-500">번역 </span>
+          {u.guest_message_ko}
+        </p>
+      )}
+      {u?.summary_ko && (
+        <p className="mt-1 text-gray-800">
+          <span className="text-xs font-medium text-gray-500">요약 </span>
+          {u.summary_ko}
+        </p>
+      )}
+      {handedOff && (r.reasons.length > 0 || u?.reason_ko) && (
+        <div className="mt-2 text-gray-800">
+          <span className="text-xs font-medium text-gray-500">넘긴 이유 </span>
+          {[...r.reasons.map(reasonLabel), u?.reason_ko].filter(Boolean).join(" · ")}
+        </div>
+      )}
+      {r.error && <p className="mt-2 text-red-700 break-all">AI 오류: {r.error.slice(0, 300)}</p>}
+      {r.send_error && <p className="mt-2 text-red-700 break-all">전송 실패: {r.send_error.slice(0, 300)}</p>}
+      {r.draft && (
+        <div className="mt-3">
+          <p className="text-xs font-medium text-gray-500">{r.outgoing && r.outcome === "send" ? "보낸 답변" : "AI 초안 (안 보냄)"}</p>
+          <p className="mt-1 whitespace-pre-wrap rounded-lg border border-gray-200 bg-white p-3 text-gray-900">{r.draft}</p>
+        </div>
+      )}
+      <div className="mt-3">
+        <RunActions runId={r.id} draft={r.draft} rating={r.manager_rating} />
+      </div>
+      <p className="mt-2 text-xs text-gray-400">
+        {r.model} · {(r.latency_ms / 1000).toFixed(1)}초 · {formatDate(r.created_at)}
+      </p>
+    </div>
+  );
+}
