@@ -54,3 +54,31 @@ export async function sendText(cfg: GraphConfig, to: string, text: string): Prom
 export async function markRead(cfg: GraphConfig, waMessageId: string): Promise<void> {
   await post(cfg, { messaging_product: "whatsapp", status: "read", message_id: waMessageId });
 }
+
+/**
+ * Sends an approved message template with positional body parameters
+ * ({{1}}, {{2}}, …); returns Meta's message id. Templates are the only way
+ * to write first, outside the 24-hour window.
+ */
+export async function sendTemplate(
+  cfg: GraphConfig,
+  to: string,
+  template: { name: string; language: string; bodyParams: string[] },
+): Promise<string> {
+  const json = await post(cfg, {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to,
+    type: "template",
+    template: {
+      name: template.name,
+      language: { code: template.language },
+      components: [
+        { type: "body", parameters: template.bodyParams.map((text) => ({ type: "text", text })) },
+      ],
+    },
+  });
+  const id = (json.messages as { id?: string }[] | undefined)?.[0]?.id;
+  if (!id) throw new GraphError("WhatsApp API: no message id in the response");
+  return id;
+}

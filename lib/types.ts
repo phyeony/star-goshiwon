@@ -378,6 +378,7 @@ export type BookingRequestInsert = {
   guest_email: string;
   guest_phone?: string;
   whatsapp_number?: string | null;
+  whatsapp_opt_in?: boolean;
   locale?: BookingLocale;
   stay_months?: number | null;
   // Korean requests only: KRW prices at the time of the request. Korean stays

@@ -8,13 +8,17 @@
 //   WHATSAPP_PHONE_NUMBER_ID  the number the agent answers on
 //   WHATSAPP_INTERNAL_TOKEN   random string; lets the queue call /api/whatsapp/process
 //   WHATSAPP_GRAPH_VERSION    optional, e.g. v24.0
+//   WHATSAPP_BOOKING_TEMPLATE name of the approved booking-received template;
+//                             empty = don't send it (lib/whatsapp/booking-received.ts)
+//   WHATSAPP_BOOKING_TEMPLATE_LANG  optional, default "en"
 //   OPENAI_API_KEY etc.       the model provider chosen in whatsapp_settings
 
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createLlmClient, type ProviderName } from "@/lib/whatsapp-agent/llm";
-import { markRead, sendText, type GraphConfig } from "./graph";
+import { markRead, sendTemplate, sendText, type GraphConfig } from "./graph";
+import type { BookingReceivedDeps } from "./booking-received";
 import { processConversation, type ProcessDeps, type ProcessResult } from "./process";
-import { loadAgentContext, supabaseStore } from "./store";
+import { loadAgentContext, recordBookingReceived, supabaseStore } from "./store";
 
 // The webhook queues a job this long after each guest message (burst wait).
 export const QUEUE_DELAY_SECONDS = 45;
@@ -87,4 +91,17 @@ export function liveDeps(): ProcessDeps {
 
 export function runConversation(conversationId: string): Promise<ProcessResult> {
   return processConversation(liveDeps(), conversationId);
+}
+
+/** Deps for the booking-received template, or null when it isn't set up. */
+export function bookingReceivedDeps(): BookingReceivedDeps | null {
+  const templateName = env("WHATSAPP_BOOKING_TEMPLATE");
+  if (!templateName || !env("WHATSAPP_ACCESS_TOKEN") || !env("WHATSAPP_PHONE_NUMBER_ID")) return null;
+  const cfg = graphConfig();
+  return {
+    templateName,
+    language: env("WHATSAPP_BOOKING_TEMPLATE_LANG") || "en",
+    send: (to, template) => sendTemplate(cfg, to, template),
+    record: recordBookingReceived,
+  };
 }
