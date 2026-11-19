@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
       estimated_total: estimate.total,
       bedding_prepaid: data.bedding_prepaid,
       notes: data.notes,
+      whatsapp_number: data.whatsapp_number,
       status: "new",
       admin_notes: "",
     });

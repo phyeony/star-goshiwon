@@ -115,6 +115,9 @@ export interface BookingRequest {
   refunded_at: string | null;
   refund_id: string | null;
   notes: string;
+  // WhatsApp number from the booking form, E.164 ("+447700900123").
+  whatsapp_number: string | null;
+  whatsapp_opt_in: boolean;
   status: BookingStatus;
   admin_notes: string;
   created_at: string;
@@ -374,6 +377,7 @@ export type BookingRequestInsert = {
   guest_name: string;
   guest_email: string;
   guest_phone?: string;
+  whatsapp_number?: string | null;
   locale?: BookingLocale;
   stay_months?: number | null;
   // Korean requests only: KRW prices at the time of the request. Korean stays
