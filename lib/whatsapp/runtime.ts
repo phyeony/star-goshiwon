@@ -51,10 +51,13 @@ export function isInternalCall(authorization: string | null): boolean {
 }
 
 /**
- * Queues an agent run for a conversation. Without a queue binding (plain
- * `next dev`) it returns false and the caller runs it in the background.
+ * Queues an agent run for a conversation. In `next dev`, or without a queue
+ * binding, it returns false and the caller runs it in the background.
  */
 export async function enqueue(job: QueueJob): Promise<boolean> {
+  // `next dev` emulates the queue binding but has no consumer, so a job
+  // sent there would never run.
+  if (process.env.NODE_ENV === "development") return false;
   try {
     const { env: cf } = await getCloudflareContext({ async: true });
     const queue = (cf as unknown as { WHATSAPP_QUEUE?: QueueBinding }).WHATSAPP_QUEUE;
