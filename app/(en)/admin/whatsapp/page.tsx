@@ -6,6 +6,7 @@ import { WhatsAppOutageBanner } from "./banner";
 export const dynamic = "force-dynamic";
 
 const STATUS: Record<ChatStatus, { label: string; cls: string }> = {
+  stuck: { label: "처리 실패", cls: "border-red-200 bg-red-50 text-red-800" },
   needs_reply: { label: "답변 필요", cls: "border-amber-200 bg-amber-50 text-amber-800" },
   processing: { label: "AI 처리 중", cls: "border-sky-200 bg-sky-50 text-sky-800" },
   answered: { label: "답변함", cls: "border-gray-200 bg-gray-50 text-gray-600" },
@@ -29,7 +30,7 @@ export default async function AdminWhatsAppPage({
 }) {
   const { filter } = await searchParams;
   const [all, settings] = await Promise.all([listConversations(), getAdminSettings()]);
-  const needsReply = all.filter((c) => c.status === "needs_reply");
+  const needsReply = all.filter((c) => c.status === "needs_reply" || c.status === "stuck");
   const chats = filter === "needs_reply" ? needsReply : all;
 
   return (

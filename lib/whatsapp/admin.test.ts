@@ -26,8 +26,13 @@ const run = (outcome: string, at: string, extra: Partial<AdminRun> = {}) =>
   ({ id: "r", conversation_id: "c", outcome, created_at: at, error: null, send_error: null, ...extra }) as AdminRun;
 
 describe("chatStatus", () => {
-  it("guest messages the AI hasn't reached yet are processing", () => {
-    expect(chatStatus([msg("guest", "2026-11-19T01:00:00Z", false)], null)).toBe("processing");
+  it("guest messages the AI hasn't reached yet are processing, then stuck after 10 minutes", () => {
+    const m = [msg("guest", "2026-11-19T01:00:00Z", false)];
+    expect(chatStatus(m, null, new Date("2026-11-19T01:05:00Z"))).toBe("processing");
+    expect(chatStatus(m, null, new Date("2026-11-19T01:11:00Z"))).toBe("stuck");
+    // A failed send is stuck straight away.
+    const failed = run("send", "2026-11-19T01:01:00Z", { send_error: "HTTP 500" });
+    expect(chatStatus(m, failed, new Date("2026-11-19T01:02:00Z"))).toBe("stuck");
   });
 
   it("a handoff with nobody writing since needs a reply", () => {

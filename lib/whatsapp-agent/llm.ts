@@ -2,6 +2,8 @@
 // matching a schema, so every provider is reached the same way and the
 // model can be switched by settings alone.
 
+import { isTransient, withRetry } from "@/lib/retry";
+
 export interface JsonSchema {
   type: "object";
   properties: Record<string, unknown>;
@@ -55,6 +57,25 @@ export interface OpenAiCompatibleConfig {
   reasoningEffort?: "none" | "minimal" | "low" | "medium" | "high";
   timeoutMs?: number;
   fetchImpl?: typeof fetch;
+}
+
+/**
+ * Retries a model call twice (2 s, then 5 s) on a rate limit, a server
+ * error or a dropped connection. A timeout or a bad reply is not retried.
+ */
+export function retryingClient(
+  inner: LlmClient,
+  opts: { delaysMs?: number[]; sleep?: (ms: number) => Promise<void> } = {},
+): LlmClient {
+  return {
+    label: inner.label,
+    json: (req) =>
+      withRetry(() => inner.json(req), {
+        delaysMs: opts.delaysMs ?? [2_000, 5_000],
+        shouldRetry: (e) => (e instanceof LlmError ? e.status !== undefined && isTransient(e, e.status) : isTransient(e)),
+        sleep: opts.sleep,
+      }),
+  };
 }
 
 // Chat Completions shape: OpenAI, Gemini (OpenAI-compatible endpoint),

@@ -59,7 +59,10 @@ export interface AdminSettings {
   llmModel: string;
 }
 
-export type ChatStatus = "needs_reply" | "processing" | "answered" | "quiet";
+export type ChatStatus = "stuck" | "needs_reply" | "processing" | "answered" | "quiet";
+
+// Guest messages still unanswered after this long: something failed.
+export const STUCK_AFTER_MS = 10 * 60_000;
 
 export interface ConversationListItem extends AdminConversation {
   lastMessage: AdminMessage | null;
@@ -78,15 +81,21 @@ const HANDOFF_OUTCOMES = new Set(["draft", "send_check_only"]);
 
 /**
  * Where a chat stands for the manager:
- * - processing: guest messages the agent hasn't got to yet (within a minute)
+ * - processing: guest messages the agent hasn't got to yet
+ * - stuck: guest messages still unanswered after 10 minutes, or the reply
+ *   to them failed to send (처리 실패)
  * - needs_reply: the agent handed the last turn to the manager and nobody
  *   (manager or agent) has written since
  * - answered: the agent answered the last turn
  */
-export function chatStatus(messages: AdminMessage[], latestRun: AdminRun | null): ChatStatus {
+export function chatStatus(messages: AdminMessage[], latestRun: AdminRun | null, now = new Date()): ChatStatus {
   const last = messages[messages.length - 1];
   if (!last) return "quiet";
-  if (last.sender === "guest" && !last.handled_at) return "processing";
+  if (last.sender === "guest" && !last.handled_at) {
+    const oldest = messages.find((m) => m.sender === "guest" && !m.handled_at) ?? last;
+    const failed = latestRun?.send_error && Date.parse(latestRun.created_at) >= Date.parse(last.sent_at);
+    return failed || now.getTime() - Date.parse(oldest.sent_at) > STUCK_AFTER_MS ? "stuck" : "processing";
+  }
   if (last.sender === "manager") return "answered";
   if (!latestRun) return last.sender === "guest" ? "needs_reply" : "answered";
   const managerAfterRun = messages.some(
@@ -321,6 +330,21 @@ export async function noteRun(id: string, note: string, betterReply: string) {
  * Model or sending failures in the last hour. Two or more means the agent is
  * probably down (key, budget or Meta token), so the admin page shows a banner.
  */
+/** Chats with guest messages unanswered for over 10 minutes (last 24 h). */
+export async function stuckChats(now = new Date()): Promise<number> {
+  const rows = (must(
+    await db()
+      .from("whatsapp_messages")
+      .select("conversation_id")
+      .eq("sender", "guest")
+      .is("handled_at", null)
+      .lt("sent_at", new Date(now.getTime() - STUCK_AFTER_MS).toISOString())
+      .gte("sent_at", new Date(now.getTime() - 24 * 60 * 60_000).toISOString())
+      .limit(200),
+  ) ?? []) as { conversation_id: string }[];
+  return new Set(rows.map((r) => r.conversation_id)).size;
+}
+
 export async function recentFailures(now = new Date()): Promise<{ count: number; latest: string | null }> {
   const since = new Date(now.getTime() - 60 * 60_000).toISOString();
   const rows = (must(
@@ -466,3 +490,41 @@ export async function recordQuickReply(args: {
     );
   }
 }
+
+/** Deps for 다시 보내기 (lib/whatsapp/resend.ts). */
+export const resendStore = {
+  async getRun(id: string) {
+    return must(
+      await db().from("whatsapp_agent_runs").select("conversation_id, outgoing, send_error").eq("id", id).maybeSingle(),
+    ) as { conversation_id: string; outgoing: string | null; send_error: string | null } | null;
+  },
+  async lastGuestMessageAt(conversationId: string) {
+    const rows = (must(
+      await db()
+        .from("whatsapp_messages")
+        .select("sent_at")
+        .eq("conversation_id", conversationId)
+        .eq("sender", "guest")
+        .order("sent_at", { ascending: false })
+        .limit(1),
+    ) ?? []) as { sent_at: string }[];
+    return rows[0]?.sent_at ?? null;
+  },
+  async stillPending(runId: string) {
+    const rows = (must(
+      await db().from("whatsapp_messages").select("id").eq("run_id", runId).eq("sender", "guest").is("handled_at", null).limit(1),
+    ) ?? []) as unknown[];
+    return rows.length > 0;
+  },
+  async markResent(runId: string, at: Date) {
+    must(await db().from("whatsapp_agent_runs").update({ send_error: null }).eq("id", runId));
+    must(
+      await db()
+        .from("whatsapp_messages")
+        .update({ handled_at: at.toISOString() })
+        .eq("run_id", runId)
+        .eq("sender", "guest")
+        .is("handled_at", null),
+    );
+  },
+};
