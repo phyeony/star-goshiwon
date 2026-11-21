@@ -3,7 +3,20 @@ import { notFound } from "next/navigation";
 import { BotStateControl, RunActions } from "@/components/admin/whatsapp-controls";
 import { getConversationDetail, type AdminMessage, type AdminRun } from "@/lib/whatsapp/admin-queries";
 import { CATEGORY_LABEL, MEN_ONLY_LABEL, OUTCOME_LABEL, SENDER_LABEL, reasonLabel } from "@/lib/whatsapp/admin-labels";
+import { estimateCostUsd } from "@/lib/whatsapp-agent/model-prices";
 import { WhatsAppOutageBanner } from "../banner";
+
+// "토큰 1,234+210 (약 $0.0002)", or "" when the model wasn't called.
+function tokenText(r: AdminRun): string {
+  if (!r.input_tokens && !r.output_tokens) return "";
+  const n = (v: number) => v.toLocaleString("ko-KR");
+  const cost = estimateCostUsd(r.model, {
+    input: r.input_tokens,
+    cachedInput: r.cached_input_tokens,
+    output: r.output_tokens,
+  });
+  return `토큰 ${n(r.input_tokens)}+${n(r.output_tokens)}${cost === null ? "" : ` (약 $${cost.toFixed(4)})`}`;
+}
 
 export const dynamic = "force-dynamic";
 
@@ -166,7 +179,9 @@ function RunCard({ r }: { r: AdminRun }) {
         <RunActions runId={r.id} draft={r.draft} rating={r.manager_rating} />
       </div>
       <p className="mt-2 text-xs text-gray-400">
-        {r.model} · {(r.latency_ms / 1000).toFixed(1)}초 · {formatDate(r.created_at)}
+        {[r.model, `${(r.latency_ms / 1000).toFixed(1)}초`, tokenText(r), formatDate(r.created_at)]
+          .filter(Boolean)
+          .join(" · ")}
       </p>
     </div>
   );

@@ -1,6 +1,7 @@
 // Reads and writes for the /admin/whatsapp pages.
 
 import { getSupabaseServiceClient } from "@/lib/supabase";
+import { estimateCostUsd } from "@/lib/whatsapp-agent/model-prices";
 import { CATEGORIES, type BotState, type Category, type MenOnlyState, type Mode, type Understanding } from "@/lib/whatsapp-agent/types";
 
 export interface AdminConversation {
@@ -234,6 +235,67 @@ export async function recentFailures(now = new Date()): Promise<{ count: number;
       .limit(20),
   ) ?? []) as { error: string | null; send_error: string | null }[];
   return { count: rows.length, latest: rows[0] ? (rows[0].error ?? rows[0].send_error) : null };
+}
+
+export interface UsageSummary {
+  since: string;
+  turns: number;
+  inputTokens: number;
+  cachedInputTokens: number;
+  outputTokens: number;
+  costUsd: number;
+  unpricedModels: string[];
+}
+
+type UsageRow = { model: string; input_tokens: number; cached_input_tokens: number; output_tokens: number };
+
+/** Start of the current month in Korea time. */
+export function seoulMonthStart(now = new Date()): Date {
+  const kst = new Date(now.getTime() + 9 * 3600_000);
+  return new Date(Date.UTC(kst.getUTCFullYear(), kst.getUTCMonth(), 1) - 9 * 3600_000);
+}
+
+/** Adds up the stored token counts; no model call. */
+export function summarizeUsage(rows: UsageRow[], since: Date): UsageSummary {
+  const sum: UsageSummary = {
+    since: since.toISOString(),
+    turns: 0,
+    inputTokens: 0,
+    cachedInputTokens: 0,
+    outputTokens: 0,
+    costUsd: 0,
+    unpricedModels: [],
+  };
+  for (const r of rows) {
+    // Runs that never called the model (bot off, paused) have no tokens.
+    if (!r.input_tokens && !r.output_tokens) continue;
+    sum.turns += 1;
+    sum.inputTokens += r.input_tokens;
+    sum.cachedInputTokens += r.cached_input_tokens;
+    sum.outputTokens += r.output_tokens;
+    const cost = estimateCostUsd(r.model, {
+      input: r.input_tokens,
+      cachedInput: r.cached_input_tokens,
+      output: r.output_tokens,
+    });
+    if (cost === null) {
+      if (!sum.unpricedModels.includes(r.model)) sum.unpricedModels.push(r.model);
+    } else sum.costUsd += cost;
+  }
+  return sum;
+}
+
+/** This month's (Korea time) AI turns, tokens and estimated cost. */
+export async function monthUsage(now = new Date()): Promise<UsageSummary> {
+  const since = seoulMonthStart(now);
+  const rows = (must(
+    await db()
+      .from("whatsapp_agent_runs")
+      .select("model, input_tokens, cached_input_tokens, output_tokens")
+      .gte("created_at", since.toISOString())
+      .limit(20000),
+  ) ?? []) as UsageRow[];
+  return summarizeUsage(rows, since);
 }
 
 /** ✓ / ✗ counts per category, for deciding which switches to turn on. */

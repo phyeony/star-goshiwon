@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { bookingRequestSchema } from "@/lib/validation";
-import { chatStatus, type AdminMessage, type AdminRun } from "./admin-queries";
+import { chatStatus, seoulMonthStart, summarizeUsage, type AdminMessage, type AdminRun } from "./admin-queries";
+import { estimateCostUsd } from "@/lib/whatsapp-agent/model-prices";
 import { reasonLabel } from "./admin-labels";
 
 const msg = (sender: AdminMessage["sender"], at: string, handled = true): AdminMessage => ({
@@ -86,5 +87,37 @@ describe("booking form WhatsApp number", () => {
     const r = bookingRequestSchema.safeParse({ ...base, whatsapp_number: "7700 900123" });
     expect(r.success).toBe(false);
     expect(!r.success && r.error.issues[0].path).toEqual(["whatsapp_number"]);
+  });
+});
+
+describe("AI usage", () => {
+  it("prices a run from its label, cached tokens at the cached rate", () => {
+    // 1,000,000 input of which 400,000 cached, 100,000 output on GPT-6 Luna
+    const c = estimateCostUsd("openai/gpt-6-luna", { input: 1_000_000, cachedInput: 400_000, output: 100_000 });
+    expect(c).toBeCloseTo(0.06 + 0.004 + 0.05, 10);
+    expect(estimateCostUsd("someone/unknown-model", { input: 1, cachedInput: 0, output: 1 })).toBeNull();
+  });
+
+  it("adds up only runs that called the model, and lists unpriced models", () => {
+    const since = new Date("2026-10-31T15:00:00Z");
+    const s = summarizeUsage(
+      [
+        { model: "openai/gpt-6-luna", input_tokens: 2000, cached_input_tokens: 1000, output_tokens: 200 },
+        { model: "openai/gpt-6-luna", input_tokens: 0, cached_input_tokens: 0, output_tokens: 0 },
+        { model: "x/new-model", input_tokens: 500, cached_input_tokens: 0, output_tokens: 50 },
+      ],
+      since,
+    );
+    expect(s.turns).toBe(2);
+    expect(s.inputTokens).toBe(2500);
+    expect(s.outputTokens).toBe(250);
+    expect(s.unpricedModels).toEqual(["x/new-model"]);
+    expect(s.costUsd).toBeCloseTo((1000 * 0.1 + 1000 * 0.01 + 200 * 0.5) / 1e6, 12);
+  });
+
+  it("starts the month at midnight Korea time", () => {
+    expect(seoulMonthStart(new Date("2026-11-21T08:00:00Z")).toISOString()).toBe("2026-10-31T15:00:00.000Z");
+    // 1 Dec 03:00 KST is still 30 Nov in UTC, but already December here
+    expect(seoulMonthStart(new Date("2026-11-30T18:00:00Z")).toISOString()).toBe("2026-11-30T15:00:00.000Z");
   });
 });
