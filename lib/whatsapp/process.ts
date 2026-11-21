@@ -20,9 +20,9 @@ import type {
 } from "@/lib/whatsapp-agent/types";
 
 // Guests often send several short messages in a row. The webhook queues a
-// job ~45 s after each message; a job only runs once the newest message is
+// job ~15 s after each message; a job only runs once the newest message is
 // at least this old, so the last job answers all of them together.
-export const BURST_WAIT_MS = 30_000;
+export const BURST_WAIT_MS = 10_000;
 // How long one run may hold the conversation (model calls included).
 export const CLAIM_MS = 3 * 60_000;
 // A manager reply from the app pauses the agent this long.

@@ -435,6 +435,10 @@ CREATE TABLE IF NOT EXISTS whatsapp_agent_runs (
   output_tokens INTEGER NOT NULL DEFAULT 0,
   latency_ms INTEGER NOT NULL DEFAULT 0,
   manager_rating TEXT CHECK (manager_rating IN ('good', 'bad')),
+  -- What was wrong, and what the reply should have said (2026-11-21 migration)
+  manager_note TEXT,
+  manager_better_reply TEXT,
+  manager_noted_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

@@ -15,7 +15,7 @@ export type CallProcess = (conversationId: string) => Promise<{ status?: string 
 // "busy": another run holds the chat and may have started before this
 // message arrived, so try again shortly. "waiting_for_more": the guest is
 // still typing; a later job will answer, but retry once in case it was lost.
-const RETRY_DELAY: Record<string, number> = { busy: 30, waiting_for_more: 20 };
+const RETRY_DELAY: Record<string, number> = { busy: 30, waiting_for_more: 10 };
 
 export async function consumeBatch(messages: readonly QueueMessage[], callProcess: CallProcess): Promise<void> {
   for (const msg of messages) {

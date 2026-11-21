@@ -167,7 +167,7 @@ describe("processConversation", () => {
   });
 
   it("waits while the guest is still typing", async () => {
-    const t = setup({ messages: [{ body: "Hi", created_at: new Date(NOON_KST.getTime() - 10_000).toISOString() }] });
+    const t = setup({ messages: [{ body: "Hi", created_at: new Date(NOON_KST.getTime() - 5_000).toISOString() }] });
     expect(await processConversation(t.deps, "c1")).toEqual({ status: "waiting_for_more" });
     expect(t.log.llmCalls).toBe(0);
     expect(t.log.handled).toEqual([]);
