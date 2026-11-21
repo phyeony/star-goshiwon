@@ -6,7 +6,7 @@
 //   WHATSAPP_VERIFY_TOKEN     any random string, also typed into Meta's webhook form
 //   WHATSAPP_ACCESS_TOKEN     System User permanent token
 //   WHATSAPP_PHONE_NUMBER_ID  the number the agent answers on
-//   WHATSAPP_INTERNAL_TOKEN   random string; lets the queue call /api/whatsapp/process
+//   WHATSAPP_INTERNAL_TOKEN   32+ random characters (openssl rand -hex 32); lets the queue call /api/whatsapp/process
 //   WHATSAPP_GRAPH_VERSION    optional, e.g. v24.0
 //   WHATSAPP_BOOKING_TEMPLATE name of the approved booking-received template;
 //                             empty = don't send it (lib/whatsapp/booking-received.ts)
@@ -18,6 +18,7 @@ import { createLlmClient, type ProviderName } from "@/lib/whatsapp-agent/llm";
 import { markRead, sendTemplate, sendText, type GraphConfig } from "./graph";
 import type { BookingReceivedDeps } from "./booking-received";
 import { processConversation, type ProcessDeps, type ProcessResult } from "./process";
+import { timingSafeEqual } from "./signature";
 import { loadAgentContext, recordBookingReceived, supabaseStore } from "./store";
 
 // The webhook queues a job this long after each guest message (burst wait).
@@ -49,9 +50,13 @@ export function graphConfig(): GraphConfig {
 }
 
 /** True when the internal call carries WHATSAPP_INTERNAL_TOKEN. */
-export function isInternalCall(authorization: string | null): boolean {
-  const token = env("WHATSAPP_INTERNAL_TOKEN");
-  return Boolean(token) && authorization === `Bearer ${token}`;
+// A shorter token is treated as unset, so a placeholder like "test" can't
+// open the route by mistake. `openssl rand -hex 32` gives 64 characters.
+export const MIN_INTERNAL_TOKEN_LENGTH = 32;
+
+export function isInternalCall(authorization: string | null, token = env("WHATSAPP_INTERNAL_TOKEN")): boolean {
+  if (token.length < MIN_INTERNAL_TOKEN_LENGTH || !authorization) return false;
+  return timingSafeEqual(authorization, `Bearer ${token}`);
 }
 
 /**
