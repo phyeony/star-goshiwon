@@ -5,6 +5,7 @@ import { Footer } from "@/components/footer";
 import { PostHogProvider } from "@/components/analytics/posthog-provider";
 import { PostHogPageview } from "@/components/analytics/posthog-pageview";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
+import { NaverAnalytics } from "@/components/analytics/naver-analytics";
 import { siteConfig } from "@/lib/site-data";
 import { caveat, inter } from "@/lib/fonts";
 import "../globals.css";
@@ -136,6 +137,7 @@ export default function RootLayout({
           <main className="min-h-screen">{children}</main>
           <Footer />
           <GoogleAnalytics />
+          <NaverAnalytics />
         </PostHogProvider>
       </body>
     </html>
