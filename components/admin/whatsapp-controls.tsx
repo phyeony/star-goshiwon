@@ -387,3 +387,44 @@ export function QuickReplies({
     </div>
   );
 }
+
+/** 다시 보내기 on a reply that failed to send. */
+export function ResendButton({ runId, text }: { runId: string; text: string }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function resend() {
+    if (!confirm(`이 답변을 손님에게 다시 보낼까요?\n\n${text}`)) return;
+    setBusy(true);
+    setError("");
+    const res = await fetch(`/api/admin/whatsapp/runs/${runId}/resend`, { method: "POST" });
+    setBusy(false);
+    if (res.ok) {
+      router.refresh();
+      return;
+    }
+    const json = (await res.json().catch(() => ({}))) as { status?: string; detail?: string };
+    setError(
+      json.status === "window_closed"
+        ? "손님의 마지막 메시지가 24시간이 지나 보낼 수 없습니다."
+        : json.status === "busy"
+          ? "AI가 이 채팅을 처리 중입니다. 잠시 후 다시 눌러 주세요."
+          : `전송 실패${json.detail ? `: ${json.detail}` : ""}`,
+    );
+  }
+
+  return (
+    <div className="space-y-1">
+      <button
+        type="button"
+        disabled={busy}
+        onClick={resend}
+        className={`${btn} border-red-300 text-red-700 hover:bg-red-50`}
+      >
+        {busy ? "보내는 중…" : "다시 보내기"}
+      </button>
+      {error && <p className="text-sm text-red-600 break-all">{error}</p>}
+    </div>
+  );
+}

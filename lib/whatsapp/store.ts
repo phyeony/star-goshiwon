@@ -65,6 +65,20 @@ export async function insertMessage(msg: {
   return (must(res) ?? []).length > 0;
 }
 
+/** True when Meta re-sent a guest message we saved but never answered. */
+export async function isUnansweredGuestMessage(waMessageId: string): Promise<boolean> {
+  const rows = must(
+    await db()
+      .from("whatsapp_messages")
+      .select("id")
+      .eq("wa_message_id", waMessageId)
+      .eq("sender", "guest")
+      .is("handled_at", null)
+      .limit(1),
+  ) as unknown[] | null;
+  return (rows ?? []).length > 0;
+}
+
 /**
  * The manager wrote from the WhatsApp app: the agent stays quiet in this
  * chat until `until`, and the guest messages the manager has seen count as
@@ -311,6 +325,11 @@ export const supabaseStore: WhatsAppStore = {
         .update({ handled_at: at.toISOString(), run_id: runId })
         .in("id", messageIds),
     );
+  },
+
+  async linkRun(messageIds, runId) {
+    if (!messageIds.length) return;
+    must(await db().from("whatsapp_messages").update({ run_id: runId }).in("id", messageIds));
   },
 
   async insertOutbound(conversationId, waMessageId, body, at) {

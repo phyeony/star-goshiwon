@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BotStateControl, QuickReplies, RunActions } from "@/components/admin/whatsapp-controls";
+import { BotStateControl, QuickReplies, ResendButton, RunActions } from "@/components/admin/whatsapp-controls";
 import {
   datesToCheck,
   freeRoomsFor,
@@ -96,7 +96,12 @@ export default async function WhatsAppChatPage({ params }: { params: Promise<{ i
               </p>
             </div>
           ) : (
-            <RunCard key={e.r.id} r={e.r} />
+            <RunCard
+              key={e.r.id}
+              r={e.r}
+              windowOpen={windowOpen}
+              canResend={messages.some((m) => m.run_id === e.r.id && m.sender === "guest" && !m.handled_at)}
+            />
           ),
         )}
         {messages.length === 0 && <p className="text-gray-500">메시지가 없습니다.</p>}
@@ -212,7 +217,7 @@ function FreeRoomsCard({
   );
 }
 
-function RunCard({ r }: { r: AdminRun }) {
+function RunCard({ r, windowOpen, canResend }: { r: AdminRun; windowOpen: boolean; canResend: boolean }) {
   const u = r.understanding;
   const handedOff = r.outcome === "draft" || r.outcome === "send_check_only";
   return (
@@ -246,9 +251,18 @@ function RunCard({ r }: { r: AdminRun }) {
       )}
       {r.error && <p className="mt-2 text-red-700 break-all">AI 오류: {r.error.slice(0, 300)}</p>}
       {r.send_error && <p className="mt-2 text-red-700 break-all">전송 실패: {r.send_error.slice(0, 300)}</p>}
+      {r.send_error && r.outgoing && canResend && (
+        <div className="mt-2">
+          {windowOpen ? (
+            <ResendButton runId={r.id} text={r.outgoing} />
+          ) : (
+            <p className="text-xs text-gray-500">손님의 마지막 메시지 후 24시간이 지나 다시 보낼 수 없습니다.</p>
+          )}
+        </div>
+      )}
       {r.draft && (
         <div className="mt-3">
-          <p className="text-xs font-medium text-gray-500">{r.outgoing && r.outcome === "send" ? "보낸 답변" : "AI 초안 (안 보냄)"}</p>
+          <p className="text-xs font-medium text-gray-500">{r.outgoing && !r.send_error && r.outcome === "send" ? "보낸 답변" : "AI 초안 (안 보냄)"}</p>
           <p className="mt-1 whitespace-pre-wrap rounded-lg border border-gray-200 bg-white p-3 text-gray-900">{r.draft}</p>
         </div>
       )}
