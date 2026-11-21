@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { bookingRequestSchema } from "@/lib/validation";
-import { chatStatus, seoulMonthStart, summarizeUsage, type AdminMessage, type AdminRun } from "./admin-queries";
+import {
+  chatStatus,
+  datesToCheck,
+  seoulMonthStart,
+  summarizeFreeRooms,
+  summarizeUsage,
+  type AdminMessage,
+  type AdminRun,
+} from "./admin-queries";
 import { estimateCostUsd } from "@/lib/whatsapp-agent/model-prices";
 import { reasonLabel } from "./admin-labels";
 
@@ -119,5 +127,39 @@ describe("AI usage", () => {
     expect(seoulMonthStart(new Date("2026-11-21T08:00:00Z")).toISOString()).toBe("2026-10-31T15:00:00.000Z");
     // 1 Dec 03:00 KST is still 30 Nov in UTC, but already December here
     expect(seoulMonthStart(new Date("2026-11-30T18:00:00Z")).toISOString()).toBe("2026-11-30T15:00:00.000Z");
+  });
+});
+
+describe("free rooms on the chat page", () => {
+  const block = (guest: string, id: string | null) =>
+    ({ guest_name: guest, booking_request_id: id, status: "confirmed", source: "direct" }) as never;
+  const unit = (name: string, blocks: unknown[] = []) => ({ name, room_unit_blocks: blocks }) as never;
+
+  it("lists free and taken rooms per type, the asked-about type first", () => {
+    const types = summarizeFreeRooms(
+      [
+        { id: "r1", slug: "economy-room", name: "Economy" },
+        { id: "r2", slug: "shower-room", name: "Shower" },
+      ],
+      { r1: [unit("501"), unit("502", [block("Kim", "b1")])], r2: [unit("601")] },
+      "shower-room",
+    );
+    expect(types.map((t) => t.slug)).toEqual(["shower-room", "economy-room"]);
+    expect(types[1]).toMatchObject({ freeCount: 1, units: [{ name: "501", free: true }, { name: "502", free: false }] });
+    expect(types[1].units[1].takenBy[0]).toMatchObject({ guestName: "Kim", bookingRequestId: "b1" });
+  });
+
+  it("checks the dates the guest asked about last, else the linked booking", () => {
+    const withDates = (ci: string | null, co: string | null, slug: string | null = null) =>
+      ({ understanding: { check_in: ci, check_out: co, room_slug: slug } }) as AdminRun;
+    const booking = { check_in_date: "2027-01-01", check_out_date: "2027-01-10" };
+    expect(datesToCheck([withDates("2026-12-01", "2026-12-15", "economy-room"), withDates(null, null)], booking)).toEqual({
+      checkIn: "2026-12-01",
+      checkOut: "2026-12-15",
+      roomSlug: "economy-room",
+      from: "guest",
+    });
+    expect(datesToCheck([withDates(null, null)], booking)).toMatchObject({ checkIn: "2027-01-01", from: "booking" });
+    expect(datesToCheck([], null)).toBeNull();
   });
 });

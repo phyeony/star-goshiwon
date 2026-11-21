@@ -1,7 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BotStateControl, RunActions } from "@/components/admin/whatsapp-controls";
-import { getConversationDetail, type AdminMessage, type AdminRun } from "@/lib/whatsapp/admin-queries";
+import {
+  datesToCheck,
+  freeRoomsFor,
+  getConversationDetail,
+  type AdminMessage,
+  type AdminRun,
+  type FreeRoomType,
+} from "@/lib/whatsapp/admin-queries";
 import { CATEGORY_LABEL, MEN_ONLY_LABEL, OUTCOME_LABEL, SENDER_LABEL, reasonLabel } from "@/lib/whatsapp/admin-labels";
 import { estimateCostUsd } from "@/lib/whatsapp-agent/model-prices";
 import { WhatsAppOutageBanner } from "../banner";
@@ -60,6 +67,8 @@ export default async function WhatsAppChatPage({ params }: { params: Promise<{ i
   if (!detail) notFound();
   const { conversation: c, messages, runs, booking } = detail;
   const wantsDocument = runs.some((r) => r.outcome === "send_document_pending");
+  const dates = datesToCheck(runs, booking);
+  const freeRooms = dates ? await freeRoomsFor(dates.checkIn, dates.checkOut, dates.roomSlug) : null;
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
@@ -116,6 +125,7 @@ export default async function WhatsAppChatPage({ params }: { params: Promise<{ i
             WhatsApp에서 열기
           </a>
         </div>
+        {dates && freeRooms && <FreeRoomsCard dates={dates} types={freeRooms} />}
         {wantsDocument && (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900 space-y-2">
             <h2 className="font-bold">거주 확인서 요청</h2>
@@ -131,6 +141,62 @@ export default async function WhatsAppChatPage({ params }: { params: Promise<{ i
           </div>
         )}
       </aside>
+    </div>
+  );
+}
+
+// Free rooms for the dates the guest asked about. For the manager only: room
+// numbers never go to the guest (the AI gets counts).
+function FreeRoomsCard({
+  dates,
+  types,
+}: {
+  dates: NonNullable<ReturnType<typeof datesToCheck>>;
+  types: FreeRoomType[];
+}) {
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 space-y-3 text-sm">
+      <div>
+        <h2 className="font-bold text-gray-900">이 날짜 빈방</h2>
+        <p className="text-xs text-gray-500 mt-0.5">
+          {dates.checkIn} – {dates.checkOut} · {dates.from === "guest" ? "손님이 문의한 날짜" : "연결된 예약 날짜"} · 페이지를 열 때 기준
+        </p>
+      </div>
+      {types.map((t) => (
+        <div key={t.slug}>
+          <p className="font-medium text-gray-900">
+            {t.name}{" "}
+            <span className={t.freeCount ? "text-emerald-700" : "text-red-700"}>
+              {t.freeCount}/{t.units.length} 빈방
+            </span>
+            {t.slug === dates.roomSlug && <span className="ml-1 text-xs text-indigo-700">문의한 방</span>}
+          </p>
+          <ul className="mt-1 flex flex-wrap gap-1.5">
+            {t.units.map((u) =>
+              u.free ? (
+                <li key={u.name} className="rounded-md border border-emerald-300 bg-emerald-50 px-2 py-0.5 font-medium text-emerald-800">
+                  {u.name}
+                </li>
+              ) : (
+                <li
+                  key={u.name}
+                  className="rounded-md border border-gray-200 bg-gray-100 px-2 py-0.5 text-gray-400 line-through"
+                  title={u.takenBy.map((b) => `${b.guestName || "외부 예약"} (${b.status})`).join(", ")}
+                >
+                  {u.takenBy[0]?.bookingRequestId ? (
+                    <Link href={`/admin/requests/${u.takenBy[0].bookingRequestId}`} className="hover:text-gray-600">
+                      {u.name}
+                    </Link>
+                  ) : (
+                    u.name
+                  )}
+                </li>
+              ),
+            )}
+          </ul>
+        </div>
+      ))}
+      <p className="text-xs text-gray-500">예약을 확정하고 방을 배정하면 다음에 열 때 반영됩니다. 손님에게는 방 번호가 가지 않습니다.</p>
     </div>
   );
 }

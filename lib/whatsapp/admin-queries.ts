@@ -2,6 +2,8 @@
 
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import { estimateCostUsd } from "@/lib/whatsapp-agent/model-prices";
+import { getPublicRooms, getRoomUnitAvailability } from "@/lib/queries";
+import type { RoomUnitWithBlocks } from "@/lib/types";
 import { CATEGORIES, type BotState, type Category, type MenOnlyState, type Mode, type Understanding } from "@/lib/whatsapp-agent/types";
 
 export interface AdminConversation {
@@ -203,6 +205,82 @@ export async function getConversationDetail(id: string): Promise<{
       check_out_date: string;
     } | null,
   };
+}
+
+export interface FreeRoomUnit {
+  name: string;
+  free: boolean;
+  // Who holds it for (part of) those dates, when it isn't free.
+  takenBy: { guestName: string; bookingRequestId: string | null; status: string; source: string }[];
+}
+
+export interface FreeRoomType {
+  slug: string;
+  name: string;
+  units: FreeRoomUnit[];
+  freeCount: number;
+}
+
+/**
+ * Per room type, which rooms (units) are free for the dates. The room asked
+ * about comes first. Pure, so it is tested without the database.
+ */
+export function summarizeFreeRooms(
+  rooms: { id: string; slug: string; name: string }[],
+  unitsByRoom: Record<string, RoomUnitWithBlocks[]>,
+  preferredSlug: string | null,
+): FreeRoomType[] {
+  const types = rooms.map((room) => {
+    const units = (unitsByRoom[room.id] ?? []).map((u) => ({
+      name: u.name,
+      free: u.room_unit_blocks.length === 0,
+      takenBy: u.room_unit_blocks.map((b) => ({
+        guestName: b.guest_name,
+        bookingRequestId: b.booking_request_id,
+        status: b.status,
+        source: b.source,
+      })),
+    }));
+    return { slug: room.slug, name: room.name, units, freeCount: units.filter((u) => u.free).length };
+  });
+  return [
+    ...types.filter((t) => t.slug === preferredSlug),
+    ...types.filter((t) => t.slug !== preferredSlug),
+  ];
+}
+
+/** Read fresh on every page load, so a confirmed, assigned booking shows at once. */
+export async function freeRoomsFor(
+  checkIn: string,
+  checkOut: string,
+  preferredSlug: string | null,
+): Promise<FreeRoomType[]> {
+  const rooms = await getPublicRooms();
+  const units = await Promise.all(rooms.map((r) => getRoomUnitAvailability(r.id, checkIn, checkOut)));
+  return summarizeFreeRooms(
+    rooms,
+    Object.fromEntries(rooms.map((r, i) => [r.id, units[i]])),
+    preferredSlug,
+  );
+}
+
+/**
+ * The dates and room to check for a chat: what the guest asked about most
+ * recently, else the linked booking's dates.
+ */
+export function datesToCheck(
+  runs: AdminRun[],
+  booking: { check_in_date: string; check_out_date: string } | null,
+): { checkIn: string; checkOut: string; roomSlug: string | null; from: "guest" | "booking" } | null {
+  for (let i = runs.length - 1; i >= 0; i--) {
+    const u = runs[i].understanding;
+    if (u?.check_in && u.check_out && u.check_out > u.check_in) {
+      return { checkIn: u.check_in, checkOut: u.check_out, roomSlug: u.room_slug ?? null, from: "guest" };
+    }
+  }
+  return booking
+    ? { checkIn: booking.check_in_date, checkOut: booking.check_out_date, roomSlug: null, from: "booking" }
+    : null;
 }
 
 /** Turns the agent on or off for one chat. "active" also ends a manager pause. */
