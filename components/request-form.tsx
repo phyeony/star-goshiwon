@@ -7,6 +7,7 @@ import { trackGaEvent } from "@/lib/ga";
 import type { Room } from "@/lib/types";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { MIN_STAY_NIGHTS } from "@/lib/validation";
+import { prefillDates } from "@/lib/prefill";
 import {
   calculateEstimate,
   formatUSD,
@@ -57,6 +58,17 @@ export function RequestForm({
   // Once-per-form-session funnel markers (started / saw a price)
   const formStarted = useRef(false);
   const estimateViewed = useRef(false);
+
+  // Pre-filled link from WhatsApp: ?check_in=…&check_out=… picks the dates.
+  // Read on the client so the room page can stay statically rendered.
+  useEffect(() => {
+    const d = new Date();
+    const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const dates = prefillDates(window.location.search, today);
+    if (dates) {
+      setForm((prev) => ({ ...prev, check_in_date: dates.checkIn, check_out_date: dates.checkOut }));
+    }
+  }, []);
 
   useEffect(() => {
     if (selectedRoom && form.check_in_date && form.check_out_date) {

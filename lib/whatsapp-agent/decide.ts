@@ -166,10 +166,11 @@ export function decide(input: DecideInput): Decision {
     };
   }
 
-  // First contact with a question we can't answer: still ask the men-only
-  // check so the guest isn't left waiting, but leave the message unread
-  // because its question is still open.
-  if (state.isFirstContact && askCheck && canSend && switchOn("men_only")) {
+  // A question we can't answer while the men-only question is still open
+  // (first contact, or the guest hasn't answered it yet): ask it now, so the
+  // manager has the answer when they pick up the chat. The message stays
+  // unread because its question is still open.
+  if (askCheck && canSend && switchOn("men_only")) {
     return {
       outcome: "send_check_only",
       markRead: false,
