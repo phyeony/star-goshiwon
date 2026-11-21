@@ -8,8 +8,9 @@
 //   WHATSAPP_PHONE_NUMBER_ID  the number the agent answers on
 //   WHATSAPP_INTERNAL_TOKEN   32+ random characters (openssl rand -hex 32); lets the queue call /api/whatsapp/process
 //   WHATSAPP_GRAPH_VERSION    optional, e.g. v24.0
-//   WHATSAPP_BOOKING_TEMPLATE name of the approved booking-received template;
-//                             empty = don't send it (lib/whatsapp/booking-received.ts)
+//   WHATSAPP_BOOKING_TEMPLATE base name of the approved booking-received templates
+//                             (booking_received, plus _no_passport, _no_men_only,
+//                             _basic); empty = don't send it (lib/whatsapp/booking-received.ts)
 //   WHATSAPP_BOOKING_TEMPLATE_LANG  optional, default "en"
 //   OPENAI_API_KEY etc.       the model provider chosen in whatsapp_settings
 
@@ -19,7 +20,7 @@ import { markRead, sendTemplate, sendText, type GraphConfig } from "./graph";
 import type { BookingReceivedDeps } from "./booking-received";
 import { processConversation, type ProcessDeps, type ProcessResult } from "./process";
 import { timingSafeEqual } from "./signature";
-import { loadAgentContext, recordBookingReceived, supabaseStore } from "./store";
+import { chatSoFar, loadAgentContext, recordBookingReceived, supabaseStore } from "./store";
 
 // The webhook queues a job this long after each guest message (burst wait).
 export const QUEUE_DELAY_SECONDS = 15;
@@ -106,7 +107,9 @@ export function bookingReceivedDeps(): BookingReceivedDeps | null {
   return {
     templateName,
     language: env("WHATSAPP_BOOKING_TEMPLATE_LANG") || "en",
+    chatSoFar,
     send: (to, template) => sendTemplate(cfg, to, template),
+    sendText: (to, text) => sendText(cfg, to, text),
     record: recordBookingReceived,
   };
 }

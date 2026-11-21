@@ -415,3 +415,54 @@ export async function ratingStats(): Promise<Record<string, { good: number; bad:
   }
   return stats;
 }
+
+/** The chat's phone, men-only state and the guest's latest message time. */
+export async function quickReplyTarget(
+  id: string,
+): Promise<{ waPhone: string; menOnlyState: MenOnlyState; lastGuestMessageAt: string | null } | null> {
+  const c = must(
+    await db().from("whatsapp_conversations").select("wa_phone, men_only_state").eq("id", id).maybeSingle(),
+  ) as { wa_phone: string; men_only_state: MenOnlyState } | null;
+  if (!c) return null;
+  const last = (must(
+    await db()
+      .from("whatsapp_messages")
+      .select("sent_at")
+      .eq("conversation_id", id)
+      .eq("sender", "guest")
+      .order("sent_at", { ascending: false })
+      .limit(1),
+  ) ?? []) as { sent_at: string }[];
+  return { waPhone: c.wa_phone, menOnlyState: c.men_only_state, lastGuestMessageAt: last[0]?.sent_at ?? null };
+}
+
+/** Stores a quick reply the manager sent from this page. */
+export async function recordQuickReply(args: {
+  conversationId: string;
+  waMessageId: string;
+  body: string;
+  sentAt: Date;
+  asksMenOnly: boolean;
+}) {
+  must(
+    await db().from("whatsapp_messages").insert({
+      conversation_id: args.conversationId,
+      wa_message_id: args.waMessageId,
+      direction: "out",
+      sender: "manager",
+      message_type: "text",
+      body: args.body,
+      sent_at: args.sentAt.toISOString(),
+      handled_at: args.sentAt.toISOString(),
+    }),
+  );
+  if (args.asksMenOnly) {
+    must(
+      await db()
+        .from("whatsapp_conversations")
+        .update({ men_only_state: "asked" })
+        .eq("id", args.conversationId)
+        .eq("men_only_state", "unasked"),
+    );
+  }
+}

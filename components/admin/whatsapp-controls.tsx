@@ -321,3 +321,69 @@ export function RunActions({
     </div>
   );
 }
+
+/** One-tap canned messages (lib/whatsapp/quick-replies.ts). */
+export function QuickReplies({
+  conversationId,
+  replies,
+  windowOpen,
+}: {
+  conversationId: string;
+  replies: { key: string; label: string; text: string }[];
+  windowOpen: boolean;
+}) {
+  const router = useRouter();
+  const [busy, setBusy] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
+
+  async function send(key: string, label: string, text: string) {
+    if (!confirm(`"${label}" 메시지를 손님에게 보낼까요?\n\n${text}`)) return;
+    setBusy(key);
+    setMessage(null);
+    const res = await fetch(`/api/admin/whatsapp/conversations/${conversationId}/quick-reply`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ key }),
+    });
+    setBusy(null);
+    if (res.ok) {
+      setMessage({ ok: true, text: "보냈습니다." });
+      router.refresh();
+      return;
+    }
+    const json = (await res.json().catch(() => ({}))) as { error?: string; detail?: string };
+    setMessage({
+      ok: false,
+      text:
+        json.error === "window_closed"
+          ? "손님의 마지막 메시지가 24시간이 지나 보낼 수 없습니다."
+          : `전송 실패${json.detail ? `: ${json.detail}` : ""}`,
+    });
+  }
+
+  return (
+    <div className="space-y-2">
+      {!windowOpen && (
+        <p className="text-sm text-gray-500">
+          손님의 마지막 메시지 후 24시간이 지나 보낼 수 없습니다 (WhatsApp 규칙). 손님이 다시 메시지하면 쓸 수 있습니다.
+        </p>
+      )}
+      <ul className="space-y-2">
+        {replies.map((r) => (
+          <li key={r.key} className="flex items-start gap-3">
+            <button
+              type="button"
+              disabled={!windowOpen || busy !== null}
+              onClick={() => send(r.key, r.label, r.text)}
+              className={`${btn} shrink-0 border-indigo-300 text-indigo-700 hover:bg-indigo-50`}
+            >
+              {busy === r.key ? "보내는 중…" : r.label}
+            </button>
+            <span className="text-xs text-gray-500 pt-1">{r.text}</span>
+          </li>
+        ))}
+      </ul>
+      {message && <p className={`text-sm ${message.ok ? "text-emerald-700" : "text-red-600"}`}>{message.text}</p>}
+    </div>
+  );
+}
