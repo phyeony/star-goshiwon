@@ -245,8 +245,8 @@ API keys (action 3) to *run*; the harness and adversarial cases can be written f
 - `worker.ts` wraps OpenNext's worker. Its queue handler calls
   `/api/whatsapp/process` through `WORKER_SELF_REFERENCE`
   with `WHATSAPP_INTERNAL_TOKEN`, so all app code runs inside Next.js.
-- Webhook queues each guest message with a 45 s delay; a run only starts once the
-  newest message is 30 s old (burst wait). A DB claim (`processing_until`) stops
+- Webhook queues each guest message with a 15 s delay (was 45 s until 2026-11-21); a run only starts once the
+  newest message is 10 s old (burst wait). A DB claim (`processing_until`) stops
   two runs answering the same messages.
 - Manager echo (`smb_message_echoes`) pauses the chat for 12 h and marks its
   pending guest messages handled.

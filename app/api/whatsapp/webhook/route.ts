@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
   for (const conversationId of toRun) {
     if (await enqueue({ conversationId })) continue;
     // No queue (local dev): run in the background after the burst wait.
-    const job = new Promise((r) => setTimeout(r, 35_000)).then(() => runConversation(conversationId));
+    const job = new Promise((r) => setTimeout(r, 15_000)).then(() => runConversation(conversationId));
     try {
       const { ctx } = await getCloudflareContext({ async: true });
       ctx.waitUntil(job.catch((e) => console.error("whatsapp: local run failed", e)));

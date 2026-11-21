@@ -22,7 +22,7 @@ import { timingSafeEqual } from "./signature";
 import { loadAgentContext, recordBookingReceived, supabaseStore } from "./store";
 
 // The webhook queues a job this long after each guest message (burst wait).
-export const QUEUE_DELAY_SECONDS = 45;
+export const QUEUE_DELAY_SECONDS = 15;
 
 export interface QueueJob {
   conversationId: string;

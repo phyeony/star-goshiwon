@@ -403,7 +403,7 @@ knowledge pack, tools) can start once this spec and the implementation plan are 
     Inside those hours handoffs stay silent.
   - **Manager reply pauses the bot:** after the manager replies from the WhatsApp
     app, the agent stays quiet in that chat for 12 hours.
-  - **Message bursts:** the queue waits 30–60 s after a guest's last message and
+  - **Message bursts:** the queue waits about 15 s (changed from 30–60 s on 2026-11-21: replies felt slow) after a guest's last message and
     answers everything pending in one reply.
   - **Model outage / budget exhausted:** every turn becomes a handoff; the admin
     page shows a banner so the manager watches the app.
