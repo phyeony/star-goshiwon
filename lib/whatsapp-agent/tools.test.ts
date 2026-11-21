@@ -11,6 +11,14 @@ describe("getQuote", () => {
     expect(q.ok && q.totalUsd).toBe(est.total);
     expect(q.ok && q.nights).toBe(14);
   });
+  it("leads with the USD total, no won figures", () => {
+    const q = getQuote(rooms, "economy-room", "2026-12-01", "2026-12-15", "2026-11-18");
+    const text = q.ok ? q.text : "";
+    expect(text.split("\n")[1]).toMatch(/^Total \$\d+, prepaid via PayPal\.$/);
+    expect(text).toContain("deposit, refunded after check-out");
+    expect(text).toContain("Optional bedding set: +$15.");
+    expect(text).not.toMatch(/₩|KRW/);
+  });
   it("applies the long-stay discount at 28 nights", () => {
     const q = getQuote(rooms, "economy-room", "2026-12-01", "2026-12-29", "2026-11-18");
     expect(q.ok && q.longStayDiscountUsd).toBe(Math.round(11 * 28 * 0.4));
@@ -35,5 +43,15 @@ describe("bookingLink", () => {
   it("links to the room page or the request page", () => {
     expect(bookingLink("https://goshiwonseoul.com/", "economy-room")).toBe("https://goshiwonseoul.com/rooms/economy-room");
     expect(bookingLink("https://goshiwonseoul.com")).toBe("https://goshiwonseoul.com/request-to-book");
+  });
+
+  it("pre-fills the quoted dates on the room page", () => {
+    expect(
+      bookingLink("https://goshiwonseoul.com", "economy-room", { checkIn: "2026-12-01", checkOut: "2026-12-15" }),
+    ).toBe("https://goshiwonseoul.com/rooms/economy-room?check_in=2026-12-01&check_out=2026-12-15#book");
+    // No room: dates alone don't make a link
+    expect(bookingLink("https://goshiwonseoul.com", null, { checkIn: "2026-12-01", checkOut: "2026-12-15" })).toBe(
+      "https://goshiwonseoul.com/request-to-book",
+    );
   });
 });

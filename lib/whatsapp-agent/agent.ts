@@ -121,9 +121,12 @@ Write the reply to the guest's NEW messages, in English, like a friendly person 
 Hard rules:
 - Use only facts from the knowledge pack and the FACTS FOR THIS TURN block. If something isn't there, don't guess: say the manager will get back to them.
 - Prices: only quote amounts that appear in the knowledge pack or FACTS FOR THIS TURN, exactly as written. Never calculate your own totals. Never offer or hint at a discount other than the published long-stay discount.
+- Give prices in US dollars only; no won (KRW) figures unless the guest asks in won. Lead with the final total, say the $70 deposit is refunded after check-out, and mention the optional bedding set price. Keep it to one or two short sentences.
 - Never promise that a booking is approved, a room is held, or a request will be accepted. A free room is not reserved until the booking is confirmed.
 - Never send payment links, room numbers, door or key-box codes, or bank details.
-- Links: only the ones listed under ALLOWED LINKS. If none are listed, include no links and don't explain how to book yet.
+- Links: only the ones listed under ALLOWED LINKS, copied exactly. If none are listed, include no links and don't explain how to book yet.
+- A room link with check_in and check_out opens the booking form with that room and those dates already filled in. When the guest is asking about specific dates, offer it as the way to request the booking: they just add their name, email and WhatsApp number and send it.
+- Whenever you explain how to book or give a booking link, also ask them to send a clear photo of their passport here on WhatsApp after sending the request: the manager needs it to decide on the request.
 - If asked whether you're a bot, be honest: "${ASSISTANT_DISCLOSURE}"
 - Never say "As an AI". Never comment on nationality, religion or other personal characteristics.
 - Don't ask the men-only question yourself; it is added automatically when needed.
@@ -163,6 +166,8 @@ export async function runAgentTurn(input: AgentTurnInput): Promise<AgentTurnResu
   let availability: AvailabilityCount[] | null = null;
   let draft = "";
   let error: string | undefined;
+  // Room page with the quoted dates filled in, when a quote passed.
+  let prefilledLink: string | null = null;
 
   try {
     const r1 = await input.llm.json({
@@ -185,9 +190,12 @@ export async function runAgentTurn(input: AgentTurnInput): Promise<AgentTurnResu
 
     const confirmedGuest = isConfirmedGuest(input.state);
     const menOnlyOk = confirmedGuest || input.state.menOnlyState === "confirmed" || u.men_only_signal === "confirmed";
+    if (quote?.ok && u.room_slug) {
+      prefilledLink = bookingLink(input.siteUrl, u.room_slug, { checkIn: quote.checkIn, checkOut: quote.checkOut });
+    }
     const links =
       menOnlyOk && !input.state.linkedBooking
-        ? [bookingLink(input.siteUrl, u.room_slug), bookingLink(input.siteUrl)]
+        ? [prefilledLink ?? bookingLink(input.siteUrl, u.room_slug), bookingLink(input.siteUrl)]
         : [];
 
     const r2 = await input.llm.json({
@@ -207,7 +215,11 @@ export async function runAgentTurn(input: AgentTurnInput): Promise<AgentTurnResu
     ...findAmounts(input.knowledgePack),
     ...quoteAmounts(quote),
   ];
-  const links = [bookingLink(input.siteUrl), ...input.rooms.map((r) => bookingLink(input.siteUrl, r.slug))];
+  const links = [
+    bookingLink(input.siteUrl),
+    ...input.rooms.map((r) => bookingLink(input.siteUrl, r.slug)),
+    ...(prefilledLink ? [prefilledLink] : []),
+  ];
   const menOnlyOk =
     isConfirmedGuest(input.state) ||
     input.state.menOnlyState === "confirmed" ||
@@ -250,7 +262,7 @@ export function outgoingText(decision: Decision, draft: string): string | null {
     case "send":
       return decision.appendMenOnlyCheck ? `${draft}\n\n${MEN_ONLY_CHECK}` : draft;
     case "send_check_only":
-      return `Thanks for your message! ${MEN_ONLY_CHECK}`;
+      return `Thanks for your message! The manager will get back to you soon. ${MEN_ONLY_CHECK}`;
     case "send_decline":
       return DECLINE_TEXT;
     case "send_document_pending":

@@ -246,7 +246,10 @@ export default async function RoomDetailPage({ params }: Props) {
 
         {/* Sidebar — Embedded Booking Form */}
         <div className="w-full lg:w-1/3">
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 sticky top-24">
+          <div
+            id="book"
+            className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 sticky top-24 scroll-mt-24"
+          >
             <h3 className="text-2xl font-bold text-gray-900 mb-2">
               Request to Book
             </h3>

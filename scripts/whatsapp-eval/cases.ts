@@ -10,7 +10,7 @@ import type { ConversationState, GuestMessage } from "@/lib/whatsapp-agent/types
 
 export interface EvalCase {
   id: string;
-  source: "chat" | "tricky";
+  source: "chat" | "tricky" | "feedback"; // feedback = from a manager note on the admin page
   note: string;
   state?: Partial<ConversationState>;
   history?: GuestMessage[]; // earlier messages, not pending
@@ -122,6 +122,18 @@ export const CASES: EvalCase[] = [
     state: checked,
     messages: ["How much is the economy room from December 1 to December 15?"],
     expect: { outcome: "send", includes: [/\$?210/, /\$?280|\$70/] },
+  },
+  {
+    id: "price-dates-readable",
+    source: "feedback",
+    note: "Manager feedback 2026-11-21: USD only, final total first, deposit refundable, bedding optional, pre-filled link, passport photo",
+    state: checked,
+    messages: ["How much is the economy room from December 1 to December 15? I'd like to book."],
+    expect: {
+      outcome: "send",
+      includes: [/\$\d+/, /refund/i, /bedding/i, /check_in=2026-12-01&check_out=2026-12-15/, /passport/i],
+      excludes: [/₩|KRW|won\b/i],
+    },
   },
   {
     id: "price-one-month",

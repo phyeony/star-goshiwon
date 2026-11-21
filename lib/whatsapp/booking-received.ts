@@ -13,7 +13,7 @@
  */
 export const BOOKING_RECEIVED_TEMPLATE_TEXT =
   "Hi {{1}}, thanks for your booking request at Star Goshiwon! We received it for {{2}}, {{3}} to {{4}}.\n\n" +
-  "The manager will check availability and get back to you soon.\n\n" +
+  "To decide on your request, the manager needs a clear photo of your passport. Please send it here.\n\n" +
   "One quick question: Star Goshiwon is for men only at the moment. Could you confirm you're male? " +
   "You can also reply here with any questions.";
 

@@ -424,3 +424,5 @@ knowledge pack, tools) can start once this spec and the implementation plan are 
 - 2026-11-19: Booking form: WhatsApp number is now **required** (email stays required too);
   a separate unticked "Message me on WhatsApp about this booking" checkbox is the opt-in.
   The booking-received template is sent only when ticked and `WHATSAPP_BOOKING_TEMPLATE` is set.
+- 2026-11-21: WhatsApp booking help is a **pre-filled booking link** (room page with ?check_in&check_out, built by code from a passing quote; the guest adds name, email, number and ticks the boxes). Not creating requests from chat. The guest's number is not in the link (URLs go to analytics).
+- 2026-11-21 manager feedback: quotes in USD only, total first, deposit refundable, bedding optional; ask for a passport photo whenever booking is explained (and in the booking-received template); ask the men-only question again on every handoff while it's unanswered.
