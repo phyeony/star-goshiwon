@@ -161,28 +161,57 @@ export function BotStateControl({
   );
 }
 
-/** Copy the AI's draft, and rate the turn ✓ / ✗. */
+/** Copy the AI's draft, rate the turn ✓ / ✗, and leave a note on it. */
 export function RunActions({
   runId,
   draft,
   rating,
+  note,
+  betterReply,
 }: {
   runId: string;
   draft: string;
   rating: "good" | "bad" | null;
+  note: string | null;
+  betterReply: string | null;
 }) {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [noteText, setNoteText] = useState(note ?? "");
+  const [betterText, setBetterText] = useState(betterReply ?? "");
+  const [error, setError] = useState("");
+  const hasNote = Boolean(note || betterReply);
 
   async function rate(value: "good" | "bad") {
     setBusy(true);
-    await patch(`/api/admin/whatsapp/runs/${runId}`, { rating: rating === value ? null : value });
+    const next = rating === value ? null : value;
+    await patch(`/api/admin/whatsapp/runs/${runId}`, { rating: next });
     setBusy(false);
+    // A ✗ without a note opens the note box: the why is what improves the agent.
+    if (next === "bad" && !hasNote) setEditing(true);
     router.refresh();
   }
 
+  async function saveNote() {
+    setBusy(true);
+    setError("");
+    const ok = await patch(`/api/admin/whatsapp/runs/${runId}`, { note: noteText, betterReply: betterText });
+    setBusy(false);
+    if (!ok) {
+      setError("저장하지 못했습니다. 다시 시도해 주세요.");
+      return;
+    }
+    setEditing(false);
+    router.refresh();
+  }
+
+  const field =
+    "mt-1 block w-full rounded-lg border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500";
+
   return (
+    <div className="space-y-2">
     <div className="flex flex-wrap items-center gap-2">
       {draft && (
         <button
@@ -217,6 +246,78 @@ export function RunActions({
       >
         ✗ 별로
       </button>
+      {!editing && (
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className={`${btn} border-gray-300 text-gray-700 hover:bg-gray-50`}
+        >
+          {hasNote ? "메모 수정" : "메모 남기기"}
+        </button>
+      )}
+    </div>
+    {!editing && hasNote && (
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-gray-900">
+        {note && (
+          <p className="whitespace-pre-wrap">
+            <span className="text-xs font-medium text-gray-500">메모 </span>
+            {note}
+          </p>
+        )}
+        {betterReply && (
+          <p className="mt-1 whitespace-pre-wrap">
+            <span className="text-xs font-medium text-gray-500">이렇게 답했어야 함 </span>
+            {betterReply}
+          </p>
+        )}
+      </div>
+    )}
+    {editing && (
+      <div className="rounded-lg border border-gray-200 bg-white p-3">
+        <label className="block text-xs font-medium text-gray-600">
+          무엇이 문제였나요?
+          <textarea
+            rows={2}
+            value={noteText}
+            onChange={(e) => setNoteText(e.target.value)}
+            placeholder="예: 너무 길어요 / 보증금 설명이 빠졌어요 / 매니저에게 넘겼어야 해요"
+            className={field}
+          />
+        </label>
+        <label className="mt-2 block text-xs font-medium text-gray-600">
+          이렇게 답했어야 함 (선택, 영어로)
+          <textarea
+            rows={3}
+            value={betterText}
+            onChange={(e) => setBetterText(e.target.value)}
+            className={field}
+          />
+        </label>
+        <div className="mt-2 flex gap-2">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={saveNote}
+            className={`${btn} border-indigo-600 bg-indigo-600 text-white hover:bg-indigo-700`}
+          >
+            저장
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => {
+              setNoteText(note ?? "");
+              setBetterText(betterReply ?? "");
+              setEditing(false);
+            }}
+            className={`${btn} border-gray-300 text-gray-700 hover:bg-gray-50`}
+          >
+            취소
+          </button>
+        </div>
+        {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      </div>
+    )}
     </div>
   );
 }

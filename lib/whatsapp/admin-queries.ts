@@ -45,6 +45,8 @@ export interface AdminRun {
   output_tokens: number;
   latency_ms: number;
   manager_rating: "good" | "bad" | null;
+  manager_note: string | null;
+  manager_better_reply: string | null;
   created_at: string;
 }
 
@@ -217,6 +219,24 @@ export async function setBotState(id: string, state: "active" | "off") {
 
 export async function rateRun(id: string, rating: "good" | "bad" | null) {
   must(await db().from("whatsapp_agent_runs").update({ manager_rating: rating }).eq("id", id).select("id").single());
+}
+
+/** Saves the manager's note on a turn; empty text clears it. */
+export async function noteRun(id: string, note: string, betterReply: string) {
+  const n = note.trim();
+  const b = betterReply.trim();
+  must(
+    await db()
+      .from("whatsapp_agent_runs")
+      .update({
+        manager_note: n || null,
+        manager_better_reply: b || null,
+        manager_noted_at: n || b ? new Date().toISOString() : null,
+      })
+      .eq("id", id)
+      .select("id")
+      .single(),
+  );
 }
 
 /**

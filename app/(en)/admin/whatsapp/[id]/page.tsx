@@ -176,7 +176,13 @@ function RunCard({ r }: { r: AdminRun }) {
         </div>
       )}
       <div className="mt-3">
-        <RunActions runId={r.id} draft={r.draft} rating={r.manager_rating} />
+        <RunActions
+          runId={r.id}
+          draft={r.draft}
+          rating={r.manager_rating}
+          note={r.manager_note}
+          betterReply={r.manager_better_reply}
+        />
       </div>
       <p className="mt-2 text-xs text-gray-400">
         {[r.model, `${(r.latency_ms / 1000).toFixed(1)}초`, tokenText(r), formatDate(r.created_at)]
