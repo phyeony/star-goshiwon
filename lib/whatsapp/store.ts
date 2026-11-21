@@ -6,7 +6,8 @@ import { guides } from "@/lib/guides";
 import { getEconomyTier, getPublicRooms, getRoomUnitAvailability, getRoomUnits, isRoomUnitAvailableForBooking } from "@/lib/queries";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import { policiesText } from "@/lib/whatsapp-agent/policies-plain";
-import { CATEGORIES, type Category, type LinkedBooking, type Mode } from "@/lib/whatsapp-agent/types";
+import { CATEGORIES, type Category, type LinkedBooking, type MenOnlyState, type Mode } from "@/lib/whatsapp-agent/types";
+import type { ChatSoFar } from "./booking-received";
 import type { AgentContext, ConversationRow, MessageRow, RunRecord, Settings, WhatsAppStore } from "./process";
 
 const CONVERSATION_COLUMNS =
@@ -88,15 +89,51 @@ export async function pauseForManager(conversationId: string, until: Date): Prom
 }
 
 /**
- * After the booking-received template went out: the chat for that number is
- * linked to the booking, the men-only question counts as asked (unless the
- * guest already answered it), and the message is stored as the agent's.
+ * What the chat for this number already shows, for the booking-received
+ * message (lib/whatsapp/booking-received.ts); null when there's no chat.
+ */
+export async function chatSoFar(waPhone: string): Promise<ChatSoFar | null> {
+  const conversation = must(
+    await db().from("whatsapp_conversations").select("id, men_only_state").eq("wa_phone", waPhone).maybeSingle(),
+  ) as { id: string; men_only_state: MenOnlyState } | null;
+  if (!conversation) return null;
+  const [media, latest] = await Promise.all([
+    db()
+      .from("whatsapp_messages")
+      .select("id")
+      .eq("conversation_id", conversation.id)
+      .eq("sender", "guest")
+      .in("message_type", ["image", "document"])
+      .limit(1),
+    db()
+      .from("whatsapp_messages")
+      .select("sent_at")
+      .eq("conversation_id", conversation.id)
+      .eq("sender", "guest")
+      .order("sent_at", { ascending: false })
+      .limit(1),
+  ]);
+  const last = (must(latest) ?? []) as { sent_at: string }[];
+  return {
+    menOnlyState: conversation.men_only_state,
+    sentPhotoOrFile: ((must(media) ?? []) as unknown[]).length > 0,
+    lastGuestMessageAt: last[0]?.sent_at ?? null,
+  };
+}
+
+/**
+ * After the booking-received message went out: the chat for that number is
+ * linked to the booking, the men-only question counts as asked when it was
+ * in the message (unless the guest already answered it), and the message is
+ * stored as the agent's.
  */
 export async function recordBookingReceived(args: {
   waPhone: string;
   bookingId: string;
   waMessageId: string;
   body: string;
+  messageType: "template" | "text";
+  asksMenOnly: boolean;
   sentAt: Date;
 }): Promise<void> {
   const conversationId = await upsertConversation(args.waPhone, "", args.sentAt);
@@ -106,19 +143,21 @@ export async function recordBookingReceived(args: {
       .update({ booking_request_id: args.bookingId, match_source: "phone" })
       .eq("id", conversationId),
   );
-  must(
-    await db()
-      .from("whatsapp_conversations")
-      .update({ men_only_state: "asked" })
-      .eq("id", conversationId)
-      .eq("men_only_state", "unasked"),
-  );
+  if (args.asksMenOnly) {
+    must(
+      await db()
+        .from("whatsapp_conversations")
+        .update({ men_only_state: "asked" })
+        .eq("id", conversationId)
+        .eq("men_only_state", "unasked"),
+    );
+  }
   await insertMessage({
     conversationId,
     waMessageId: args.waMessageId,
     direction: "out",
     sender: "bot",
-    messageType: "template",
+    messageType: args.messageType,
     body: args.body,
     sentAt: args.sentAt,
     handled: true,

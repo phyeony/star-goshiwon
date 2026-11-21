@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BotStateControl, RunActions } from "@/components/admin/whatsapp-controls";
+import { BotStateControl, QuickReplies, RunActions } from "@/components/admin/whatsapp-controls";
 import {
   datesToCheck,
   freeRoomsFor,
@@ -11,6 +11,7 @@ import {
 } from "@/lib/whatsapp/admin-queries";
 import { CATEGORY_LABEL, MEN_ONLY_LABEL, OUTCOME_LABEL, SENDER_LABEL, reasonLabel } from "@/lib/whatsapp/admin-labels";
 import { estimateCostUsd } from "@/lib/whatsapp-agent/model-prices";
+import { QUICK_REPLIES, canSendText } from "@/lib/whatsapp/quick-replies";
 import { WhatsAppOutageBanner } from "../banner";
 
 // "토큰 1,234+210 (약 $0.0002)", or "" when the model wasn't called.
@@ -69,6 +70,8 @@ export default async function WhatsAppChatPage({ params }: { params: Promise<{ i
   const wantsDocument = runs.some((r) => r.outcome === "send_document_pending");
   const dates = datesToCheck(runs, booking);
   const freeRooms = dates ? await freeRoomsFor(dates.checkIn, dates.checkOut, dates.roomSlug) : null;
+  const lastGuest = [...messages].reverse().find((m) => m.sender === "guest");
+  const windowOpen = canSendText(lastGuest?.sent_at ?? null);
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
@@ -103,6 +106,14 @@ export default async function WhatsAppChatPage({ params }: { params: Promise<{ i
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 space-y-3">
           <h2 className="font-bold text-gray-900">AI 답변</h2>
           <BotStateControl conversationId={c.id} botState={c.bot_state} pausedUntil={c.paused_until} />
+        </div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 space-y-3">
+          <h2 className="font-bold text-gray-900">빠른 답장</h2>
+          <QuickReplies
+            conversationId={c.id}
+            replies={QUICK_REPLIES.map(({ key, label, text }) => ({ key, label, text }))}
+            windowOpen={windowOpen}
+          />
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 space-y-2 text-sm">
           <h2 className="font-bold text-gray-900">손님</h2>
