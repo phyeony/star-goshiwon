@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
 import {
-  BOOKING_RECEIVED_TEMPLATE_TEXT,
   BOOKING_RECEIVED_TEXTS,
   bookingReceivedParams,
   planBookingReceived,
@@ -38,7 +37,8 @@ describe("booking-received template", () => {
     expect(text).toContain("Hi Alex, thanks for your booking request at Star Goshiwon!");
     expect(text).toContain("Economy Room, 1 Dec 2026 to 15 Dec 2026");
     expect(text).not.toMatch(/\{\{\d\}\}/);
-    expect(BOOKING_RECEIVED_TEMPLATE_TEXT.match(/\{\{\d\}\}/g)).toHaveLength(4);
+    // WhatsApp's policy: never ask for ID on WhatsApp.
+    for (const t of Object.values(BOOKING_RECEIVED_TEXTS)) expect(t).not.toMatch(/passport|\bID\b|identity|visa/i);
   });
 
   function makeDeps(chat: Awaited<ReturnType<BookingReceivedDeps["chatSoFar"]>> = null): BookingReceivedDeps {
@@ -53,12 +53,12 @@ describe("booking-received template", () => {
   }
   const now = new Date("2026-11-19T08:00:00Z");
 
-  it("sends the full template to a guest who never wrote, and records the chat against the booking", async () => {
+  it("sends the template with the men-only question to a guest who never wrote, and records the chat", async () => {
     const deps = makeDeps();
     await sendBookingReceived(deps, input, now);
     expect(deps.chatSoFar).toHaveBeenCalledWith("447700900123");
     expect(deps.send).toHaveBeenCalledWith("447700900123", {
-      name: "booking_received",
+      name: "booking_received_ask_men_only",
       language: "en",
       bodyParams: ["Alex", "Economy Room", "1 Dec 2026", "15 Dec 2026"],
     });
@@ -74,47 +74,40 @@ describe("booking-received template", () => {
     });
   });
 
-  it("leaves out what the chat already covers", async () => {
-    const deps = makeDeps({ menOnlyState: "confirmed", sentPhotoOrFile: true, lastGuestMessageAt: "2026-11-10T08:00:00Z" });
+  it("leaves out the men-only question once answered", async () => {
+    const deps = makeDeps({ menOnlyState: "confirmed", lastGuestMessageAt: "2026-11-10T08:00:00Z" });
     await sendBookingReceived(deps, input, now);
-    expect(deps.send).toHaveBeenCalledWith("447700900123", expect.objectContaining({ name: "booking_received_basic" }));
+    expect(deps.send).toHaveBeenCalledWith("447700900123", expect.objectContaining({ name: "booking_received" }));
     const body = (deps.record as ReturnType<typeof vi.fn>).mock.calls[0][0].body as string;
-    expect(body).not.toContain("passport");
     expect(body).not.toContain("men only");
     expect((deps.record as ReturnType<typeof vi.fn>).mock.calls[0][0].asksMenOnly).toBe(false);
   });
 
   it("sends a normal text inside the guest's 24-hour window", async () => {
-    const deps = makeDeps({ menOnlyState: "asked", sentPhotoOrFile: true, lastGuestMessageAt: "2026-11-19T07:00:00Z" });
+    const deps = makeDeps({ menOnlyState: "asked", lastGuestMessageAt: "2026-11-19T07:00:00Z" });
     await sendBookingReceived(deps, input, now);
     expect(deps.send).not.toHaveBeenCalled();
-    expect(deps.sendText).toHaveBeenCalledWith("447700900123", renderBookingReceived(bookingReceivedParams(input), "no_passport"));
+    expect(deps.sendText).toHaveBeenCalledWith("447700900123", renderBookingReceived(bookingReceivedParams(input), "ask_men_only"));
     expect(deps.record).toHaveBeenCalledWith(expect.objectContaining({ messageType: "text", waMessageId: "wamid.X" }));
   });
 
   it("sends nothing to a guest the men-only rule already ruled out", async () => {
-    const deps = makeDeps({ menOnlyState: "not_eligible", sentPhotoOrFile: false, lastGuestMessageAt: null });
+    const deps = makeDeps({ menOnlyState: "not_eligible", lastGuestMessageAt: null });
     expect(await sendBookingReceived(deps, input, now)).toEqual({ send: false, reason: "not_eligible" });
     expect(deps.send).not.toHaveBeenCalled();
     expect(deps.sendText).not.toHaveBeenCalled();
     expect(deps.record).not.toHaveBeenCalled();
   });
 
-  it("picks the variant from passport and men-only state", () => {
-    const chat = (menOnlyState: "unasked" | "confirmed", sentPhotoOrFile: boolean) => ({
-      menOnlyState,
-      sentPhotoOrFile,
-      lastGuestMessageAt: null,
-    });
+  it("picks the variant from the men-only state", () => {
+    const chat = (menOnlyState: "unasked" | "confirmed") => ({ menOnlyState, lastGuestMessageAt: null });
     const variant = (p: ReturnType<typeof planBookingReceived>) => (p.send ? p.variant : null);
-    expect(variant(planBookingReceived(chat("unasked", false), now))).toBe("full");
-    expect(variant(planBookingReceived(chat("unasked", true), now))).toBe("no_passport");
-    expect(variant(planBookingReceived(chat("confirmed", false), now))).toBe("no_men_only");
-    expect(variant(planBookingReceived(chat("confirmed", true), now))).toBe("basic");
+    expect(variant(planBookingReceived(chat("unasked"), now))).toBe("ask_men_only");
+    expect(variant(planBookingReceived(chat("confirmed"), now))).toBe("basic");
     // Just under 24 h is too close to the edge: template.
-    const late = { ...chat("unasked", false), lastGuestMessageAt: "2026-11-18T08:05:00Z" };
+    const late = { ...chat("unasked"), lastGuestMessageAt: "2026-11-18T08:05:00Z" };
     expect(planBookingReceived(late, now)).toMatchObject({ as: "template" });
-    expect(templateNameFor("booking_received", "no_men_only")).toBe("booking_received_no_men_only");
+    expect(templateNameFor("booking_received", "ask_men_only")).toBe("booking_received_ask_men_only");
     for (const text of Object.values(BOOKING_RECEIVED_TEXTS)) expect(text.match(/\{\{\d\}\}/g)).toHaveLength(4);
   });
 

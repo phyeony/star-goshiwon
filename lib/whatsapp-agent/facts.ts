@@ -10,7 +10,7 @@ export const MANAGER_FACTS = [
   "Use Naver Map in Korea: Google Maps often gives wrong directions here.",
   "Non-guests may not enter the building. Residents include people studying for exams, so the building must stay quiet.",
   "Rooms are assigned after the booking is confirmed, so the exact room may differ from the photos. Every room has a window with an outside view.",
-  "After submitting a booking request on the website, please send a clear photo of your passport here on WhatsApp. Once we've verified it, we email a PayPal payment link.",
+  "After a booking request, we send a secure link to verify your identity on our website (never on WhatsApp). Once that's done, we email a PayPal payment link.",
   "Payment is due at least 5 days before check-in.",
   "A residence confirmation document (for immigration / visa purposes) can be issued for confirmed guests.",
 ];

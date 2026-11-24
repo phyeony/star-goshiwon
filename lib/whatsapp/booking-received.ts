@@ -1,11 +1,13 @@
 // The one message we send first: right after a booking request, to guests
 // who gave a WhatsApp number and ticked the opt-in (spec §1.1).
 //
-// It leaves out what the chat already covers: the passport line once the
-// guest has sent a photo or file, the men-only question once they've said
-// they're male. A guest who has written in the last 24 hours gets it as a
-// normal (free) text; everyone else gets one of four Meta "utility"
-// templates, whose text must be approved in WhatsApp Manager first. Until
+// It never asks for ID: WhatsApp's Business Messaging Policy forbids asking
+// people to share ID on WhatsApp (an earlier version asked for a passport
+// photo and the account was disabled). Identity checks go through a secure
+// link on the website. The men-only question is left out once the chat has
+// recorded the answer. A guest who has written in the last 24 hours gets it
+// as a normal (free) text; everyone else gets a Meta "utility" template, whose
+// text must be approved in WhatsApp Manager first. Until
 // WHATSAPP_BOOKING_TEMPLATE names the approved base template, nothing is sent.
 //
 // The chat is created already linked to the booking, with the men-only
@@ -16,12 +18,11 @@ import type { MenOnlyState } from "@/lib/whatsapp-agent/types";
 
 const INTRO =
   "Hi {{1}}, thanks for your booking request at Star Goshiwon! We received it for {{2}}, {{3}} to {{4}}.";
-const PASSPORT = "To decide on your request, the manager needs a clear photo of your passport. Please send it here.";
+const NEXT = "The manager will review it and get back to you here.";
 const MEN_ONLY = "One quick question: Star Goshiwon is for men only at the moment. Could you confirm you're male?";
-const QUESTIONS = "You can also reply here with any questions.";
-const BASIC = "The manager will review it and get back to you here. You can also reply with any questions.";
+const QUESTIONS = "You can also reply with any questions.";
 
-export type BookingVariant = "full" | "no_passport" | "no_men_only" | "basic";
+export type BookingVariant = "basic" | "ask_men_only";
 
 /**
  * Text to submit in WhatsApp Manager for each variant (category Utility,
@@ -29,25 +30,18 @@ export type BookingVariant = "full" | "no_passport" | "no_men_only" | "basic";
  * check-out. Kept here so the stored chat history shows what the guest got.
  */
 export const BOOKING_RECEIVED_TEXTS: Record<BookingVariant, string> = {
-  full: `${INTRO}\n\n${PASSPORT}\n\n${MEN_ONLY} ${QUESTIONS}`,
-  no_passport: `${INTRO}\n\n${MEN_ONLY} ${QUESTIONS}`,
-  no_men_only: `${INTRO}\n\n${PASSPORT} ${QUESTIONS}`,
-  basic: `${INTRO}\n\n${BASIC}`,
+  basic: `${INTRO}\n\n${NEXT} ${QUESTIONS}`,
+  ask_men_only: `${INTRO}\n\n${NEXT}\n\n${MEN_ONLY} ${QUESTIONS}`,
 };
 
-/** The full message, as first submitted. */
-export const BOOKING_RECEIVED_TEMPLATE_TEXT = BOOKING_RECEIVED_TEXTS.full;
-
-/** booking_received, booking_received_no_passport, … */
+/** booking_request_received, booking_request_received_ask_men_only */
 export function templateNameFor(base: string, variant: BookingVariant): string {
-  return variant === "full" ? base : `${base}_${variant}`;
+  return variant === "basic" ? base : `${base}_${variant}`;
 }
 
 /** What the chat for this number already shows; null when there's no chat. */
 export interface ChatSoFar {
   menOnlyState: MenOnlyState;
-  /** The guest has sent a photo or a file (taken to be the passport). */
-  sentPhotoOrFile: boolean;
   /** ISO time of the guest's latest message, or null. */
   lastGuestMessageAt: string | null;
 }
@@ -62,10 +56,8 @@ export type BookingPlan =
 
 export function planBookingReceived(chat: ChatSoFar | null, now: Date): BookingPlan {
   if (chat?.menOnlyState === "not_eligible") return { send: false, reason: "not_eligible" };
-  const askPassport = !chat?.sentPhotoOrFile;
   const askMenOnly = chat?.menOnlyState !== "confirmed";
-  const variant: BookingVariant =
-    askPassport && askMenOnly ? "full" : askMenOnly ? "no_passport" : askPassport ? "no_men_only" : "basic";
+  const variant: BookingVariant = askMenOnly ? "ask_men_only" : "basic";
   const last = chat?.lastGuestMessageAt ? Date.parse(chat.lastGuestMessageAt) : NaN;
   const inWindow = !Number.isNaN(last) && now.getTime() - last < FREE_TEXT_WINDOW_MS;
   return { send: true, variant, as: inWindow ? "text" : "template", asksMenOnly: askMenOnly };
@@ -81,7 +73,7 @@ export interface BookingReceivedInput {
 }
 
 export interface BookingReceivedDeps {
-  /** Base template name; the other variants add _no_passport etc. */
+  /** Base template name; the men-only variant adds _ask_men_only. */
   templateName: string;
   language: string;
   chatSoFar(waPhone: string): Promise<ChatSoFar | null>;
@@ -121,7 +113,7 @@ export function bookingReceivedParams(input: BookingReceivedInput): string[] {
   ];
 }
 
-export function renderBookingReceived(params: string[], variant: BookingVariant = "full"): string {
+export function renderBookingReceived(params: string[], variant: BookingVariant = "basic"): string {
   return BOOKING_RECEIVED_TEXTS[variant].replace(/\{\{(\d)\}\}/g, (_, n: string) => params[Number(n) - 1] ?? "");
 }
 
