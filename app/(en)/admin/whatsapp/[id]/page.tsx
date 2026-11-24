@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BotStateControl, QuickReplies, ResendButton, RunActions, SimulatorComposer } from "@/components/admin/whatsapp-controls";
+import { BotStateControl, QuickReplies, ResendButton, RunActions, SimulatorComposer, TestBookingLink } from "@/components/admin/whatsapp-controls";
 import {
   datesToCheck,
   freeRoomsFor,
   getConversationDetail,
+  recentBookingRequests,
   type AdminMessage,
   type AdminRun,
   type FreeRoomType,
@@ -115,7 +116,7 @@ export default async function WhatsAppChatPage({ params }: { params: Promise<{ i
         {messages.length === 0 && <p className="text-gray-500">메시지가 없습니다.</p>}
         {isTest && (
           <div className="bg-white rounded-2xl shadow-sm border border-indigo-200 p-5 space-y-3">
-            <h2 className="font-bold text-gray-900">손님으로 메시지 보내기</h2>
+            <h2 className="font-bold text-gray-900">테스트 메시지 보내기</h2>
             <SimulatorComposer conversationId={c.id} />
           </div>
         )}
@@ -157,6 +158,22 @@ export default async function WhatsAppChatPage({ params }: { params: Promise<{ i
           </a>
           )}
         </div>
+        {isTest && (
+          <div className="bg-white rounded-2xl shadow-sm border border-indigo-200 p-5 space-y-2 text-sm">
+            <h2 className="font-bold text-gray-900">테스트: 예약 연결</h2>
+            <p className="text-gray-600">
+              스테이징 예약 요청에 연결하면 AI가 그 예약 상태를 봅니다. 예약 요청 페이지에서 승인하면 확정 손님으로 답합니다.
+            </p>
+            <TestBookingLink
+              conversationId={c.id}
+              linkedId={c.booking_request_id}
+              options={(await recentBookingRequests()).map((b) => ({
+                id: b.id,
+                label: `${b.guest_name} · ${b.check_in_date} – ${b.check_out_date} · ${b.status}`,
+              }))}
+            />
+          </div>
+        )}
         {dates && freeRooms && <FreeRoomsCard dates={dates} types={freeRooms} />}
         {wantsDocument && (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900 space-y-2">

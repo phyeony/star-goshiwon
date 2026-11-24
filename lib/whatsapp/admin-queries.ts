@@ -293,6 +293,37 @@ export function datesToCheck(
 }
 
 /** Turns the agent on or off for one chat. "active" also ends a manager pause. */
+export interface BookingOption {
+  id: string;
+  guest_name: string;
+  status: string;
+  check_in_date: string;
+  check_out_date: string;
+}
+
+/** Latest booking requests, for linking a test chat (simulator). */
+export async function recentBookingRequests(limit = 30): Promise<BookingOption[]> {
+  return (must(
+    await db()
+      .from("booking_requests")
+      .select("id, guest_name, status, check_in_date, check_out_date")
+      .order("created_at", { ascending: false })
+      .limit(limit),
+  ) ?? []) as BookingOption[];
+}
+
+/** Links a chat to a booking request, or unlinks it (null). */
+export async function setLinkedBooking(id: string, bookingRequestId: string | null) {
+  must(
+    await db()
+      .from("whatsapp_conversations")
+      .update({ booking_request_id: bookingRequestId })
+      .eq("id", id)
+      .select("id")
+      .single(),
+  );
+}
+
 export async function setBotState(id: string, state: "active" | "off") {
   must(
     await db()
