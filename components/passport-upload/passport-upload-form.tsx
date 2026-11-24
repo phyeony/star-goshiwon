@@ -106,7 +106,8 @@ export function PassportUploadForm({
         </h2>
         <p className="mt-2 text-sm text-gray-600 max-w-md mx-auto">
           The manager will check it within 24 hours and email you about your
-          booking. Your photo is deleted as soon as it has been checked.
+          booking. Your photo stays encrypted and is deleted automatically on
+          your check-out day.
         </p>
         <p className="mt-6 text-xs text-gray-500">
           Sent the wrong photo? Just open this link again and upload a new one.
@@ -117,37 +118,6 @@ export function PassportUploadForm({
 
   return (
     <form onSubmit={submit} className="space-y-6">
-      {/* Why + how it's protected */}
-      <section className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8">
-        <h2 className="text-lg font-semibold text-gray-900">
-          Why we ask for your passport
-        </h2>
-        <p className="mt-2 text-sm text-gray-600 leading-relaxed">
-          Star Goshiwon has self check-in, with no front desk. Checking your
-          passport before you arrive is how we make sure the person who booked
-          is the person who moves in. It keeps the house safe for everyone
-          living here.
-        </p>
-
-        <h3 className="mt-6 text-sm font-semibold text-gray-900">
-          How we protect your photo
-        </h3>
-        <ul className="mt-3 space-y-3">
-          <TrustItem icon={<LockIcon />} title="Encrypted">
-            Sent over a secure connection and stored encrypted. It never goes
-            through WhatsApp or email.
-          </TrustItem>
-          <TrustItem icon={<PersonIcon />} title="Only the manager sees it">
-            It isn&apos;t shared with anyone, and it isn&apos;t used for
-            anything except checking this booking.
-          </TrustItem>
-          <TrustItem icon={<TrashIcon />} title="Deleted after checking">
-            Deleted as soon as we&apos;ve checked it, and never kept more than
-            3 days. We keep only a note that your passport was checked.
-          </TrustItem>
-        </ul>
-      </section>
-
       {/* Upload */}
       <section className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8">
         <h2 className="text-lg font-semibold text-gray-900">
@@ -155,6 +125,11 @@ export function PassportUploadForm({
         </h2>
         <p className="mt-1 text-sm text-gray-600">
           The page with your photo and name.
+        </p>
+        <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-indigo-50/60 px-3 py-2 text-xs font-medium text-indigo-900">
+          <span className="inline-flex items-center gap-1"><LockIcon className="h-3.5 w-3.5" /> Encrypted</span>
+          <span className="inline-flex items-center gap-1"><PersonIcon className="h-3.5 w-3.5" /> Only the manager sees it</span>
+          <span className="inline-flex items-center gap-1"><TrashIcon className="h-3.5 w-3.5" /> Deleted on your check-out day</span>
         </p>
 
         <input
@@ -206,10 +181,6 @@ export function PassportUploadForm({
           <Tip>All four corners in the frame</Tip>
           <Tip>Name, photo and dates easy to read</Tip>
           <Tip>No glare or blur</Tip>
-          <Tip>
-            You may cover the passport number and the two code lines at the
-            bottom. We don&apos;t need them.
-          </Tip>
         </ul>
       </section>
 
@@ -224,7 +195,7 @@ export function PassportUploadForm({
           />
           <span className="text-sm text-gray-900">
             I agree that Star Goshiwon may use this photo to check my identity
-            for this booking, and delete it once checked. (Required){" "}
+            for this booking, and keep it until my check-out day. (Required){" "}
             <button
               type="button"
               onClick={() => setShowDetails((v) => !v)}
@@ -241,10 +212,12 @@ export function PassportUploadForm({
               A photo of your passport&apos;s photo page.
             </DetailRow>
             <DetailRow label="Why">
-              To check your identity before we approve your booking.
+              To check your identity before we approve your booking, and to
+              prepare documents you ask for during your stay.
             </DetailRow>
             <DetailRow label="How long">
-              Until the manager has checked it, and never more than 3 days.
+              Until your check-out day, then deleted automatically. If your
+              request is declined or cancelled, it&apos;s deleted within 7 days.
             </DetailRow>
             <DetailRow label="Your choice">
               You can say no. We can&apos;t approve a booking without an
@@ -283,6 +256,38 @@ export function PassportUploadForm({
           </Link>
         </p>
       </section>
+      {/* Why + how it's protected */}
+      <section className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8">
+        <h2 className="text-lg font-semibold text-gray-900">
+          Why we ask for your passport
+        </h2>
+        <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+          Star Goshiwon has self check-in, with no front desk. Checking your
+          passport before you arrive is how we make sure the person who booked
+          is the person who moves in. It keeps the house safe for everyone
+          living here. During your stay we may also use it to prepare
+          documents you ask for, such as a residence confirmation.
+        </p>
+
+        <h3 className="mt-6 text-sm font-semibold text-gray-900">
+          How we protect your photo
+        </h3>
+        <ul className="mt-3 space-y-3">
+          <TrustItem icon={<LockIcon />} title="Encrypted">
+            Sent over a secure connection and stored encrypted. It never goes
+            through WhatsApp or email.
+          </TrustItem>
+          <TrustItem icon={<PersonIcon />} title="Only the manager sees it">
+            It isn&apos;t shared with anyone, and it isn&apos;t used for
+            anything except your booking and stay.
+          </TrustItem>
+          <TrustItem icon={<TrashIcon />} title="Deleted on your check-out day">
+            Kept encrypted while you stay with us, then deleted automatically
+            on your check-out day.
+          </TrustItem>
+        </ul>
+      </section>
+
     </form>
   );
 }
