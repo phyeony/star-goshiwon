@@ -53,12 +53,12 @@ describe("booking-received template", () => {
   }
   const now = new Date("2026-11-19T08:00:00Z");
 
-  it("sends the template to a guest who never wrote, and records the chat", async () => {
+  it("sends the template with the men-only question to a guest who never wrote, and records the chat", async () => {
     const deps = makeDeps();
     await sendBookingReceived(deps, input, now);
     expect(deps.chatSoFar).toHaveBeenCalledWith("447700900123");
     expect(deps.send).toHaveBeenCalledWith("447700900123", {
-      name: "booking_received",
+      name: "booking_received_ask_men_only",
       language: "en",
       bodyParams: ["Alex", "Economy Room", "1 Dec 2026", "15 Dec 2026"],
     });
@@ -69,7 +69,7 @@ describe("booking-received template", () => {
       waMessageId: "wamid.T",
       body: expect.stringContaining("Hi Alex"),
       messageType: "template",
-      asksMenOnly: false,
+      asksMenOnly: true,
       sentAt: now,
     });
   });
@@ -87,7 +87,7 @@ describe("booking-received template", () => {
     const deps = makeDeps({ menOnlyState: "asked", lastGuestMessageAt: "2026-11-19T07:00:00Z" });
     await sendBookingReceived(deps, input, now);
     expect(deps.send).not.toHaveBeenCalled();
-    expect(deps.sendText).toHaveBeenCalledWith("447700900123", renderBookingReceived(bookingReceivedParams(input), "basic"));
+    expect(deps.sendText).toHaveBeenCalledWith("447700900123", renderBookingReceived(bookingReceivedParams(input), "ask_men_only"));
     expect(deps.record).toHaveBeenCalledWith(expect.objectContaining({ messageType: "text", waMessageId: "wamid.X" }));
   });
 
@@ -102,8 +102,7 @@ describe("booking-received template", () => {
   it("picks the variant from the men-only state", () => {
     const chat = (menOnlyState: "unasked" | "confirmed") => ({ menOnlyState, lastGuestMessageAt: null });
     const variant = (p: ReturnType<typeof planBookingReceived>) => (p.send ? p.variant : null);
-    // WhatsApp policy: the men-only question is off (ASK_MEN_ONLY_ON_WHATSAPP).
-    expect(variant(planBookingReceived(chat("unasked"), now))).toBe("basic");
+    expect(variant(planBookingReceived(chat("unasked"), now))).toBe("ask_men_only");
     expect(variant(planBookingReceived(chat("confirmed"), now))).toBe("basic");
     // Just under 24 h is too close to the edge: template.
     const late = { ...chat("unasked"), lastGuestMessageAt: "2026-11-18T08:05:00Z" };

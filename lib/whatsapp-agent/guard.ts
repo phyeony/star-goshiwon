@@ -1,5 +1,3 @@
-import { ASK_MEN_ONLY_ON_WHATSAPP } from "./facts";
-
 // Last check on a drafted reply before code may send it. Anything found here
 // turns the turn into a handoff; the draft is still shown to the manager.
 
@@ -18,7 +16,6 @@ const MAX_LENGTH = 1200;
 const MONEY =
   /(?:US\$|\$|USD\s?|₩|KRW\s?)\s?(\d[\d,]*(?:\.\d+)?)|(\d[\d,]*(?:\.\d+)?)\s?(?:USD|KRW|won|원|dollars?)\b|(\d+(?:\.\d+)?)\s?만\s?원/gi;
 const URL = /https?:\/\/[^\s)>\]]+/gi;
-const GENDER = /\bmen[- ]only\b|\bmale\b|\bfemale\b|\bwomen\b|\bwoman\b|\bgender\b|남성|여성/i;
 const ID_DOCUMENT =
   /\bpassports?\b|\bid cards?\b|\bnational id\b|\bidentity (?:card|document)s?\b|\b(?:photo|picture|copy|scan) of (?:your|the|an?) (?:id|visa)\b|여권|신분증/i;
 
@@ -64,8 +61,6 @@ export function checkReply(reply: string, ctx: GuardContext): string[] {
   // WhatsApp's Business Messaging Policy: never ask people to share ID on
   // WhatsApp. Identity checks go through a secure link on the website.
   if (ID_DOCUMENT.test(text)) problems.push("mentions ID documents");
-  // Same policy: no preference for or against people because of sex.
-  if (!ASK_MEN_ONLY_ON_WHATSAPP && GENDER.test(text)) problems.push("mentions gender");
   return problems;
 }
 

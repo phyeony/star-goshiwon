@@ -34,9 +34,8 @@ function input(over: Partial<DecideInput> = {}, state: Partial<DecideInput["stat
 const confirmedBooking = { status: "confirmed" as const, check_in_date: "2026-12-01", check_out_date: "2026-12-31", room_name: "Economy Room" };
 
 describe("men-only state", () => {
-  it("records what the guest says; never moves to asked by itself (not asked on WhatsApp)", () => {
-    expect(nextMenOnlyState("unasked", true, "none")).toBe("unasked");
-    expect(nextMenOnlyState("unasked", true, "confirmed")).toBe("confirmed");
+  it("moves through asked → confirmed / not_eligible", () => {
+    expect(nextMenOnlyState("unasked", true, "none")).toBe("asked");
     expect(nextMenOnlyState("asked", false, "confirmed")).toBe("confirmed");
     expect(nextMenOnlyState("asked", false, "declined")).toBe("not_eligible");
     expect(nextMenOnlyState("asked", false, "none")).toBe("asked");
@@ -50,26 +49,27 @@ describe("decide", () => {
     expect(d).toMatchObject({ outcome: "send", markRead: true, appendMenOnlyCheck: false });
   });
 
-  // WhatsApp policy: no preference by sex, so no men-only question or
-  // decline on WhatsApp (ASK_MEN_ONLY_ON_WHATSAPP = false).
-  it("first contact with a safe question: just answers, no men-only check", () => {
+  it("first contact with a safe question: answers and appends the men-only check", () => {
     const d = decide(input({}, { menOnlyState: "unasked", isFirstContact: true }));
-    expect(d).toMatchObject({ outcome: "send", appendMenOnlyCheck: false });
+    expect(d).toMatchObject({ outcome: "send", appendMenOnlyCheck: true, newMenOnlyState: "asked" });
   });
 
-  it("first contact with a handoff question: a plain handoff", () => {
+  it("first contact with a handoff question: sends only the check and leaves it unread", () => {
     const d = decide(input({ understanding: u({ categories: ["special_request"] }) }, { menOnlyState: "unasked", isFirstContact: true }));
-    expect(d).toMatchObject({ outcome: "draft", markRead: false, appendMenOnlyCheck: false });
+    expect(d).toMatchObject({ outcome: "send_check_only", markRead: false });
   });
 
-  it("questions about the men-only rule go to the manager", () => {
-    const d = decide(input({ understanding: u({ categories: ["men_only"] }) }, { menOnlyState: "asked" }));
-    expect(d.outcome).toBe("draft");
+  it("asks the men-only question again on a handoff while it is unanswered", () => {
+    const d = decide(input({ understanding: u({ categories: ["special_request"] }) }, { menOnlyState: "asked", isFirstContact: false }));
+    expect(d).toMatchObject({ outcome: "send_check_only", markRead: false, newMenOnlyState: "asked" });
+    // Once answered, a handoff is just a handoff
+    const done = decide(input({ understanding: u({ categories: ["special_request"] }) }, { menOnlyState: "confirmed" }));
+    expect(done.outcome).toBe("draft");
   });
 
-  it("a guest who may not be eligible is handed to the manager, never declined", () => {
+  it("guest saying it's for a woman gets the decline", () => {
     const d = decide(input({ understanding: u({ categories: ["men_only"], men_only_signal: "declined" }) }, { menOnlyState: "asked" }));
-    expect(d).toMatchObject({ outcome: "draft", newMenOnlyState: "not_eligible", markRead: false });
+    expect(d).toMatchObject({ outcome: "send_decline", newMenOnlyState: "not_eligible", markRead: true });
   });
 
   it("nothing more is sent in a not-eligible chat", () => {

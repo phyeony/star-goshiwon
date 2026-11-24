@@ -48,10 +48,9 @@ describe("runAgentTurn", () => {
     expect(calls[1].system.startsWith("Economy Room")).toBe(true);
   });
 
-  it("never asks about gender on WhatsApp (policy)", async () => {
+  it("appends the men-only check on first contact", async () => {
     const r = await runAgentTurn(base(fakeLlm({}, "We're near Noryangjin Station."), { menOnlyState: "unasked", isFirstContact: true }));
-    expect(r.outgoing).toBe("We're near Noryangjin Station.");
-    expect(r.outgoing).not.toContain(MEN_ONLY_CHECK);
+    expect(r.outgoing).toContain(MEN_ONLY_CHECK);
   });
 
   it("hands off when the reply invents a price", async () => {
@@ -67,17 +66,9 @@ describe("runAgentTurn", () => {
     expect(r.decision.outcome).toBe("send");
   });
 
-  it("never turns anyone away by gender: hands the chat to the manager", async () => {
+  it("sends the fixed decline", async () => {
     const r = await runAgentTurn(base(fakeLlm({ categories: ["men_only"], men_only_signal: "declined" }, "whatever"), { menOnlyState: "asked" }));
-    expect(r.outgoing).toBeNull();
-    expect(r.outgoing).not.toBe(DECLINE_TEXT);
-    expect(r.decision.outcome).toBe("draft");
-  });
-
-  it("a drafted reply that mentions gender is not sent", async () => {
-    const r = await runAgentTurn(base(fakeLlm({ categories: ["rules"] }, "Sorry, we only take male guests.")));
-    expect(r.decision.outcome).toBe("draft");
-    expect(r.guardProblems).toContain("mentions gender");
+    expect(r.outgoing).toBe(DECLINE_TEXT);
   });
 
   it("an LLM failure is a handoff, not a crash", async () => {

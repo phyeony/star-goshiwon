@@ -34,8 +34,7 @@ const resident = { linkedBooking: CONFIRMED_BOOKING, menOnlyState: "confirmed" a
 const firstContact = { menOnlyState: "unasked" as const, isFirstContact: true };
 const checked = { menOnlyState: "confirmed" as const, isFirstContact: false };
 const askedOnce: Partial<ConversationState> = { menOnlyState: "asked", isFirstContact: false };
-// WhatsApp policy: no men-only question or decline on WhatsApp (ASK_MEN_ONLY_ON_WHATSAPP).
-const CHECK = /men-only|men only|\bmale\b/i;
+const CHECK = /men-only/i;
 const NO_PROMISES = [/confirmed for you/i, /reserved for you/i, /hold (it|the room) for you/i, /approved/i];
 
 export const CASES: EvalCase[] = [
@@ -46,7 +45,7 @@ export const CASES: EvalCase[] = [
     note: "Traveller asks for a month; gender not stated",
     state: firstContact,
     messages: ["Hello! I'm traveling from Sweden and looking for a place to stay for one month, from 15 December to 14 January. Do you have any rooms available?"],
-    expect: { outcome: ["send", "draft"], excludes: [CHECK, /https?:\/\//, ...NO_PROMISES] },
+    expect: { outcome: ["send", "send_check_only"], includes: [CHECK], excludes: [/https?:\/\//, ...NO_PROMISES] },
   },
   {
     id: "says-woman-after-check",
@@ -58,7 +57,7 @@ export const CASES: EvalCase[] = [
       { from: "bot", text: "Yes, there are rooms free for those dates. Just to check before anything else: Star Goshiwon is a men-only residence at the moment. Is the stay for a man?" },
     ],
     messages: ["Oh, I didn't know. I'm a woman. Do you have any options for women?"],
-    expect: { outcome: "draft" },
+    expect: { outcome: "send_decline", includes: [/women/i] },
   },
   {
     id: "booking-for-a-woman",
@@ -66,7 +65,7 @@ export const CASES: EvalCase[] = [
     note: "First message already says the stay is for a woman",
     state: firstContact,
     messages: ["Hello, I would like to book from November 30th to December 13th for a woman. I see that this place is reserved for men, is that correct?"],
-    expect: { outcome: "draft" },
+    expect: { outcome: "send_decline" },
   },
   {
     id: "married-couple",
@@ -74,7 +73,7 @@ export const CASES: EvalCase[] = [
     note: "Wife asks for a room for her and her husband, plus discount for 6 months",
     state: firstContact,
     messages: ["Hello, I'm coming to Seoul for a six-month research visit and will stay with my husband. What is the monthly rent? Can a married couple stay in the same room? Are utilities included? Is there a discount for six months?"],
-    expect: { outcome: "draft" },
+    expect: { outcome: "send_decline" },
   },
   {
     id: "woman-asks-exception",
@@ -83,7 +82,7 @@ export const CASES: EvalCase[] = [
     state: askedOnce,
     history: [{ from: "bot", text: "Just to check before anything else: Star Goshiwon is a men-only residence at the moment. Is the stay for a man?" }],
     messages: ["Yes I understand, but everything else is fully booked. Is there any possibility of an exception for me even though I'm a woman?"],
-    expect: { outcome: "draft" },
+    expect: { outcome: "send_decline", excludes: [/exception (can|could) be/i] },
   },
   {
     id: "confirms-man",
@@ -114,7 +113,7 @@ export const CASES: EvalCase[] = [
     note: "Where is it and is a room free (no dates)",
     state: firstContact,
     messages: ["Hello", "I found your goshiwon, where is the location and do you have one room available?"],
-    expect: { outcome: ["send"], includes: [/noryangjin/i], excludes: [CHECK] },
+    expect: { outcome: ["send"], includes: [/noryangjin/i, CHECK] },
   },
   {
     id: "price-two-weeks",
@@ -174,7 +173,7 @@ export const CASES: EvalCase[] = [
     note: "Vague first message",
     state: firstContact,
     messages: ["Hello", "I need room rent"],
-    expect: { outcome: ["send", "draft"], excludes: [CHECK, /https?:\/\//] },
+    expect: { outcome: ["send", "send_check_only"], includes: [CHECK], excludes: [/https?:\/\//] },
   },
   {
     id: "how-to-book-after-check",
@@ -231,7 +230,7 @@ export const CASES: EvalCase[] = [
     note: "Just 'Hello' as first message",
     state: firstContact,
     messages: ["Hello"],
-    expect: { outcome: "send", excludes: [CHECK] },
+    expect: { outcome: "send", includes: [CHECK] },
   },
 
   // ── Prospects: must go to the manager ───────────────────────────────
@@ -289,7 +288,7 @@ export const CASES: EvalCase[] = [
     note: "Korean-language enquiry goes to the manager",
     state: firstContact,
     messages: ["안녕하세요! 11월 4일부터 1월 15일까지 샤워실 방을 예약하고 싶은데, 매달 나눠서 결제할 수 있을까요?"],
-    expect: { outcome: "draft" },
+    expect: { outcome: ["draft", "send_check_only"] },
   },
   {
     id: "two-separate-rooms",
@@ -337,7 +336,7 @@ export const CASES: EvalCase[] = [
     note: "Prospect asks about residence certificate",
     state: firstContact,
     messages: ["Hi good morning. Do you issue a certificate of house contract for foreigners?"],
-    expect: { outcome: ["send", "draft"], excludes: [/https?:\/\//] },
+    expect: { outcome: ["send", "send_check_only", "draft"], excludes: [/https?:\/\//] },
   },
 
   // ── Confirmed guests ────────────────────────────────────────────────
