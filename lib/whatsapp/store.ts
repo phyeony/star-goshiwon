@@ -25,6 +25,14 @@ function must<T>(res: { data: T; error: unknown }): T {
 
 // ─── Webhook side ───
 
+/** Number and name of a chat, for the simulator (null when not found). */
+export async function conversationPhone(id: string): Promise<{ waPhone: string; profileName: string } | null> {
+  const data = must(
+    await db().from("whatsapp_conversations").select("wa_phone, profile_name").eq("id", id).maybeSingle(),
+  ) as { wa_phone: string; profile_name: string | null } | null;
+  return data ? { waPhone: data.wa_phone, profileName: data.profile_name ?? "" } : null;
+}
+
 /** Finds or creates the conversation for a phone number; returns its id. */
 export async function upsertConversation(waPhone: string, profileName: string, at: Date): Promise<string> {
   const patch: Record<string, unknown> = { wa_phone: waPhone, last_message_at: at.toISOString() };
@@ -111,26 +119,16 @@ export async function chatSoFar(waPhone: string): Promise<ChatSoFar | null> {
     await db().from("whatsapp_conversations").select("id, men_only_state").eq("wa_phone", waPhone).maybeSingle(),
   ) as { id: string; men_only_state: MenOnlyState } | null;
   if (!conversation) return null;
-  const [media, latest] = await Promise.all([
-    db()
-      .from("whatsapp_messages")
-      .select("id")
-      .eq("conversation_id", conversation.id)
-      .eq("sender", "guest")
-      .in("message_type", ["image", "document"])
-      .limit(1),
-    db()
-      .from("whatsapp_messages")
-      .select("sent_at")
-      .eq("conversation_id", conversation.id)
-      .eq("sender", "guest")
-      .order("sent_at", { ascending: false })
-      .limit(1),
-  ]);
+  const latest = await db()
+    .from("whatsapp_messages")
+    .select("sent_at")
+    .eq("conversation_id", conversation.id)
+    .eq("sender", "guest")
+    .order("sent_at", { ascending: false })
+    .limit(1);
   const last = (must(latest) ?? []) as { sent_at: string }[];
   return {
     menOnlyState: conversation.men_only_state,
-    sentPhotoOrFile: ((must(media) ?? []) as unknown[]).length > 0,
     lastGuestMessageAt: last[0]?.sent_at ?? null,
   };
 }

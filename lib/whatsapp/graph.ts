@@ -1,5 +1,10 @@
 // WhatsApp Cloud API calls: send a text, mark a message read.
 // https://developers.facebook.com/docs/whatsapp/cloud-api/messages
+//
+// Test chats from the simulator (lib/whatsapp/simulator.ts) are answered
+// here with a made-up id and never reach Meta.
+
+import { isSimulatedMessageId, isSimulatedPhone, simMessageId } from "./simulator";
 
 import { isTransient, withRetry } from "@/lib/retry";
 
@@ -54,6 +59,7 @@ async function postOnce(cfg: GraphConfig, body: unknown): Promise<Record<string,
 
 /** Sends a plain text message; returns Meta's message id. */
 export async function sendText(cfg: GraphConfig, to: string, text: string): Promise<string> {
+  if (isSimulatedPhone(to)) return simMessageId();
   const json = await post(cfg, {
     messaging_product: "whatsapp",
     recipient_type: "individual",
@@ -68,6 +74,7 @@ export async function sendText(cfg: GraphConfig, to: string, text: string): Prom
 
 /** Marks a guest message (and the ones before it) as read: blue ticks. */
 export async function markRead(cfg: GraphConfig, waMessageId: string): Promise<void> {
+  if (isSimulatedMessageId(waMessageId)) return;
   await post(cfg, { messaging_product: "whatsapp", status: "read", message_id: waMessageId });
 }
 
@@ -81,6 +88,7 @@ export async function sendTemplate(
   to: string,
   template: { name: string; language: string; bodyParams: string[] },
 ): Promise<string> {
+  if (isSimulatedPhone(to)) return simMessageId();
   const json = await post(cfg, {
     messaging_product: "whatsapp",
     recipient_type: "individual",
