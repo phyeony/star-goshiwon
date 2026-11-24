@@ -387,3 +387,91 @@ export function QuickReplies({
     </div>
   );
 }
+
+// How long the chat page keeps refreshing after a test message: the queue
+// waits 15 s, then the model takes a few seconds.
+const SIM_POLL_MS = 4_000;
+const SIM_POLL_FOR_MS = 60_000;
+
+/**
+ * Types a guest message into a test chat (staging only). Without
+ * conversationId it starts a new test chat under the given name.
+ */
+export function SimulatorComposer({ conversationId }: { conversationId?: string }) {
+  const router = useRouter();
+  const [name, setName] = useState("");
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [waiting, setWaiting] = useState(false);
+  const [error, setError] = useState("");
+
+  function pollForReply() {
+    setWaiting(true);
+    const started = Date.now();
+    const timer = setInterval(() => {
+      router.refresh();
+      if (Date.now() - started > SIM_POLL_FOR_MS) {
+        clearInterval(timer);
+        setWaiting(false);
+      }
+    }, SIM_POLL_MS);
+  }
+
+  async function send() {
+    if (!text.trim()) return;
+    setBusy(true);
+    setError("");
+    const res = await fetch("/api/admin/whatsapp/simulate", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(conversationId ? { conversationId, text } : { name: name || undefined, text }),
+    });
+    setBusy(false);
+    const json = (await res.json().catch(() => ({}))) as { conversationId?: string; error?: string };
+    if (!res.ok || !json.conversationId) {
+      setError(`보내지 못했습니다${json.error ? ` (${json.error})` : ""}`);
+      return;
+    }
+    setText("");
+    if (!conversationId) {
+      router.push(`/admin/whatsapp/${json.conversationId}`);
+      return;
+    }
+    router.refresh();
+    pollForReply();
+  }
+
+  return (
+    <div className="space-y-2">
+      {!conversationId && (
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="손님 이름 (예: Test 1). 같은 이름이면 같은 채팅에 이어집니다"
+          maxLength={40}
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+        />
+      )}
+      <textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="손님이 보낼 메시지를 영어로 입력하세요"
+        rows={3}
+        maxLength={2000}
+        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+      />
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          disabled={busy || !text.trim()}
+          onClick={send}
+          className={`${btn} border-indigo-600 bg-indigo-600 text-white hover:bg-indigo-700`}
+        >
+          {busy ? "보내는 중…" : "손님으로 보내기"}
+        </button>
+        {waiting && <span className="text-sm text-gray-500">AI 답변 기다리는 중 (약 20초)…</span>}
+      </div>
+      {error && <p className="text-sm text-red-600">{error}</p>}
+    </div>
+  );
+}

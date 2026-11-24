@@ -5,6 +5,7 @@ import { quickReplyTarget, recordQuickReply } from "@/lib/whatsapp/admin-queries
 import { sendText } from "@/lib/whatsapp/graph";
 import { canSendText, quickReply } from "@/lib/whatsapp/quick-replies";
 import { graphConfig } from "@/lib/whatsapp/runtime";
+import { isSimulatedPhone, simMessageId } from "@/lib/whatsapp/simulator";
 
 const bodySchema = z.object({ key: z.string().max(40) });
 
@@ -28,7 +29,9 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
 
   let waMessageId: string;
   try {
-    waMessageId = await sendText(graphConfig(), target.waPhone, reply.text);
+    waMessageId = isSimulatedPhone(target.waPhone)
+      ? simMessageId() // test chat: never sent
+      : await sendText(graphConfig(), target.waPhone, reply.text);
   } catch (e) {
     return NextResponse.json({ error: "send_failed", detail: e instanceof Error ? e.message : String(e) }, { status: 502 });
   }

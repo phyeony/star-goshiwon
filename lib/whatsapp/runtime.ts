@@ -79,6 +79,23 @@ export async function enqueue(job: QueueJob): Promise<boolean> {
   }
 }
 
+/**
+ * Runs the agent for a chat after the burst wait: through the queue, or
+ * (local dev, no queue) in the background of this request.
+ */
+export async function scheduleRun(conversationId: string): Promise<void> {
+  if (await enqueue({ conversationId })) return;
+  const job = new Promise((r) => setTimeout(r, QUEUE_DELAY_SECONDS * 1000)).then(() =>
+    runConversation(conversationId),
+  );
+  try {
+    const { ctx } = await getCloudflareContext({ async: true });
+    ctx.waitUntil(job.catch((e) => console.error("whatsapp: local run failed", e)));
+  } catch {
+    job.catch((e) => console.error("whatsapp: local run failed", e));
+  }
+}
+
 export function liveDeps(): ProcessDeps {
   return {
     store: supabaseStore,

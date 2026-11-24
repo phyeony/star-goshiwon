@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BotStateControl, QuickReplies, RunActions } from "@/components/admin/whatsapp-controls";
+import { BotStateControl, QuickReplies, RunActions, SimulatorComposer } from "@/components/admin/whatsapp-controls";
 import {
   datesToCheck,
   freeRoomsFor,
@@ -12,6 +12,7 @@ import {
 import { CATEGORY_LABEL, MEN_ONLY_LABEL, OUTCOME_LABEL, SENDER_LABEL, reasonLabel } from "@/lib/whatsapp/admin-labels";
 import { estimateCostUsd } from "@/lib/whatsapp-agent/model-prices";
 import { QUICK_REPLIES, canSendText } from "@/lib/whatsapp/quick-replies";
+import { isSimulatedPhone } from "@/lib/whatsapp/simulator";
 import { WhatsAppOutageBanner } from "../banner";
 
 // "토큰 1,234+210 (약 $0.0002)", or "" when the model wasn't called.
@@ -73,6 +74,7 @@ export default async function WhatsAppChatPage({ params }: { params: Promise<{ i
   const lastGuest = [...messages].reverse().find((m) => m.sender === "guest");
   const windowOpen = canSendText(lastGuest?.sent_at ?? null);
 
+  const isTest = isSimulatedPhone(c.wa_phone);
   return (
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
       <div className="xl:col-span-2 space-y-4">
@@ -80,8 +82,14 @@ export default async function WhatsAppChatPage({ params }: { params: Promise<{ i
           WhatsApp으로 돌아가기
         </Link>
         <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">
-          {c.profile_name || "(이름 없음)"} <span className="text-base font-normal text-gray-500">+{c.wa_phone}</span>
+          {c.profile_name || "(이름 없음)"}{" "}
+          <span className="text-base font-normal text-gray-500">{isTest ? "테스트 채팅" : `+${c.wa_phone}`}</span>
         </h1>
+        {isTest && (
+          <p className="rounded-xl border border-indigo-200 bg-indigo-50 p-3 text-sm text-indigo-900">
+            테스트 채팅입니다. AI 답변과 빠른 답장은 저장만 되고 WhatsApp으로 보내지 않습니다.
+          </p>
+        )}
         <WhatsAppOutageBanner />
 
         {timeline(messages, runs).map((e) =>
@@ -100,6 +108,12 @@ export default async function WhatsAppChatPage({ params }: { params: Promise<{ i
           ),
         )}
         {messages.length === 0 && <p className="text-gray-500">메시지가 없습니다.</p>}
+        {isTest && (
+          <div className="bg-white rounded-2xl shadow-sm border border-indigo-200 p-5 space-y-3">
+            <h2 className="font-bold text-gray-900">손님으로 메시지 보내기</h2>
+            <SimulatorComposer conversationId={c.id} />
+          </div>
+        )}
       </div>
 
       <aside className="space-y-4">
@@ -127,6 +141,7 @@ export default async function WhatsAppChatPage({ params }: { params: Promise<{ i
           ) : (
             <p className="text-gray-500">연결된 예약 없음 (예약 폼의 WhatsApp 번호로 자동 연결됩니다)</p>
           )}
+          {!isTest && (
           <a
             href={`https://wa.me/${c.wa_phone}`}
             target="_blank"
@@ -135,6 +150,7 @@ export default async function WhatsAppChatPage({ params }: { params: Promise<{ i
           >
             WhatsApp에서 열기
           </a>
+          )}
         </div>
         {dates && freeRooms && <FreeRoomsCard dates={dates} types={freeRooms} />}
         {wantsDocument && (
