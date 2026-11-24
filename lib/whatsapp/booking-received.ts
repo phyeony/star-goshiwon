@@ -14,6 +14,7 @@
 // question marked as asked when it was in the message, so the agent reads
 // the guest's reply in context.
 
+import { ASK_MEN_ONLY_ON_WHATSAPP } from "@/lib/whatsapp-agent/facts";
 import type { MenOnlyState } from "@/lib/whatsapp-agent/types";
 
 const INTRO =
@@ -56,7 +57,7 @@ export type BookingPlan =
 
 export function planBookingReceived(chat: ChatSoFar | null, now: Date): BookingPlan {
   if (chat?.menOnlyState === "not_eligible") return { send: false, reason: "not_eligible" };
-  const askMenOnly = chat?.menOnlyState !== "confirmed";
+  const askMenOnly = ASK_MEN_ONLY_ON_WHATSAPP && chat?.menOnlyState !== "confirmed";
   const variant: BookingVariant = askMenOnly ? "ask_men_only" : "basic";
   const last = chat?.lastGuestMessageAt ? Date.parse(chat.lastGuestMessageAt) : NaN;
   const inWindow = !Number.isNaN(last) && now.getTime() - last < FREE_TEXT_WINDOW_MS;

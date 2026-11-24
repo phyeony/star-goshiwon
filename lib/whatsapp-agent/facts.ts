@@ -15,6 +15,13 @@ export const MANAGER_FACTS = [
   "A residence confirmation document (for immigration / visa purposes) can be issued for confirmed guests.",
 ];
 
+// WhatsApp's Business Messaging Policy: businesses must not "suggest a
+// preference for or against people" because of sex. So WhatsApp never asks
+// about gender or turns anyone away by it: the booking form's men-only
+// checkbox is the check, and the manager handles any chat where it comes up.
+// true brings back the old men-only question and decline (owner's call).
+export const ASK_MEN_ONLY_ON_WHATSAPP = false;
+
 // Asked of every new contact, including guests who ticked the men-only box
 // on the booking form. Appended by code, never paraphrased by the model.
 export const MEN_ONLY_CHECK =

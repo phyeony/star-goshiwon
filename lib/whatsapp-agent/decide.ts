@@ -1,3 +1,4 @@
+import { ASK_MEN_ONLY_ON_WHATSAPP } from "./facts";
 import type {
   AgentSettings,
   Category,
@@ -46,7 +47,7 @@ const SAFE_PROSPECT: ReadonlySet<Category> = new Set([
   "rules",
   "booking_how_to",
   "availability",
-  "men_only",
+  ...(ASK_MEN_ONLY_ON_WHATSAPP ? (["men_only"] as const) : []),
   "short_stay",
   "smalltalk",
 ]);
@@ -72,6 +73,8 @@ export function nextMenOnlyState(
   if (current === "confirmed" || current === "not_eligible") return current;
   if (signal === "declined") return "not_eligible";
   if (signal === "confirmed") return "confirmed";
+  // Not asked on WhatsApp any more, so it never becomes "asked" by itself.
+  if (!ASK_MEN_ONLY_ON_WHATSAPP) return current;
   return isFirstContact || current === "unasked" ? "asked" : current;
 }
 
@@ -105,6 +108,7 @@ export function decide(input: DecideInput): Decision {
   // The decline is a fixed text, so it goes out even if the drafted reply
   // tripped the guard.
   if (!confirmedGuest && newMenOnlyState === "not_eligible") {
+    if (!ASK_MEN_ONLY_ON_WHATSAPP) return handoff(["men-only: guest may not be eligible (manager decides)"]);
     return canSend && switchOn("men_only")
       ? {
           outcome: "send_decline",
@@ -153,7 +157,7 @@ export function decide(input: DecideInput): Decision {
   }
 
   const askCheck =
-    !confirmedGuest && (newMenOnlyState === "asked" || newMenOnlyState === "unasked");
+    ASK_MEN_ONLY_ON_WHATSAPP && !confirmedGuest && (newMenOnlyState === "asked" || newMenOnlyState === "unasked");
 
   if (reasons.length === 0) {
     if (!canSend) return handoff([settings.mode === "live" ? "bot paused" : `mode ${settings.mode}`]);

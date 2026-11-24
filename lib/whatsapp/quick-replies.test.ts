@@ -15,7 +15,9 @@ describe("quick replies", () => {
     const keys = QUICK_REPLIES.map((q) => q.key);
     expect(new Set(keys).size).toBe(keys.length);
     for (const q of QUICK_REPLIES) expect(q.text).not.toMatch(/\{\{|[가-힣]/);
-    expect(quickReply("men_only")?.asksMenOnly).toBe(true);
+    // WhatsApp policy: no gender question, no ID request.
+    expect(quickReply("men_only")).toBeUndefined();
+    for (const q of QUICK_REPLIES) expect(q.text).not.toMatch(/passport|\bmale\b|men only/i);
     expect(quickReply("nope")).toBeUndefined();
   });
 });

@@ -159,11 +159,11 @@ describe("processConversation", () => {
     expect(t.log.released).toBe(true);
   });
 
-  it("asks the men-only check on first contact and remembers it was asked", async () => {
+  it("never asks the men-only question on WhatsApp (policy)", async () => {
     const t = setup({ conversation: { men_only_state: "unasked" } });
     await processConversation(t.deps, "c1");
-    expect(t.log.sent[0]).toContain(MEN_ONLY_CHECK);
-    expect(t.conversation().men_only_state).toBe("asked");
+    expect(t.log.sent[0]).not.toContain(MEN_ONLY_CHECK);
+    expect(t.conversation().men_only_state).toBe("unasked");
   });
 
   it("waits while the guest is still typing", async () => {

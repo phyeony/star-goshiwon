@@ -2,7 +2,7 @@
 // They go out as normal texts, so only inside the 24-hour window after the
 // guest's last message (Meta's rule); outside it the buttons are disabled.
 
-import { MEN_ONLY_CHECK } from "@/lib/whatsapp-agent/facts";
+import { ASK_MEN_ONLY_ON_WHATSAPP, MEN_ONLY_CHECK } from "@/lib/whatsapp-agent/facts";
 
 export interface QuickReply {
   key: string;
@@ -23,7 +23,7 @@ export const QUICK_REPLIES: QuickReply[] = [
     label: "채팅으로 신분증 X",
     text: "Thanks! For your privacy, please don't send ID documents on WhatsApp. We'll send you a secure link to upload it on our website instead.",
   },
-  { key: "men_only", label: "남성 확인", text: MEN_ONLY_CHECK, asksMenOnly: true },
+  ...(ASK_MEN_ONLY_ON_WHATSAPP ? [{ key: "men_only", label: "남성 확인", text: MEN_ONLY_CHECK, asksMenOnly: true }] : []),
   {
     key: "will_reply",
     label: "확인 후 답장",
