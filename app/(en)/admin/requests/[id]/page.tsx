@@ -15,6 +15,9 @@ import { RoomUnitAssignment } from "@/components/admin/room-unit-assignment";
 import { DocumentsCard } from "@/components/admin/documents-card";
 import { getDocumentTemplates } from "@/lib/documents/queries";
 import { PAYMENT_STATUS_LABELS_KO } from "@/lib/types";
+import { PassportCard } from "@/components/admin/passport-card";
+import { getActivePhoto, getLatestPhoto, getPassportLog } from "@/lib/passport/service";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +34,27 @@ export default async function RequestDetailPage({ params }: Props) {
     getDocumentTemplates(),
   ]);
   if (!request) notFound();
+
+  const isKo = request.locale === "ko";
+  // Falls back to "no data" if the passport tables aren't migrated yet, so
+  // the rest of the request page keeps working.
+  const [passportActive, passportLatest, passportLog, waChat] = isKo
+    ? ([null, null, [], null] as const)
+    : await Promise.all([
+        getActivePhoto(request.id),
+        getLatestPhoto(request.id),
+        getPassportLog(request.id),
+        getSupabaseServiceClient()
+          .from("whatsapp_conversations")
+          .select("id")
+          .eq("booking_request_id", request.id)
+          .limit(1)
+          .maybeSingle()
+          .then((r) => r.data),
+      ]).catch((e) => {
+        console.error("passport card: load failed", e);
+        return [null, null, [] as { action: string; actor: string; at: string }[], null] as const;
+      });
 
   const emailReceives = await getEmailReceivesForRequest(
     request.id,
@@ -323,6 +347,21 @@ export default async function RequestDetailPage({ params }: Props) {
 
         {/* Actions Sidebar */}
         <div className="space-y-6">
+          {!isKo && (
+            <div id="passport" className="scroll-mt-24">
+              <PassportCard
+                requestId={request.id}
+                checkOutDate={request.check_out_date}
+                hasPhoto={Boolean(passportActive)}
+                uploadedAt={passportActive?.uploaded_at ?? null}
+                checkedAt={request.passport_checked_at ?? null}
+                deletedAt={!passportActive ? (passportLatest?.deleted_at ?? null) : null}
+                linkCreatedAt={request.passport_token_created_at ?? null}
+                hasWhatsApp={Boolean(waChat)}
+                log={[...passportLog]}
+              />
+            </div>
+          )}
           <RoomUnitAssignment
             request={request}
             units={roomUnitAvailability}
