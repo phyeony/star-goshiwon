@@ -36,8 +36,10 @@ export default async function RequestDetailPage({ params }: Props) {
   if (!request) notFound();
 
   const isKo = request.locale === "ko";
+  // Falls back to "no data" if the passport tables aren't migrated yet, so
+  // the rest of the request page keeps working.
   const [passportActive, passportLatest, passportLog, waChat] = isKo
-    ? [null, null, [], null]
+    ? ([null, null, [], null] as const)
     : await Promise.all([
         getActivePhoto(request.id),
         getLatestPhoto(request.id),
@@ -49,7 +51,10 @@ export default async function RequestDetailPage({ params }: Props) {
           .limit(1)
           .maybeSingle()
           .then((r) => r.data),
-      ]);
+      ]).catch((e) => {
+        console.error("passport card: load failed", e);
+        return [null, null, [] as { action: string; actor: string; at: string }[], null] as const;
+      });
 
   const emailReceives = await getEmailReceivesForRequest(
     request.id,
@@ -353,7 +358,7 @@ export default async function RequestDetailPage({ params }: Props) {
                 deletedAt={!passportActive ? (passportLatest?.deleted_at ?? null) : null}
                 linkCreatedAt={request.passport_token_created_at ?? null}
                 hasWhatsApp={Boolean(waChat)}
-                log={passportLog}
+                log={[...passportLog]}
               />
             </div>
           )}

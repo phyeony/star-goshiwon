@@ -218,10 +218,10 @@ export async function cleanupPassportPhotos(now = new Date()): Promise<{ deleted
   const active = (must(
     await db()
       .from("passport_photos")
-      .select("*, booking_requests(status, check_out_date, updated_at)")
+      .select("*, booking_requests(status, check_out_date, updated_at, status_changed_at)")
       .is("deleted_at", null),
   ) ?? []) as (PassportPhoto & {
-    booking_requests: { status: (typeof ENDED_STATUSES)[number] | string; check_out_date: string; updated_at: string } | null;
+    booking_requests: { status: (typeof ENDED_STATUSES)[number] | string; check_out_date: string; updated_at: string; status_changed_at: string | null } | null;
   })[];
 
   const reasons: Record<DeleteReason, number> = { checked_out: 0, request_ended: 0 };

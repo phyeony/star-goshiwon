@@ -114,6 +114,7 @@ export interface BookingRequest {
   passport_token_hash?: string | null;
   passport_token_created_at?: string | null;
   passport_checked_at?: string | null;
+  status_changed_at?: string | null;
   payment_error: string;
   refund_amount: number;
   refunded_at: string | null;

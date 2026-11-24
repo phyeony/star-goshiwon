@@ -32,6 +32,12 @@ describe("passport retention", () => {
     expect(deleteReason({ ...base, status: "approved", updated_at: "2026-11-01T00:00:00Z" }, now)).toBeNull();
   });
 
+  it("counts the 7 days from the status change, not later edits", () => {
+    const base = { check_out_date: "2027-01-31", status: "declined" as const };
+    expect(deleteReason({ ...base, status_changed_at: "2026-12-01T00:00:00Z", updated_at: "2026-12-14T00:00:00Z" }, now)).toBe("request_ended");
+    expect(deleteReason({ ...base, status_changed_at: "2026-12-10T00:00:00Z", updated_at: "2026-12-01T00:00:00Z" }, now)).toBeNull();
+  });
+
   it("only takes uploads for live requests before check-out", () => {
     expect(canUpload({ status: "approved", check_out_date: "2026-12-16" }, now)).toBe(true);
     expect(canUpload({ status: "approved", check_out_date: "2026-12-15" }, now)).toBe(false);

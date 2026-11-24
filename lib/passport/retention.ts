@@ -13,7 +13,10 @@ export const ENDED_GRACE_DAYS = 7;
 export interface RetentionInput {
   status: BookingStatus;
   check_out_date: string; // YYYY-MM-DD, Seoul date
-  updated_at: string; // ISO; when the status last changed (close enough)
+  /** ISO; when the status last changed (set by a DB trigger). */
+  status_changed_at?: string | null;
+  /** Fallback for rows from before status_changed_at existed. */
+  updated_at: string;
 }
 
 export type DeleteReason = "checked_out" | "request_ended";
@@ -26,7 +29,7 @@ export function seoulToday(now = new Date()): string {
 export function deleteReason(r: RetentionInput, now = new Date()): DeleteReason | null {
   if (r.check_out_date <= seoulToday(now)) return "checked_out";
   if (ENDED_STATUSES.includes(r.status)) {
-    const ended = Date.parse(r.updated_at);
+    const ended = Date.parse(r.status_changed_at || r.updated_at);
     if (!Number.isNaN(ended) && now.getTime() - ended >= ENDED_GRACE_DAYS * 86_400_000) {
       return "request_ended";
     }

@@ -11,7 +11,26 @@
 ALTER TABLE booking_requests
   ADD COLUMN IF NOT EXISTS passport_token_hash TEXT,
   ADD COLUMN IF NOT EXISTS passport_token_created_at TIMESTAMPTZ,
-  ADD COLUMN IF NOT EXISTS passport_checked_at TIMESTAMPTZ;
+  ADD COLUMN IF NOT EXISTS passport_checked_at TIMESTAMPTZ,
+  -- When status last changed; the 7-day clock after a decline counts from
+  -- here, so later edits (notes etc.) don't push deletion back.
+  ADD COLUMN IF NOT EXISTS status_changed_at TIMESTAMPTZ;
+
+UPDATE booking_requests SET status_changed_at = updated_at WHERE status_changed_at IS NULL;
+
+CREATE OR REPLACE FUNCTION booking_requests_status_changed_at() RETURNS trigger AS $$
+BEGIN
+  IF TG_OP = 'INSERT' OR NEW.status IS DISTINCT FROM OLD.status THEN
+    NEW.status_changed_at = now();
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS booking_requests_status_changed_at ON booking_requests;
+CREATE TRIGGER booking_requests_status_changed_at
+  BEFORE INSERT OR UPDATE ON booking_requests
+  FOR EACH ROW EXECUTE FUNCTION booking_requests_status_changed_at();
 
 CREATE TABLE IF NOT EXISTS passport_photos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
