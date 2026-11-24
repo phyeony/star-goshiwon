@@ -25,7 +25,7 @@ export const LINK_PLACEHOLDER = "[verification link]";
 export const QUICK_REPLIES: QuickReply[] = [
   {
     key: "verification",
-    label: "예약 확인 링크 보내기",
+    label: "인증 링크 보내기",
     text: verificationMessage(LINK_PLACEHOLDER),
     sendsVerificationLink: true,
   },
