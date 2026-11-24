@@ -327,10 +327,12 @@ export function QuickReplies({
   conversationId,
   replies,
   windowOpen,
+  hasBooking,
 }: {
   conversationId: string;
-  replies: { key: string; label: string; text: string }[];
+  replies: { key: string; label: string; text: string; needsBooking?: boolean }[];
   windowOpen: boolean;
+  hasBooking: boolean;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
@@ -357,6 +359,8 @@ export function QuickReplies({
       text:
         json.error === "window_closed"
           ? "손님의 마지막 메시지가 24시간이 지나 보낼 수 없습니다."
+          : json.error === "no_booking"
+            ? "연결된 예약 요청이 없어 링크를 만들 수 없습니다."
           : `전송 실패${json.detail ? `: ${json.detail}` : ""}`,
     });
   }
@@ -373,13 +377,22 @@ export function QuickReplies({
           <li key={r.key} className="flex items-start gap-3">
             <button
               type="button"
-              disabled={!windowOpen || busy !== null}
+              disabled={!windowOpen || busy !== null || (r.needsBooking && !hasBooking)}
               onClick={() => send(r.key, r.label, r.text)}
               className={`${btn} shrink-0 border-indigo-300 text-indigo-700 hover:bg-indigo-50`}
             >
               {busy === r.key ? "보내는 중…" : r.label}
             </button>
-            <span className="text-xs text-gray-500 pt-1">{r.text}</span>
+            <span className="text-xs text-gray-500 pt-1">
+              {r.text}
+              {r.needsBooking && (
+                <span className="block mt-1 text-gray-400">
+                  {hasBooking
+                    ? "보낼 때 새 링크를 만듭니다 (이전 링크는 더 이상 열리지 않음)."
+                    : "연결된 예약 요청이 있어야 보낼 수 있습니다."}
+                </span>
+              )}
+            </span>
           </li>
         ))}
       </ul>
