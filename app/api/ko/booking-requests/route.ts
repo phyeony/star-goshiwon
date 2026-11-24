@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { koBookingRequestSchema } from "@/lib/validation";
 import { getRoomBySlug, createBookingRequest } from "@/lib/queries";
 import { sendKoAdminNotification } from "@/lib/email";
+import { bookingReceivedVariables, sendAlimtalk } from "@/lib/kakao-alimtalk";
 import { getPostHogClient } from "@/lib/posthog-server";
 import {
   addMonths,
@@ -13,7 +14,7 @@ import {
 /**
  * Booking request from the Korean site. Saves the request (locale 'ko', phone
  * number, no email) and alerts the admin by email, like the English site.
- * The guest is answered by phone/SMS; no guest email is sent.
+ * The guest gets a "예약 요청 접수" KakaoTalk 알림톡 (when Sendon is configured).
  */
 export async function POST(req: NextRequest) {
   try {
@@ -99,6 +100,22 @@ export async function POST(req: NextRequest) {
       });
     } catch (err) {
       console.error("Korean admin notification failed:", err);
+    }
+    try {
+      const sent = await sendAlimtalk(
+        "ko_booking_received_v1",
+        phone,
+        bookingReceivedVariables({
+          guest_name: data.guest_name,
+          room_name: roomName,
+          move_in_date: data.move_in_date,
+          stay_months: data.stay_months,
+          monthly_rate_krw: room.monthly_rate_krw ?? null,
+        }),
+      );
+      if (!sent.ok) console.warn("알림톡 not sent:", sent);
+    } catch (err) {
+      console.error("알림톡 send failed:", err);
     }
 
     return NextResponse.json(

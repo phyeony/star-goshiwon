@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { PostHogProvider } from "@/components/analytics/posthog-provider";
 import { PostHogPageview } from "@/components/analytics/posthog-pageview";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
+import { NaverAnalytics } from "@/components/analytics/naver-analytics";
 import { siteConfig } from "@/lib/site-data";
 import "../globals.css";
 
@@ -58,6 +59,7 @@ export default function KoRootLayout({
           </Suspense>
           {children}
           <GoogleAnalytics lang="ko" />
+          <NaverAnalytics />
         </PostHogProvider>
       </body>
     </html>

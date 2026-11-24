@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Script from "next/script";
-import { GA_ID, gaEnabled, GA_CONSENT_STORAGE_KEY } from "@/lib/analytics";
+import { GA_ID, gaEnabled, GA_CONSENT_STORAGE_KEY, ANALYTICS_CONSENT_EVENT } from "@/lib/analytics";
 
 type Choice = "granted" | "denied" | null;
 const STORAGE_KEY = GA_CONSENT_STORAGE_KEY;
@@ -42,6 +42,8 @@ export function GoogleAnalytics({ lang = "en" }: { lang?: "en" | "ko" } = {}) {
     setChoice(granted ? "granted" : "denied");
     window.localStorage.setItem(STORAGE_KEY, granted ? "granted" : "denied");
     updateConsent(granted);
+    // Lets other trackers (Naver Analytics) follow the same choice.
+    window.dispatchEvent(new Event(ANALYTICS_CONSENT_EVENT));
   }
 
   return (
