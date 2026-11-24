@@ -2,7 +2,7 @@
 // They go out as normal texts, so only inside the 24-hour window after the
 // guest's last message (Meta's rule); outside it the buttons are disabled.
 
-import { verificationMessage } from "@/lib/passport/messages";
+import { linkInsteadMessage, verificationMessage } from "@/lib/passport/messages";
 import { MEN_ONLY_CHECK } from "@/lib/whatsapp-agent/facts";
 
 export interface QuickReply {
@@ -14,9 +14,11 @@ export interface QuickReply {
   /**
    * Carries a fresh upload link for the chat's linked booking request
    * (lib/passport). `text` is then only the preview; the sent text is
-   * verificationMessage(url).
+   * withLink(url).
    */
   sendsVerificationLink?: boolean;
+  /** With sendsVerificationLink: the text sent, given the real link. */
+  withLink?: (url: string) => string;
 }
 
 /** Shown on the button in place of the real link. */
@@ -28,11 +30,14 @@ export const QUICK_REPLIES: QuickReply[] = [
     label: "인증 링크 보내기",
     text: verificationMessage(LINK_PLACEHOLDER),
     sendsVerificationLink: true,
+    withLink: verificationMessage,
   },
   {
     key: "id_not_here",
-    label: "채팅으로 신분증 X",
-    text: "Thanks! For your privacy, please don't send ID documents on WhatsApp. We'll send you a secure link to upload it on our website instead.",
+    label: "채팅 말고 링크로",
+    text: linkInsteadMessage(LINK_PLACEHOLDER),
+    sendsVerificationLink: true,
+    withLink: linkInsteadMessage,
   },
   { key: "men_only", label: "남성 확인", text: MEN_ONLY_CHECK, asksMenOnly: true },
   {
