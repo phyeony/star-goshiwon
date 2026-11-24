@@ -93,6 +93,8 @@ export interface WhatsAppStore {
   ): Promise<void>;
   saveRun(run: RunRecord): Promise<string>;
   markHandled(messageIds: string[], runId: string | null, at: Date): Promise<void>;
+  /** Points still-pending messages at the run that tried to answer them. */
+  linkRun(messageIds: string[], runId: string): Promise<void>;
   insertOutbound(conversationId: string, waMessageId: string, body: string, at: Date): Promise<void>;
 }
 
@@ -228,15 +230,21 @@ export async function processConversation(deps: ProcessDeps, conversationId: str
 
     let sent = false;
     let sendError: string | null = null;
+    let waId: string | null = null;
     if (outgoing) {
       try {
-        const waId = await deps.sender.sendText(conversation.wa_phone, outgoing);
-        await store.insertOutbound(conversationId, waId, outgoing, now);
+        waId = await deps.sender.sendText(conversation.wa_phone, outgoing);
         sent = true;
       } catch (e) {
         sendError = e instanceof Error ? e.message : String(e);
       }
     }
+
+    // Once a reply is out, the guest's messages count as answered straight
+    // away: if saving anything below fails, the queue's retry then finds
+    // nothing pending instead of sending the same reply twice.
+    if (sent) await store.markHandled(pendingIds, null, now);
+    if (sent && waId) await store.insertOutbound(conversationId, waId, outgoing!, now);
 
     // Read receipts only after a successful send of a real answer.
     if (sent && result.decision.markRead) {
@@ -260,15 +268,24 @@ export async function processConversation(deps: ProcessDeps, conversationId: str
     if (afterHoursNotice && sent) patch.after_hours_notice_at = now.toISOString();
     if (Object.keys(patch).length) await store.updateConversation(conversationId, patch);
 
+    // A failed send keeps the text (outgoing + send_error) so the manager
+    // can resend it from the admin page.
     const runId = await store.saveRun({
       conversationId,
       result,
-      outgoing: sent ? outgoing : null,
+      outgoing: outgoing ?? null,
       afterHoursNotice,
       sendError,
       model: llm.label,
     });
-    await store.markHandled(pendingIds, runId, now);
+    if (sendError) {
+      // Not answered: the guest's messages stay pending, so the next turn
+      // (their next message, or the manager's 다시 보내기) covers them all,
+      // and the admin page flags the chat as 처리 실패.
+      await store.linkRun(pendingIds, runId);
+    } else {
+      await store.markHandled(pendingIds, runId, now);
+    }
     return { status: "done", runId, outcome: result.decision.outcome, sent };
   } finally {
     await store.releaseConversation(conversationId);

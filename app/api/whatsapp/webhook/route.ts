@@ -3,7 +3,7 @@ import { parseWebhook } from "@/lib/whatsapp/payload";
 import { MANAGER_PAUSE_MS } from "@/lib/whatsapp/process";
 import { scheduleRun } from "@/lib/whatsapp/runtime";
 import { verifyMetaSignature } from "@/lib/whatsapp/signature";
-import { insertMessage, pauseForManager, upsertConversation } from "@/lib/whatsapp/store";
+import { insertMessage, isUnansweredGuestMessage, pauseForManager, upsertConversation } from "@/lib/whatsapp/store";
 
 // Meta's webhook for the WhatsApp number (plan/whatsapp-agent.md §2.2).
 // Saves each message and queues the agent; answers Meta within a second.
@@ -56,7 +56,14 @@ export async function POST(req: NextRequest) {
       sentAt: event.sentAt,
       handled: event.kind === "manager_echo",
     });
-    if (!isNew) continue; // Meta retries; already saved.
+    if (!isNew) {
+      // Meta re-sent it: already saved. If it was never answered (the job
+      // got lost), queue the chat again.
+      if (event.kind === "guest_message" && (await isUnansweredGuestMessage(event.waMessageId))) {
+        toRun.add(conversationId);
+      }
+      continue;
+    }
 
     if (event.kind === "manager_echo") {
       await pauseForManager(conversationId, new Date(Date.now() + MANAGER_PAUSE_MS));

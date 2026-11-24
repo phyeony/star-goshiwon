@@ -6,11 +6,16 @@
 
 import { isSimulatedMessageId, isSimulatedPhone, simMessageId } from "./simulator";
 
+import { isTransient, withRetry } from "@/lib/retry";
+
 export interface GraphConfig {
   accessToken: string;
   phoneNumberId: string;
   apiVersion?: string;
   fetchImpl?: typeof fetch;
+  /** Waits before each retry; default 2 s then 6 s. [] = no retries. */
+  retryDelaysMs?: number[];
+  sleep?: (ms: number) => Promise<void>;
 }
 
 export class GraphError extends Error {
@@ -25,7 +30,18 @@ export class GraphError extends Error {
 
 export const DEFAULT_GRAPH_VERSION = "v24.0";
 
-async function post(cfg: GraphConfig, body: unknown): Promise<Record<string, unknown>> {
+// A rate limit, a Meta server error or a dropped connection gets two more
+// tries. A 4xx (bad token, closed window, …) or a timeout does not: the
+// first can't succeed, and after the second the message may already be out.
+function post(cfg: GraphConfig, body: unknown): Promise<Record<string, unknown>> {
+  return withRetry(() => postOnce(cfg, body), {
+    delaysMs: cfg.retryDelaysMs ?? [2_000, 6_000],
+    shouldRetry: (e) => (e instanceof GraphError ? e.status !== undefined && isTransient(e, e.status) : isTransient(e)),
+    sleep: cfg.sleep,
+  });
+}
+
+async function postOnce(cfg: GraphConfig, body: unknown): Promise<Record<string, unknown>> {
   const doFetch = cfg.fetchImpl ?? fetch;
   const url = `https://graph.facebook.com/${cfg.apiVersion ?? DEFAULT_GRAPH_VERSION}/${cfg.phoneNumberId}/messages`;
   const res = await doFetch(url, {

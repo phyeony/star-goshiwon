@@ -15,7 +15,7 @@
 //   OPENAI_API_KEY etc.       the model provider chosen in whatsapp_settings
 
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { createLlmClient, type ProviderName } from "@/lib/whatsapp-agent/llm";
+import { createLlmClient, retryingClient, type ProviderName } from "@/lib/whatsapp-agent/llm";
 import { markRead, sendTemplate, sendText, type GraphConfig } from "./graph";
 import type { BookingReceivedDeps } from "./booking-received";
 import { processConversation, type ProcessDeps, type ProcessResult } from "./process";
@@ -104,10 +104,12 @@ export function liveDeps(): ProcessDeps {
       markRead: (id) => markRead(graphConfig(), id),
     },
     makeLlm: (s) =>
-      createLlmClient(s.llmProvider as ProviderName, s.llmModel, process.env, {
-        reasoningEffort: s.llmEffort ?? undefined,
-        timeoutMs: 45_000,
-      }),
+      retryingClient(
+        createLlmClient(s.llmProvider as ProviderName, s.llmModel, process.env, {
+          reasoningEffort: s.llmEffort ?? undefined,
+          timeoutMs: 45_000,
+        }),
+      ),
     loadContext: () => loadAgentContext(siteUrl()),
   };
 }
