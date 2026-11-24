@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { QUICK_REPLIES, canSendText, quickReply } from "./quick-replies";
+import { verificationMessage } from "@/lib/passport/messages";
+import { LINK_PLACEHOLDER, QUICK_REPLIES, canSendText, quickReply } from "./quick-replies";
 
 describe("quick replies", () => {
   const now = new Date("2026-11-21T12:00:00Z");
@@ -17,5 +18,14 @@ describe("quick replies", () => {
     for (const q of QUICK_REPLIES) expect(q.text).not.toMatch(/\{\{|[가-힣]/);
     expect(quickReply("men_only")?.asksMenOnly).toBe(true);
     expect(quickReply("nope")).toBeUndefined();
+  });
+
+  it("the verification reply carries the upload link and never names an ID document", () => {
+    const r = quickReply("verification")!;
+    expect(r.sendsVerificationLink).toBe(true);
+    expect(r.text).toBe(verificationMessage(LINK_PLACEHOLDER));
+    const sent = verificationMessage("https://staging.goshiwonseoul.com/verify/abc");
+    expect(sent).toContain("https://staging.goshiwonseoul.com/verify/abc");
+    expect(sent).not.toMatch(/passport|\bid\b|identity|여권|신분증/i);
   });
 });

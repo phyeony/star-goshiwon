@@ -474,10 +474,19 @@ export async function ratingStats(): Promise<Record<string, { good: number; bad:
 /** The chat's phone, men-only state and the guest's latest message time. */
 export async function quickReplyTarget(
   id: string,
-): Promise<{ waPhone: string; menOnlyState: MenOnlyState; lastGuestMessageAt: string | null } | null> {
+): Promise<{
+  waPhone: string;
+  menOnlyState: MenOnlyState;
+  lastGuestMessageAt: string | null;
+  bookingRequestId: string | null;
+} | null> {
   const c = must(
-    await db().from("whatsapp_conversations").select("wa_phone, men_only_state").eq("id", id).maybeSingle(),
-  ) as { wa_phone: string; men_only_state: MenOnlyState } | null;
+    await db()
+      .from("whatsapp_conversations")
+      .select("wa_phone, men_only_state, booking_request_id")
+      .eq("id", id)
+      .maybeSingle(),
+  ) as { wa_phone: string; men_only_state: MenOnlyState; booking_request_id: string | null } | null;
   if (!c) return null;
   const last = (must(
     await db()
@@ -488,7 +497,12 @@ export async function quickReplyTarget(
       .order("sent_at", { ascending: false })
       .limit(1),
   ) ?? []) as { sent_at: string }[];
-  return { waPhone: c.wa_phone, menOnlyState: c.men_only_state, lastGuestMessageAt: last[0]?.sent_at ?? null };
+  return {
+    waPhone: c.wa_phone,
+    menOnlyState: c.men_only_state,
+    lastGuestMessageAt: last[0]?.sent_at ?? null,
+    bookingRequestId: c.booking_request_id,
+  };
 }
 
 /** Stores a quick reply the manager sent from this page. */

@@ -131,8 +131,14 @@ export default async function WhatsAppChatPage({ params }: { params: Promise<{ i
           <h2 className="font-bold text-gray-900">빠른 답장</h2>
           <QuickReplies
             conversationId={c.id}
-            replies={QUICK_REPLIES.map(({ key, label, text }) => ({ key, label, text }))}
+            replies={QUICK_REPLIES.map(({ key, label, text, sendsVerificationLink }) => ({
+              key,
+              label,
+              text,
+              needsBooking: Boolean(sendsVerificationLink),
+            }))}
             windowOpen={windowOpen}
+            hasBooking={Boolean(c.booking_request_id)}
           />
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 space-y-2 text-sm">
