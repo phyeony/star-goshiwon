@@ -53,7 +53,7 @@ export const buildFaqs = (longStayDiscountPct: number) => [
   {
     question: "What documents do I need to check in?",
     answer:
-      "Check-in is self check-in, so all document verification happens before you arrive. Send us clear photos of your passport and your valid Korean visa (or other proof of legal stay, such as a visa-free entry stamp). We verify these before approving your booking — no originals need to be presented on arrival.",
+      "Check-in is self check-in, so all document verification happens before you arrive. After you send a booking request, we send you a secure verification link where you upload a photo of your passport. Only the manager can see it, and it's deleted automatically on your check-out day. Please don't send passport photos by WhatsApp or email.",
   },
   {
     question: "Is a deposit required?",

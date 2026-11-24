@@ -15,6 +15,8 @@ type Props = {
   contactEmail: string;
   /** Where the photo is POSTed. Without it (dev preview) the upload is simulated. */
   uploadUrl?: string;
+  /** Extra form fields sent with the photo (the link's request id and token). */
+  uploadFields?: Record<string, string>;
   /** Start on the "received" screen (dev preview of the end state). */
   initiallyDone?: boolean;
 };
@@ -26,6 +28,7 @@ export function PassportUploadForm({
   booking,
   contactEmail,
   uploadUrl,
+  uploadFields = {},
   initiallyDone = false,
 }: Props) {
   const firstName = booking.guestName.trim().split(/\s+/)[0] || "there";
@@ -81,16 +84,27 @@ export function PassportUploadForm({
         const body = new FormData();
         body.append("photo", jpeg, "passport.jpg");
         body.append("consent", "yes");
+        for (const [k, v] of Object.entries(uploadFields)) body.append(k, v);
         const res = await fetch(uploadUrl, { method: "POST", body });
-        if (!res.ok) throw new Error(`upload_failed_${res.status}`);
+        if (!res.ok) {
+          const { error: code } = (await res.json().catch(() => ({}))) as { error?: string };
+          throw new Error(code || `upload_failed_${res.status}`);
+        }
       } else {
         await new Promise((r) => setTimeout(r, 900));
       }
       setStatus("done");
-    } catch {
+    } catch (e) {
       setStatus("idle");
+      const code = e instanceof Error ? e.message : "";
       setError(
-        "The upload didn't go through. Please check your connection and try again.",
+        code === "link_closed" || code === "invalid_link"
+          ? "This link no longer works. Please message us and we'll send a new one."
+          : code === "bad_file"
+            ? "We couldn't read that photo. Please try a JPG or PNG."
+            : code === "too_large"
+              ? "That photo is too large. Please choose a smaller one."
+              : "The upload didn't go through. Please check your connection and try again.",
       );
     }
   }
@@ -109,9 +123,17 @@ export function PassportUploadForm({
           booking. Your photo stays encrypted and is deleted automatically on
           your check-out day.
         </p>
-        <p className="mt-6 text-xs text-gray-500">
-          Sent the wrong photo? Just open this link again and upload a new one.
-        </p>
+        <button
+          type="button"
+          onClick={() => {
+            setFile(null);
+            setConsent(false);
+            setStatus("idle");
+          }}
+          className="mt-6 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+        >
+          Sent the wrong photo? Upload a new one
+        </button>
       </div>
     );
   }

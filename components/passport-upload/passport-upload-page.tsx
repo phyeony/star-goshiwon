@@ -17,10 +17,12 @@ function formatDay(iso: string) {
 export function PassportUploadPage({
   booking,
   uploadUrl,
+  uploadFields,
   initiallyDone,
 }: {
   booking: PassportUploadBooking;
   uploadUrl?: string;
+  uploadFields?: Record<string, string>;
   initiallyDone?: boolean;
 }) {
   const firstName = booking.guestName.trim().split(/\s+/)[0] || "there";
@@ -60,6 +62,7 @@ export function PassportUploadPage({
         booking={booking}
         contactEmail={siteConfig.email}
         uploadUrl={uploadUrl}
+        uploadFields={uploadFields}
         initiallyDone={initiallyDone}
       />
     </div>
