@@ -14,6 +14,7 @@ const navItems: NavEntry[] = [
   { href: "/admin/whatsapp", label: "WhatsApp" },
   { href: "/admin/reviews", label: "후기 관리" },
   { href: "/admin/photos", label: "사진 관리" },
+  { href: "/admin/facebook", label: "페북 홍보" },
   {
     label: "객실",
     items: [

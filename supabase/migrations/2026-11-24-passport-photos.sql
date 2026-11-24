@@ -16,7 +16,8 @@ ALTER TABLE booking_requests
   -- here, so later edits (notes etc.) don't push deletion back.
   ADD COLUMN IF NOT EXISTS status_changed_at TIMESTAMPTZ;
 
-UPDATE booking_requests SET status_changed_at = updated_at WHERE status_changed_at IS NULL;
+-- No backfill: rows from before this keep status_changed_at NULL and the
+-- retention code falls back to updated_at for them.
 
 CREATE OR REPLACE FUNCTION booking_requests_status_changed_at() RETURNS trigger AS $$
 BEGIN
@@ -27,7 +28,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS booking_requests_status_changed_at ON booking_requests;
 CREATE TRIGGER booking_requests_status_changed_at
   BEFORE INSERT OR UPDATE ON booking_requests
   FOR EACH ROW EXECUTE FUNCTION booking_requests_status_changed_at();
