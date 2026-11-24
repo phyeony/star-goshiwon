@@ -28,4 +28,15 @@ describe("quick replies", () => {
     expect(sent).toContain("https://staging.goshiwonseoul.com/verify/abc");
     expect(sent).not.toMatch(/passport|\bid\b|identity|여권|신분증/i);
   });
+
+  it("every link reply sends the real link, never an ID word", () => {
+    const linkReplies = QUICK_REPLIES.filter((q) => q.sendsVerificationLink);
+    expect(linkReplies.map((q) => q.key)).toEqual(["verification", "id_not_here"]);
+    for (const q of linkReplies) {
+      expect(q.text).toBe(q.withLink!(LINK_PLACEHOLDER));
+      const sent = q.withLink!("https://example.com/verify/x");
+      expect(sent).toContain("https://example.com/verify/x");
+      expect(sent).not.toMatch(/passport|\bid\b|identity|여권|신분증/i);
+    }
+  });
 });

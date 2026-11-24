@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createPassportLink, logPassport } from "@/lib/passport/service";
-import { verificationMessage } from "@/lib/passport/messages";
 import { getAdminUserOrNull } from "@/lib/supabase-server";
 import { quickReplyTarget, recordQuickReply } from "@/lib/whatsapp/admin-queries";
 import { sendText } from "@/lib/whatsapp/graph";
@@ -33,9 +32,9 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   }
 
   let text = reply.text;
-  if (reply.sendsVerificationLink) {
+  if (reply.sendsVerificationLink && reply.withLink) {
     if (!target.bookingRequestId) return NextResponse.json({ error: "no_booking" }, { status: 409 });
-    text = verificationMessage(await createPassportLink(target.bookingRequestId, admin.email ?? "admin"));
+    text = reply.withLink(await createPassportLink(target.bookingRequestId, admin.email ?? "admin"));
   }
 
   let waMessageId: string;
