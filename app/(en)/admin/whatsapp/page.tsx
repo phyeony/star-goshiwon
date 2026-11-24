@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { getAdminSettings, listConversations, type ChatStatus } from "@/lib/whatsapp/admin-queries";
 import { MEN_ONLY_LABEL } from "@/lib/whatsapp/admin-labels";
+import { SimulatorComposer } from "@/components/admin/whatsapp-controls";
+import { isSimulatedPhone, simulatorEnabled } from "@/lib/whatsapp/simulator";
 import { WhatsAppOutageBanner } from "./banner";
 
 export const dynamic = "force-dynamic";
 
 const STATUS: Record<ChatStatus, { label: string; cls: string }> = {
+  stuck: { label: "처리 실패", cls: "border-red-200 bg-red-50 text-red-800" },
   needs_reply: { label: "답변 필요", cls: "border-amber-200 bg-amber-50 text-amber-800" },
   processing: { label: "AI 처리 중", cls: "border-sky-200 bg-sky-50 text-sky-800" },
   answered: { label: "답변함", cls: "border-gray-200 bg-gray-50 text-gray-600" },
@@ -29,7 +32,7 @@ export default async function AdminWhatsAppPage({
 }) {
   const { filter } = await searchParams;
   const [all, settings] = await Promise.all([listConversations(), getAdminSettings()]);
-  const needsReply = all.filter((c) => c.status === "needs_reply");
+  const needsReply = all.filter((c) => c.status === "needs_reply" || c.status === "stuck");
   const chats = filter === "needs_reply" ? needsReply : all;
 
   return (
@@ -52,6 +55,16 @@ export default async function AdminWhatsAppPage({
       </div>
 
       <WhatsAppOutageBanner />
+
+      {simulatorEnabled() && (
+        <details className="mb-6 bg-white rounded-2xl shadow-sm border border-indigo-200 p-5">
+          <summary className="cursor-pointer font-bold text-gray-900">테스트 채팅 시작 (스테이징 전용)</summary>
+          <p className="mt-2 mb-3 text-sm text-gray-600">
+            손님인 척 메시지를 보내 AI를 시험합니다. 실제 WhatsApp으로는 아무것도 보내지 않습니다.
+          </p>
+          <SimulatorComposer />
+        </details>
+      )}
 
       <div className="flex flex-wrap gap-2 mb-6">
         <FilterLink href="/admin/whatsapp" active={filter !== "needs_reply"} label={`전체 ${all.length}`} />
@@ -100,7 +113,9 @@ export default async function AdminWhatsAppPage({
                         </div>
                         <p className="mt-2 text-base font-semibold text-gray-900 truncate">
                           {c.profile_name || "(이름 없음)"}{" "}
-                          <span className="font-normal text-gray-500 text-sm">+{c.wa_phone}</span>
+                          <span className="font-normal text-gray-500 text-sm">
+                            {isSimulatedPhone(c.wa_phone) ? "테스트" : `+${c.wa_phone}`}
+                          </span>
                         </p>
                         {summary ? (
                           <p className="mt-1 text-sm text-gray-700 line-clamp-2">{summary}</p>

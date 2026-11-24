@@ -123,7 +123,7 @@ describe("queue consumer", () => {
     });
     expect(done.ack).toHaveBeenCalled();
     expect(busy.retry).toHaveBeenCalledWith({ delaySeconds: 30 });
-    expect(typing.retry).toHaveBeenCalledWith({ delaySeconds: 20 });
+    expect(typing.retry).toHaveBeenCalledWith({ delaySeconds: 10 });
     expect(broken.retry).toHaveBeenCalledWith({ delaySeconds: 60 });
     expect(junk.ack).toHaveBeenCalled();
   });

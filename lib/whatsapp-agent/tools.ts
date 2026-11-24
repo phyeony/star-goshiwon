@@ -1,7 +1,6 @@
 import {
   BEDDING_FEE_USD,
   calculateEstimate,
-  formatApproxKRW,
   formatUSD,
 } from "@/lib/pricing";
 import { MIN_STAY_NIGHTS } from "@/lib/validation";
@@ -58,15 +57,17 @@ export function getQuote(
   if (est.nights < MIN_STAY_NIGHTS) return { ok: false, reason: "too_short" };
 
   const roomTotal = est.nightsSubtotal - est.discount;
+  // USD only and short: the manager found the KRW figures made quotes hard
+  // to read (2026-11-21 feedback). The final total leads.
   const lines = [
     `${room.name}, ${checkIn} to ${checkOut} (${est.label}):`,
-    `room ${formatUSD(roomTotal)} (${formatApproxKRW(roomTotal)})` +
+    `Total ${formatUSD(est.total)}, prepaid via PayPal.`,
+    `That's ${formatUSD(roomTotal)} for the room` +
       (est.discountApplied
-        ? `, after the ${Math.round(Number(room.long_stay_discount) * 100)}% long-stay discount of ${formatUSD(est.discount)}`
-        : ` at ${formatUSD(est.nightlyRate)} per night`),
-    `+ refundable deposit ${formatUSD(est.deposit)} (${formatApproxKRW(est.deposit)})`,
-    `= ${formatUSD(est.total)} (${formatApproxKRW(est.total)}) prepaid via PayPal`,
-    `optional bedding set +${formatUSD(BEDDING_FEE_USD)} (${formatApproxKRW(BEDDING_FEE_USD)})`,
+        ? ` (after the ${Math.round(Number(room.long_stay_discount) * 100)}% long-stay discount)`
+        : ` (${formatUSD(est.nightlyRate)} per night)`) +
+      ` + a ${formatUSD(est.deposit)} deposit, refunded after check-out.`,
+    `Optional bedding set: +${formatUSD(BEDDING_FEE_USD)}.`,
   ];
   return {
     ok: true,
@@ -113,7 +114,18 @@ export async function checkAvailability(
   );
 }
 
-export function bookingLink(siteUrl: string, slug?: string | null): string {
+/**
+ * The room page, or the general request page. With dates (from a quote that
+ * passed), the room page's form opens with those dates already picked.
+ * The guest's number is deliberately not in the link: page URLs go to analytics.
+ */
+export function bookingLink(
+  siteUrl: string,
+  slug?: string | null,
+  dates?: { checkIn: string; checkOut: string } | null,
+): string {
   const base = siteUrl.replace(/\/$/, "");
-  return slug ? `${base}/rooms/${slug}` : `${base}/request-to-book`;
+  if (!slug) return `${base}/request-to-book`;
+  if (!dates) return `${base}/rooms/${slug}`;
+  return `${base}/rooms/${slug}?check_in=${dates.checkIn}&check_out=${dates.checkOut}#book`;
 }

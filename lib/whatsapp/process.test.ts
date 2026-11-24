@@ -26,6 +26,7 @@ function setup(opts: {
   now?: Date;
   claimFails?: boolean;
   sendFails?: boolean;
+  saveRunFails?: boolean;
 }) {
   const now = opts.now ?? NOON_KST;
   const ago = (s: number) => new Date(now.getTime() - s * 1000).toISOString();
@@ -56,6 +57,7 @@ function setup(opts: {
     llmCalls: 0,
     released: false,
     handled: [] as { ids: string[]; runId: string | null }[],
+    linked: [] as { ids: string[]; runId: string }[],
   };
   const store: WhatsAppStore = {
     async getSettings() {
@@ -80,11 +82,16 @@ function setup(opts: {
       conversation = { ...conversation, ...patch };
     },
     async saveRun(run) {
+      if (opts.saveRunFails) throw new Error("db down");
       log.runs.push(run);
       return `run${log.runs.length}`;
     },
-    async markHandled(ids, runId) {
+    async markHandled(ids, runId, at) {
       log.handled.push({ ids, runId });
+      for (const m of messages) if (ids.includes(m.id)) m.handled_at = at.toISOString();
+    },
+    async linkRun(ids, runId) {
+      log.linked.push({ ids, runId });
     },
     async insertOutbound() {},
   };
@@ -154,7 +161,11 @@ describe("processConversation", () => {
     expect(r).toMatchObject({ status: "done", outcome: "send", sent: true });
     expect(t.log.sent).toEqual(["We're a short walk from Noryangjin Station."]);
     expect(t.log.read).toEqual(["wamid.1"]);
-    expect(t.log.handled).toEqual([{ ids: ["m0", "m1"], runId: "run1" }]);
+    // Marked answered as soon as the reply is out, then linked to the saved run.
+    expect(t.log.handled).toEqual([
+      { ids: ["m0", "m1"], runId: null },
+      { ids: ["m0", "m1"], runId: "run1" },
+    ]);
     expect(t.log.runs[0].model).toBe("fake/model");
     expect(t.log.released).toBe(true);
   });
@@ -167,7 +178,7 @@ describe("processConversation", () => {
   });
 
   it("waits while the guest is still typing", async () => {
-    const t = setup({ messages: [{ body: "Hi", created_at: new Date(NOON_KST.getTime() - 10_000).toISOString() }] });
+    const t = setup({ messages: [{ body: "Hi", created_at: new Date(NOON_KST.getTime() - 5_000).toISOString() }] });
     expect(await processConversation(t.deps, "c1")).toEqual({ status: "waiting_for_more" });
     expect(t.log.llmCalls).toBe(0);
     expect(t.log.handled).toEqual([]);
@@ -238,13 +249,25 @@ describe("processConversation", () => {
     expect(t.log.handled[0].runId).toBe("run1");
   });
 
-  it("a failed send is recorded and nothing is marked read", async () => {
+  it("a failed send is recorded, keeps its text, and leaves the guest's messages unanswered", async () => {
     const t = setup({ sendFails: true });
     const r = await processConversation(t.deps, "c1");
     expect(r).toMatchObject({ outcome: "send", sent: false });
     expect(t.log.read).toEqual([]);
     expect(t.log.runs[0].sendError).toMatch(/HTTP 500/);
-    expect(t.log.runs[0].outgoing).toBeNull();
+    expect(t.log.runs[0].outgoing).toContain("Noryangjin");
+    expect(t.log.handled).toEqual([]);
+    expect(t.log.linked).toEqual([{ ids: ["m0"], runId: "run1" }]);
+  });
+
+  it("a reply that went out is never sent twice, even if saving the run fails", async () => {
+    const t = setup({ saveRunFails: true });
+    await expect(processConversation(t.deps, "c1")).rejects.toThrow("db down");
+    expect(t.log.sent).toHaveLength(1);
+    expect(t.log.released).toBe(true);
+    // The queue retries the job: nothing is pending any more.
+    await expect(processConversation(t.deps, "c1")).resolves.toEqual({ status: "nothing_pending" });
+    expect(t.log.sent).toHaveLength(1);
   });
 
   it("never sends free-form text after Meta's 24-hour window", async () => {

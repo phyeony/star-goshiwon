@@ -6,7 +6,8 @@ import { guides } from "@/lib/guides";
 import { getEconomyTier, getPublicRooms, getRoomUnitAvailability, getRoomUnits, isRoomUnitAvailableForBooking } from "@/lib/queries";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import { policiesText } from "@/lib/whatsapp-agent/policies-plain";
-import { CATEGORIES, type Category, type LinkedBooking, type Mode } from "@/lib/whatsapp-agent/types";
+import { CATEGORIES, type Category, type LinkedBooking, type MenOnlyState, type Mode } from "@/lib/whatsapp-agent/types";
+import type { ChatSoFar } from "./booking-received";
 import type { AgentContext, ConversationRow, MessageRow, RunRecord, Settings, WhatsAppStore } from "./process";
 
 const CONVERSATION_COLUMNS =
@@ -23,6 +24,14 @@ function must<T>(res: { data: T; error: unknown }): T {
 }
 
 // ─── Webhook side ───
+
+/** Number and name of a chat, for the simulator (null when not found). */
+export async function conversationPhone(id: string): Promise<{ waPhone: string; profileName: string } | null> {
+  const data = must(
+    await db().from("whatsapp_conversations").select("wa_phone, profile_name").eq("id", id).maybeSingle(),
+  ) as { wa_phone: string; profile_name: string | null } | null;
+  return data ? { waPhone: data.wa_phone, profileName: data.profile_name ?? "" } : null;
+}
 
 /** Finds or creates the conversation for a phone number; returns its id. */
 export async function upsertConversation(waPhone: string, profileName: string, at: Date): Promise<string> {
@@ -64,6 +73,20 @@ export async function insertMessage(msg: {
   return (must(res) ?? []).length > 0;
 }
 
+/** True when Meta re-sent a guest message we saved but never answered. */
+export async function isUnansweredGuestMessage(waMessageId: string): Promise<boolean> {
+  const rows = must(
+    await db()
+      .from("whatsapp_messages")
+      .select("id")
+      .eq("wa_message_id", waMessageId)
+      .eq("sender", "guest")
+      .is("handled_at", null)
+      .limit(1),
+  ) as unknown[] | null;
+  return (rows ?? []).length > 0;
+}
+
 /**
  * The manager wrote from the WhatsApp app: the agent stays quiet in this
  * chat until `until`, and the guest messages the manager has seen count as
@@ -85,6 +108,72 @@ export async function pauseForManager(conversationId: string, until: Date): Prom
       .eq("sender", "guest")
       .is("handled_at", null),
   );
+}
+
+/**
+ * What the chat for this number already shows, for the booking-received
+ * message (lib/whatsapp/booking-received.ts); null when there's no chat.
+ */
+export async function chatSoFar(waPhone: string): Promise<ChatSoFar | null> {
+  const conversation = must(
+    await db().from("whatsapp_conversations").select("id, men_only_state").eq("wa_phone", waPhone).maybeSingle(),
+  ) as { id: string; men_only_state: MenOnlyState } | null;
+  if (!conversation) return null;
+  const latest = await db()
+    .from("whatsapp_messages")
+    .select("sent_at")
+    .eq("conversation_id", conversation.id)
+    .eq("sender", "guest")
+    .order("sent_at", { ascending: false })
+    .limit(1);
+  const last = (must(latest) ?? []) as { sent_at: string }[];
+  return {
+    menOnlyState: conversation.men_only_state,
+    lastGuestMessageAt: last[0]?.sent_at ?? null,
+  };
+}
+
+/**
+ * After the booking-received message went out: the chat for that number is
+ * linked to the booking, the men-only question counts as asked when it was
+ * in the message (unless the guest already answered it), and the message is
+ * stored as the agent's.
+ */
+export async function recordBookingReceived(args: {
+  waPhone: string;
+  bookingId: string;
+  waMessageId: string;
+  body: string;
+  messageType: "template" | "text";
+  asksMenOnly: boolean;
+  sentAt: Date;
+}): Promise<void> {
+  const conversationId = await upsertConversation(args.waPhone, "", args.sentAt);
+  must(
+    await db()
+      .from("whatsapp_conversations")
+      .update({ booking_request_id: args.bookingId, match_source: "phone" })
+      .eq("id", conversationId),
+  );
+  if (args.asksMenOnly) {
+    must(
+      await db()
+        .from("whatsapp_conversations")
+        .update({ men_only_state: "asked" })
+        .eq("id", conversationId)
+        .eq("men_only_state", "unasked"),
+    );
+  }
+  await insertMessage({
+    conversationId,
+    waMessageId: args.waMessageId,
+    direction: "out",
+    sender: "bot",
+    messageType: args.messageType,
+    body: args.body,
+    sentAt: args.sentAt,
+    handled: true,
+  });
 }
 
 // ─── Queue side ───
@@ -234,6 +323,11 @@ export const supabaseStore: WhatsAppStore = {
         .update({ handled_at: at.toISOString(), run_id: runId })
         .in("id", messageIds),
     );
+  },
+
+  async linkRun(messageIds, runId) {
+    if (!messageIds.length) return;
+    must(await db().from("whatsapp_messages").update({ run_id: runId }).in("id", messageIds));
   },
 
   async insertOutbound(conversationId, waMessageId, body, at) {

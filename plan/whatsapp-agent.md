@@ -348,8 +348,12 @@ The production WhatsApp number is not connected before step 5.
 
 **Steps 5–6**
 8. Manager tries `/admin/whatsapp`; tell Claude whether the manager's phone is iPhone or Android.
-9. Submit the booking-received template in WhatsApp Manager (Claude writes the text);
-   add a payment method for template charges.
+9. After checking the WhatsApp Business Messaging Policy and with the owner's OK, submit the two
+   booking-received templates in WhatsApp Manager: texts in `lib/whatsapp/booking-received.ts`
+   (`BOOKING_RECEIVED_TEXTS`, category Utility, English), named `booking_request_received` and
+   `booking_request_received_ask_men_only`. Once approved, set
+   `WHATSAPP_BOOKING_TEMPLATE=booking_request_received`; add a payment
+   method for template charges (about $0.003–0.055 per message by country).
 10. Update the WhatsApp business profile description to mention the assistant.
 
 Only 1–3 block starting. Work not depending on them (policies data file, FAQ fix,
@@ -401,7 +405,7 @@ knowledge pack, tools) can start once this spec and the implementation plan are 
     Inside those hours handoffs stay silent.
   - **Manager reply pauses the bot:** after the manager replies from the WhatsApp
     app, the agent stays quiet in that chat for 12 hours.
-  - **Message bursts:** the queue waits 30–60 s after a guest's last message and
+  - **Message bursts:** the queue waits about 15 s (changed from 30–60 s on 2026-11-21: replies felt slow) after a guest's last message and
     answers everything pending in one reply.
   - **Model outage / budget exhausted:** every turn becomes a handoff; the admin
     page shows a banner so the manager watches the app.
@@ -419,3 +423,11 @@ knowledge pack, tools) can start once this spec and the implementation plan are 
     must be v2.24.17+. Meta's page doesn't mention Korea. Compare 2–3 providers at
     the webhook step.
 - 2026-11-19: 12-month chat cleanup deferred (user); no cron for now (§2.7).
+- 2026-11-19: Booking form: WhatsApp number is now **required** (email stays required too);
+  a separate unticked "Message me on WhatsApp about this booking" checkbox is the opt-in.
+  The booking-received template is sent only when ticked and `WHATSAPP_BOOKING_TEMPLATE` is set.
+- 2026-11-21: WhatsApp booking help is a **pre-filled booking link** (room page with ?check_in&check_out, built by code from a passing quote; the guest adds name, email, number and ticks the boxes). Not creating requests from chat. The guest's number is not in the link (URLs go to analytics).
+- 2026-11-21 manager feedback: quotes in USD only, total first, deposit refundable, bedding optional; ask for a passport photo whenever booking is explained (and in the booking-received template); ask the men-only question again on every handoff while it's unanswered.
+- 2026-11-21: the booking-received message leaves out the passport line once the guest has sent any photo or file in the chat (not checked by AI: passport images never go to the model provider; the manager asks again if it wasn't a passport), and the men-only line once confirmed. Nothing is sent when the chat says not eligible. Inside the guest's 24 h window it goes as a free normal text, otherwise as one of four templates. The admin chat page has quick-reply buttons (passport request, passport received, men-only check, will reply) that send a normal text inside the 24 h window and don't pause the AI.
+- 2026-11-21 retries (doc "WhatsApp agent: failure points and retries"): model calls retry twice (2 s, 5 s) and Meta sends retry twice (2 s, 6 s) on 429/5xx/dropped connection, never on 4xx or a timeout. A reply that went out marks the guest's messages answered at once, so a later save failure can't cause a duplicate. A failed send leaves them unanswered (the next turn covers them) and the chat shows 처리 실패 with 다시 보내기 inside the 24 h window. A chat unanswered for 10 minutes is 처리 실패 and shows in the banner. A re-delivered, never-answered message is queued again.
+- 2026-11-24 after Meta disabled the test business portfolio (templates asked for a passport photo): WhatsApp never asks for or mentions ID documents (policy: no "personal ID card numbers, or other sensitive identifiers"); identity checks go through the secure upload link on the website, and the guard blocks replies mentioning passports/ID. The owner chose to keep the men-only question on WhatsApp (known risk: the policy's anti-discrimination rule lists sex). Booking-received templates: `booking_request_received` and `booking_request_received_ask_men_only`. Nothing goes to Meta without checking the policy and the owner's OK.

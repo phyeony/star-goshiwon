@@ -15,6 +15,7 @@ import { deriveTier } from "@/lib/pricing";
 import { runAgentTurn, type AgentTurnResult } from "@/lib/whatsapp-agent/agent";
 import { buildKnowledgePack } from "@/lib/whatsapp-agent/knowledge";
 import { createLlmClient, type ProviderName } from "@/lib/whatsapp-agent/llm";
+import { priceFor } from "@/lib/whatsapp-agent/model-prices";
 import { policiesPlainText } from "@/lib/whatsapp-agent/policies-text";
 import { CATEGORIES, type Category, type ConversationState } from "@/lib/whatsapp-agent/types";
 import { CASES, type EvalCase } from "./cases";
@@ -27,10 +28,6 @@ const ROOMS = [
 const SITE_URL = "https://goshiwonseoul.com";
 const TODAY = "2026-11-18";
 const FORBIDDEN = ["501", "502", "503", "506", "701", "702", "703", "813"];
-// USD per 1M tokens: input, cached input, output. Defaults: GPT-6 Luna.
-const DEFAULT_PRICE: Record<string, [number, number, number]> = {
-  "gpt-6-luna": [0.1, 0.01, 0.5],
-};
 
 function arg(name: string): string | undefined {
   const i = process.argv.indexOf(`--${name}`);
@@ -59,7 +56,7 @@ async function main() {
   const effort = arg("effort") as "none" | "low" | "medium" | undefined;
   const only = arg("only")?.split(",");
   const price = arg("price")?.split(",").map(Number) as [number, number, number] | undefined;
-  const [pIn, pCached, pOut] = price ?? DEFAULT_PRICE[model] ?? [0, 0, 0];
+  const [pIn, pCached, pOut] = price ?? priceFor(model) ?? [0, 0, 0];
 
   const llm = createLlmClient(provider, model, process.env, { reasoningEffort: effort, timeoutMs: 90_000 });
   const economy = deriveTier(15, 0.4);

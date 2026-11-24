@@ -59,6 +59,14 @@ describe("decide", () => {
     expect(d).toMatchObject({ outcome: "send_check_only", markRead: false });
   });
 
+  it("asks the men-only question again on a handoff while it is unanswered", () => {
+    const d = decide(input({ understanding: u({ categories: ["special_request"] }) }, { menOnlyState: "asked", isFirstContact: false }));
+    expect(d).toMatchObject({ outcome: "send_check_only", markRead: false, newMenOnlyState: "asked" });
+    // Once answered, a handoff is just a handoff
+    const done = decide(input({ understanding: u({ categories: ["special_request"] }) }, { menOnlyState: "confirmed" }));
+    expect(done.outcome).toBe("draft");
+  });
+
   it("guest saying it's for a woman gets the decline", () => {
     const d = decide(input({ understanding: u({ categories: ["men_only"], men_only_signal: "declined" }) }, { menOnlyState: "asked" }));
     expect(d).toMatchObject({ outcome: "send_decline", newMenOnlyState: "not_eligible", markRead: true });

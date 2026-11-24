@@ -37,8 +37,16 @@
 		{
 			"binding": "PHOTOS",
 			"bucket_name": "goshiwon-photos"
+		},
+		// Private: guest passport photos, encrypted. No public domain, ever.
+		// pnpm wrangler r2 bucket create goshiwon-passports
+		{
+			"binding": "PASSPORTS",
+			"bucket_name": "goshiwon-passports"
 		}
 	],
+	// Daily at 12:00 KST (after the 11:00 check-out): passport photo clean-up.
+	"triggers": { "crons": ["0 3 * * *"] },
 	"vars": {
 		"SUPABASE_URL": "https://sgymiebggwwwfjhwpezl.supabase.co",
 		"SUPABASE_ANON_KEY":"sb_publishable_hAaBw30Q0SOZh1TSSZ69Ig_FqA_qVDd",
@@ -104,8 +112,14 @@
 				{
 					"binding": "PHOTOS",
 					"bucket_name": "goshiwon-photos-staging"
+				},
+				// pnpm wrangler r2 bucket create goshiwon-passports-staging
+				{
+					"binding": "PASSPORTS",
+					"bucket_name": "goshiwon-passports-staging"
 				}
 			],
+			"triggers": { "crons": ["0 3 * * *"] },
 			// pnpm wrangler queues create goshiwon-whatsapp-staging
 			"queues": {
 				"producers": [{ "binding": "WHATSAPP_QUEUE", "queue": "goshiwon-whatsapp-staging" }],

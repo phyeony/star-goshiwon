@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { parseWebhook } from "@/lib/whatsapp/payload";
 import { MANAGER_PAUSE_MS } from "@/lib/whatsapp/process";
-import { enqueue, runConversation } from "@/lib/whatsapp/runtime";
+import { scheduleRun } from "@/lib/whatsapp/runtime";
 import { verifyMetaSignature } from "@/lib/whatsapp/signature";
-import { insertMessage, pauseForManager, upsertConversation } from "@/lib/whatsapp/store";
+import { insertMessage, isUnansweredGuestMessage, pauseForManager, upsertConversation } from "@/lib/whatsapp/store";
 
 // Meta's webhook for the WhatsApp number (plan/whatsapp-agent.md §2.2).
 // Saves each message and queues the agent; answers Meta within a second.
@@ -57,7 +56,14 @@ export async function POST(req: NextRequest) {
       sentAt: event.sentAt,
       handled: event.kind === "manager_echo",
     });
-    if (!isNew) continue; // Meta retries; already saved.
+    if (!isNew) {
+      // Meta re-sent it: already saved. If it was never answered (the job
+      // got lost), queue the chat again.
+      if (event.kind === "guest_message" && (await isUnansweredGuestMessage(event.waMessageId))) {
+        toRun.add(conversationId);
+      }
+      continue;
+    }
 
     if (event.kind === "manager_echo") {
       await pauseForManager(conversationId, new Date(Date.now() + MANAGER_PAUSE_MS));
@@ -66,17 +72,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  for (const conversationId of toRun) {
-    if (await enqueue({ conversationId })) continue;
-    // No queue (local dev): run in the background after the burst wait.
-    const job = new Promise((r) => setTimeout(r, 35_000)).then(() => runConversation(conversationId));
-    try {
-      const { ctx } = await getCloudflareContext({ async: true });
-      ctx.waitUntil(job.catch((e) => console.error("whatsapp: local run failed", e)));
-    } catch {
-      job.catch((e) => console.error("whatsapp: local run failed", e));
-    }
-  }
+  for (const conversationId of toRun) await scheduleRun(conversationId);
 
   return NextResponse.json({ received: true });
 }

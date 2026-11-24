@@ -110,6 +110,11 @@ export interface BookingRequest {
   payment_expires_at: string | null;
   payment_token_hash: string | null;
   payment_token_created_at: string | null;
+  // Passport check link (lib/passport). Only the hash of the link token is kept.
+  passport_token_hash?: string | null;
+  passport_token_created_at?: string | null;
+  passport_checked_at?: string | null;
+  status_changed_at?: string | null;
   payment_error: string;
   refund_amount: number;
   refunded_at: string | null;
@@ -378,6 +383,7 @@ export type BookingRequestInsert = {
   guest_email: string;
   guest_phone?: string;
   whatsapp_number?: string | null;
+  whatsapp_opt_in?: boolean;
   locale?: BookingLocale;
   stay_months?: number | null;
   // Korean requests only: KRW prices at the time of the request. Korean stays
@@ -430,6 +436,9 @@ export type BookingRequestUpdate = Partial<
     | "payment_expires_at"
     | "payment_token_hash"
     | "payment_token_created_at"
+    | "passport_token_hash"
+    | "passport_token_created_at"
+    | "passport_checked_at"
     | "payment_error"
     | "refund_amount"
     | "refunded_at"

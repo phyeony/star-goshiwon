@@ -295,12 +295,11 @@ export function PoliciesContent({ discountPct }: { discountPct: number }) {
             <strong> before</strong> arrival.
           </li>
           <li>
-            Before arrival, send us clear photos of your{" "}
-            <strong>passport</strong> and your{" "}
-            <strong>valid Korean visa</strong> (or other proof of legal stay,
-            such as a visa-free entry stamp). Document verification is a
-            condition of booking approval and is required for foreign-guest
-            registration in Korea.
+            Before arrival, upload a clear photo of your{" "}
+            <strong>passport</strong> through the secure verification link we
+            send you. Checking your identity is a condition of booking
+            approval. Please don&apos;t send passport photos by WhatsApp or
+            email.
           </li>
           <li>
             Your personal room key is issued at check-in and should be returned at
@@ -530,10 +529,25 @@ export function PoliciesContent({ discountPct }: { discountPct: number }) {
         <ul className="list-disc pl-6 space-y-1.5">
           <li>
             Information you submit through the booking form (name, contact
-            details, dates, and pre-arrival photos of your passport and
-            Korean visa) is used only to manage your booking, comply with
-            foreign-guest registration requirements, and contact you about
-            your stay.
+            details and dates) is used only to manage your booking and contact
+            you about your stay.
+          </li>
+          <li>
+            <strong>Passport photo.</strong> With your separate consent on the
+            verification page, we collect a photo of your passport&apos;s photo
+            page to check your identity before approving your booking, and to
+            prepare documents you ask for during your stay (such as a residence
+            confirmation). It is stored encrypted, only the manager can open
+            it, and every view is logged. It is deleted automatically on your
+            check-out day, or 7 days after a request is declined, cancelled or
+            expires. You can refuse; we then can&apos;t approve the booking
+            online, but you can contact us to arrange another way to verify.
+          </li>
+          <li>
+            Services that process data for us: Supabase (booking records),
+            Cloudflare (website and encrypted photo storage), Google (Gmail),
+            Meta (WhatsApp, if you message us) and PayPal (payments). These
+            providers may store data on servers outside Korea.
           </li>
           <li>
             We do not sell or share your data with marketers. Payment data is
