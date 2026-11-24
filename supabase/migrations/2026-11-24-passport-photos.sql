@@ -16,7 +16,11 @@ ALTER TABLE booking_requests
   -- here, so later edits (notes etc.) don't push deletion back.
   ADD COLUMN IF NOT EXISTS status_changed_at TIMESTAMPTZ;
 
+-- Backfill without the updated_at trigger, so existing rows keep their
+-- real last-edit time.
+ALTER TABLE booking_requests DISABLE TRIGGER booking_requests_updated_at;
 UPDATE booking_requests SET status_changed_at = updated_at WHERE status_changed_at IS NULL;
+ALTER TABLE booking_requests ENABLE TRIGGER booking_requests_updated_at;
 
 CREATE OR REPLACE FUNCTION booking_requests_status_changed_at() RETURNS trigger AS $$
 BEGIN
