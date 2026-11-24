@@ -1,6 +1,14 @@
 // AES-256-GCM encryption for passport photos at rest (Web Crypto, works in
 // the Worker and in Node). The key is PASSPORT_ENCRYPTION_KEY: 32 random
 // bytes, base64 (`openssl rand -base64 32`). The IV is stored per photo.
+//
+// The key is read from the Worker's runtime bindings, never process.env:
+// OpenNext copies every .env* file Next reads into the deployed bundle, so a
+// key kept in .env.local would ship inside the code. Staging/prod get it as a
+// Worker secret (.env.*.secrets, uploaded on deploy); local dev reads it from
+// .dev.vars, which wrangler loads and the build never bundles.
+
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 const IV_BYTES = 12;
 
@@ -32,6 +40,7 @@ export async function decrypt(key: CryptoKey, data: ArrayBuffer, iv: string): Pr
   return crypto.subtle.decrypt({ name: "AES-GCM", iv: b64ToBytes(iv) }, key, data);
 }
 
-export function passportKey(): Promise<CryptoKey> {
-  return importKey(process.env.PASSPORT_ENCRYPTION_KEY);
+export async function passportKey(): Promise<CryptoKey> {
+  const { env } = await getCloudflareContext({ async: true });
+  return importKey((env as unknown as { PASSPORT_ENCRYPTION_KEY?: string }).PASSPORT_ENCRYPTION_KEY);
 }

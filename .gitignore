@@ -36,3 +36,6 @@ yarn.lock
 # Local Cloudflare simulator state (e.g. photos uploaded during `pnpm dev`)
 .wrangler/
 scripts/whatsapp-eval/results/
+
+# wrangler local secrets (PASSPORT_ENCRYPTION_KEY for next dev)
+.dev.vars*
