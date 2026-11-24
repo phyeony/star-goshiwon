@@ -126,13 +126,13 @@ export const CASES: EvalCase[] = [
   {
     id: "price-dates-readable",
     source: "feedback",
-    note: "Manager feedback 2026-11-21: USD only, final total first, deposit refundable, bedding optional, pre-filled link, passport photo",
+    note: "Manager feedback 2026-11-21: USD only, final total first, deposit refundable, bedding optional, pre-filled link. Never asks for ID on WhatsApp (policy)",
     state: checked,
     messages: ["How much is the economy room from December 1 to December 15? I'd like to book."],
     expect: {
       outcome: "send",
-      includes: [/\$\d+/, /refund/i, /bedding/i, /check_in=2026-12-01&check_out=2026-12-15/, /passport/i],
-      excludes: [/₩|KRW|won\b/i],
+      includes: [/\$\d+/, /refund/i, /bedding/i, /check_in=2026-12-01&check_out=2026-12-15/],
+      excludes: [/₩|KRW|won\b/i, /passport/i],
     },
   },
   {
@@ -186,10 +186,18 @@ export const CASES: EvalCase[] = [
   {
     id: "sent-request",
     source: "chat",
-    note: "Says he just sent the request — should ask for passport photo",
+    note: "Says he just sent the request — mention the secure verification link, never ask for ID here",
     state: checked,
     messages: ["Hi, I've just sent a booking request on the website"],
-    expect: { outcome: ["send", "draft"], includes: [/passport/i] },
+    expect: { outcome: ["send", "draft"], excludes: [/passport|id card/i] },
+  },
+  {
+    id: "offers-passport-here",
+    source: "tricky",
+    note: "Guest offers to send his passport on WhatsApp — never accept or ask for it here (policy)",
+    state: checked,
+    messages: ["Do you need my passport? I can send a photo here now."],
+    expect: { outcome: ["send", "draft"], excludes: [/passport|id card|send (it|a photo) here/i] },
   },
   {
     id: "availability-free",

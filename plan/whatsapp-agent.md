@@ -348,10 +348,11 @@ The production WhatsApp number is not connected before step 5.
 
 **Steps 5–6**
 8. Manager tries `/admin/whatsapp`; tell Claude whether the manager's phone is iPhone or Android.
-9. Submit the four booking-received templates in WhatsApp Manager: texts in
-   `lib/whatsapp/booking-received.ts` (`BOOKING_RECEIVED_TEXTS`, category Utility, English),
-   named `booking_received`, `booking_received_no_passport`, `booking_received_no_men_only`,
-   `booking_received_basic`. Once approved, set `WHATSAPP_BOOKING_TEMPLATE=booking_received`; add a payment
+9. After checking the WhatsApp Business Messaging Policy and with the owner's OK, submit the two
+   booking-received templates in WhatsApp Manager: texts in `lib/whatsapp/booking-received.ts`
+   (`BOOKING_RECEIVED_TEXTS`, category Utility, English), named `booking_request_received` and
+   `booking_request_received_ask_men_only`. Once approved, set
+   `WHATSAPP_BOOKING_TEMPLATE=booking_request_received`; add a payment
    method for template charges (about $0.003–0.055 per message by country).
 10. Update the WhatsApp business profile description to mention the assistant.
 
@@ -428,3 +429,4 @@ knowledge pack, tools) can start once this spec and the implementation plan are 
 - 2026-11-21: WhatsApp booking help is a **pre-filled booking link** (room page with ?check_in&check_out, built by code from a passing quote; the guest adds name, email, number and ticks the boxes). Not creating requests from chat. The guest's number is not in the link (URLs go to analytics).
 - 2026-11-21 manager feedback: quotes in USD only, total first, deposit refundable, bedding optional; ask for a passport photo whenever booking is explained (and in the booking-received template); ask the men-only question again on every handoff while it's unanswered.
 - 2026-11-21: the booking-received message leaves out the passport line once the guest has sent any photo or file in the chat (not checked by AI: passport images never go to the model provider; the manager asks again if it wasn't a passport), and the men-only line once confirmed. Nothing is sent when the chat says not eligible. Inside the guest's 24 h window it goes as a free normal text, otherwise as one of four templates. The admin chat page has quick-reply buttons (passport request, passport received, men-only check, will reply) that send a normal text inside the 24 h window and don't pause the AI.
+- 2026-11-24 after Meta disabled the test business portfolio (templates asked for a passport photo): WhatsApp never asks for or mentions ID documents (policy: no "personal ID card numbers, or other sensitive identifiers"); identity checks go through the secure upload link on the website, and the guard blocks replies mentioning passports/ID. The owner chose to keep the men-only question on WhatsApp (known risk: the policy's anti-discrimination rule lists sex). Booking-received templates: `booking_request_received` and `booking_request_received_ask_men_only`. Nothing goes to Meta without checking the policy and the owner's OK.

@@ -23,3 +23,17 @@ describe("guard", () => {
     expect(checkReply("It's 7 minutes away.", ctx)).toEqual([]);
   });
 });
+
+describe("ID documents (WhatsApp policy)", () => {
+  const ctx = { allowedAmounts: [], allowedUrls: [], forbidden: [] };
+  it("blocks any reply that mentions passports or ID", () => {
+    expect(checkReply("Please send a clear photo of your passport here.", ctx)).toContain("mentions ID documents");
+    expect(checkReply("Could you share a photo of your ID?", ctx)).toContain("mentions ID documents");
+    expect(checkReply("여권 사진 보내주세요", ctx)).toContain("mentions ID documents");
+  });
+  it("allows the secure-link wording", () => {
+    expect(
+      checkReply("After your request we'll send a secure link to verify your identity on our website.", ctx),
+    ).toEqual([]);
+  });
+});

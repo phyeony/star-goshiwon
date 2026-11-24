@@ -9,8 +9,8 @@
 //   WHATSAPP_INTERNAL_TOKEN   32+ random characters (openssl rand -hex 32); lets the queue call /api/whatsapp/process
 //   WHATSAPP_GRAPH_VERSION    optional, e.g. v24.0
 //   WHATSAPP_BOOKING_TEMPLATE base name of the approved booking-received templates
-//                             (booking_received, plus _no_passport, _no_men_only,
-//                             _basic); empty = don't send it (lib/whatsapp/booking-received.ts)
+//                             (e.g. booking_request_received, plus _ask_men_only);
+//                             empty = don't send it (lib/whatsapp/booking-received.ts)
 //   WHATSAPP_BOOKING_TEMPLATE_LANG  optional, default "en"
 //   OPENAI_API_KEY etc.       the model provider chosen in whatsapp_settings
 

@@ -14,14 +14,14 @@ export interface QuickReply {
 
 export const QUICK_REPLIES: QuickReply[] = [
   {
-    key: "passport",
-    label: "여권 사진 요청",
-    text: "Could you send a clear photo of your passport here? The manager needs it to decide on your booking request.",
+    key: "verification",
+    label: "본인 확인 링크 안내",
+    text: "To finish your booking request, we'll send you a secure link to verify your identity on our website. For your privacy, please don't send ID documents here on WhatsApp.",
   },
   {
-    key: "passport_thanks",
-    label: "여권 받음",
-    text: "Thanks, we've received your passport photo. The manager will get back to you soon.",
+    key: "id_not_here",
+    label: "채팅으로 신분증 X",
+    text: "Thanks! For your privacy, please don't send ID documents on WhatsApp. We'll send you a secure link to upload it on our website instead.",
   },
   { key: "men_only", label: "남성 확인", text: MEN_ONLY_CHECK, asksMenOnly: true },
   {
