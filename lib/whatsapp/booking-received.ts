@@ -1,13 +1,15 @@
-// The one message we send first: right after a booking request, to guests
-// who gave a WhatsApp number and ticked the opt-in (spec §1.1).
+// The one message we send first: 30 minutes after a booking request, to
+// guests who gave a WhatsApp number, ticked the opt-in and haven't written
+// to us (spec §1.1; owner's choice 2026-11-26).
 //
 // It never asks for ID: WhatsApp's Business Messaging Policy forbids asking
 // people to share ID on WhatsApp (an earlier version asked for a passport
 // photo and the account was disabled). Identity checks go through a secure
 // link on the website. The men-only question is left out once the chat has
-// recorded the answer. A guest who has written in the last 24 hours gets it
-// as a normal (free) text; everyone else gets a Meta "utility" template, whose
-// text must be approved in WhatsApp Manager first. Until
+// recorded the answer. A guest who has written in the last 24 hours gets
+// nothing (they're already talking to us); everyone else gets a Meta
+// "utility" template, whose text must be approved in WhatsApp Manager first.
+// The booking route queues it (runtime.ts, scheduleBookingFollowup). Until
 // WHATSAPP_BOOKING_TEMPLATE names the approved base template, nothing is sent.
 //
 // The chat is created already linked to the booking, with the men-only
@@ -46,21 +48,24 @@ export interface ChatSoFar {
   lastGuestMessageAt: string | null;
 }
 
-// Meta's window is 24 h from the guest's last message; keep a margin so a
-// send that takes a moment doesn't land just after it closes.
-const FREE_TEXT_WINDOW_MS = 24 * 60 * 60 * 1000 - 10 * 60 * 1000;
+// How long after the booking request we look at the chat (owner's choice,
+// 2026-11-26): a guest who wrote to us by then doesn't need the template.
+export const BOOKING_FOLLOWUP_DELAY_SECONDS = 30 * 60;
+
+// Meta's window is 24 h from the guest's last message. A guest who wrote
+// inside it is already talking to us, and the manager can reply for free.
+const RECENT_CHAT_MS = 24 * 60 * 60 * 1000;
 
 export type BookingPlan =
-  | { send: false; reason: "not_eligible" }
-  | { send: true; variant: BookingVariant; as: "text" | "template"; asksMenOnly: boolean };
+  | { send: false; reason: "not_eligible" | "guest_messaged" }
+  | { send: true; variant: BookingVariant; asksMenOnly: boolean };
 
 export function planBookingReceived(chat: ChatSoFar | null, now: Date): BookingPlan {
   if (chat?.menOnlyState === "not_eligible") return { send: false, reason: "not_eligible" };
-  const askMenOnly = chat?.menOnlyState !== "confirmed";
-  const variant: BookingVariant = askMenOnly ? "ask_men_only" : "basic";
   const last = chat?.lastGuestMessageAt ? Date.parse(chat.lastGuestMessageAt) : NaN;
-  const inWindow = !Number.isNaN(last) && now.getTime() - last < FREE_TEXT_WINDOW_MS;
-  return { send: true, variant, as: inWindow ? "text" : "template", asksMenOnly: askMenOnly };
+  if (!Number.isNaN(last) && now.getTime() - last < RECENT_CHAT_MS) return { send: false, reason: "guest_messaged" };
+  const askMenOnly = chat?.menOnlyState !== "confirmed";
+  return { send: true, variant: askMenOnly ? "ask_men_only" : "basic", asksMenOnly: askMenOnly };
 }
 
 export interface BookingReceivedInput {
@@ -78,14 +83,13 @@ export interface BookingReceivedDeps {
   language: string;
   chatSoFar(waPhone: string): Promise<ChatSoFar | null>;
   send(to: string, template: { name: string; language: string; bodyParams: string[] }): Promise<string>;
-  sendText(to: string, text: string): Promise<string>;
   /** Links the chat to the booking and stores the sent message. */
   record(args: {
     waPhone: string;
     bookingId: string;
     waMessageId: string;
     body: string;
-    messageType: "template" | "text";
+    messageType: "template";
     asksMenOnly: boolean;
     sentAt: Date;
   }): Promise<void>;
@@ -128,20 +132,17 @@ export async function sendBookingReceived(
 
   const params = bookingReceivedParams(input);
   const body = renderBookingReceived(params, plan.variant);
-  const waMessageId =
-    plan.as === "text"
-      ? await deps.sendText(to, body)
-      : await deps.send(to, {
-          name: templateNameFor(deps.templateName, plan.variant),
-          language: deps.language,
-          bodyParams: params,
-        });
+  const waMessageId = await deps.send(to, {
+    name: templateNameFor(deps.templateName, plan.variant),
+    language: deps.language,
+    bodyParams: params,
+  });
   await deps.record({
     waPhone: to,
     bookingId: input.bookingId,
     waMessageId,
     body,
-    messageType: plan.as,
+    messageType: "template",
     asksMenOnly: plan.asksMenOnly,
     sentAt: now,
   });

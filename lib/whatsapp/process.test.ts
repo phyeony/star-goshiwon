@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AFTER_HOURS_NOTICE, MEN_ONLY_CHECK } from "@/lib/whatsapp-agent/facts";
+import { AFTER_HOURS_NOTICE, goshiwonIntro, MEN_ONLY_CHECK } from "@/lib/whatsapp-agent/facts";
 import type { LlmClient } from "@/lib/whatsapp-agent/llm";
 import { CATEGORIES, type Category, type Understanding } from "@/lib/whatsapp-agent/types";
 import {
@@ -159,7 +159,8 @@ describe("processConversation", () => {
     const t = setup({ messages: [{ body: "Hi" }, { body: "Where are you?" }] });
     const r = await processConversation(t.deps, "c1");
     expect(r).toMatchObject({ status: "done", outcome: "send", sent: true });
-    expect(t.log.sent).toEqual(["We're a short walk from Noryangjin Station."]);
+    // A new chat: the goshiwon intro follows the answer.
+    expect(t.log.sent).toEqual([`We're a short walk from Noryangjin Station.\n\n${goshiwonIntro("https://goshiwonseoul.com")}`]);
     expect(t.log.read).toEqual(["wamid.1"]);
     // Marked answered as soon as the reply is out, then linked to the saved run.
     expect(t.log.handled).toEqual([

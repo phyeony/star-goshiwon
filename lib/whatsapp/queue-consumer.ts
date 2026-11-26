@@ -1,8 +1,9 @@
 // Queue consumer logic, used by worker.ts. Kept free of app imports so the
 // small custom worker bundles without pulling in the Next.js app.
 //
-// Each job is { conversationId }. The job calls /api/whatsapp/process inside
-// the same worker; that route does the real work (lib/whatsapp/process.ts).
+// A job is { conversationId } (an agent run: /api/whatsapp/process) or
+// { bookingFollowup } (the booking-received check: /api/whatsapp/booking-followup).
+// Each calls an internal route of the same worker, which does the real work.
 
 export interface QueueMessage {
   body: unknown;
@@ -11,14 +12,30 @@ export interface QueueMessage {
 }
 
 export type CallProcess = (conversationId: string) => Promise<{ status?: string } | null>;
+export type CallFollowup = (bookingId: string) => Promise<unknown>;
 
 // "busy": another run holds the chat and may have started before this
 // message arrived, so try again shortly. "waiting_for_more": the guest is
 // still typing; a later job will answer, but retry once in case it was lost.
 const RETRY_DELAY: Record<string, number> = { busy: 30, waiting_for_more: 10 };
 
-export async function consumeBatch(messages: readonly QueueMessage[], callProcess: CallProcess): Promise<void> {
+export async function consumeBatch(
+  messages: readonly QueueMessage[],
+  callProcess: CallProcess,
+  callFollowup?: CallFollowup,
+): Promise<void> {
   for (const msg of messages) {
+    const followup = (msg.body as { bookingFollowup?: unknown } | null)?.bookingFollowup;
+    if (typeof followup === "string" && followup && callFollowup) {
+      try {
+        await callFollowup(followup);
+        msg.ack();
+      } catch (e) {
+        console.error("whatsapp queue: booking follow-up failed", followup, e);
+        msg.retry({ delaySeconds: 60 });
+      }
+      continue;
+    }
     const id = (msg.body as { conversationId?: unknown } | null)?.conversationId;
     if (typeof id !== "string" || !id) {
       msg.ack(); // malformed; retrying won't fix it
