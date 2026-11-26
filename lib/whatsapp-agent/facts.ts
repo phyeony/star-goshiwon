@@ -23,7 +23,7 @@ export const MEN_ONLY_CHECK =
 // Added by code to the first answer in a new chat (owner's wording,
 // 2026-11-26): guests often expect a hotel or hostel.
 export function goshiwonIntro(siteUrl: string): string {
-  return `A quick note: Star Goshiwon is a Korean goshiwon, which is different from a typical hotel or hostel. Rooms and bathrooms are small and simple: compact, not luxurious, but enough for what you need day to day. Please take a close look at how it works on our website: ${siteUrl}/guides/what-is-a-goshiwon\n\nOnly residents may enter the building (no visitors), and because many residents study here, it must stay quiet at all times. We hope you choose carefully!`;
+  return `A quick note: Star Goshiwon is a Korean goshiwon, which is different from a typical hotel or hostel. Rooms and bathrooms are compact, not luxurious. Please take a close look at how it works on our website: ${siteUrl}/guides/what-is-a-goshiwon\n\nOnly residents may enter the building (no visitors), and because many residents study here, it must stay quiet at all times. We hope you choose carefully!`;
 }
 
 // Sent when the guest's reply means the men-only rule rules them out.
