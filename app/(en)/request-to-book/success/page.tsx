@@ -10,6 +10,7 @@ import {
   roomTier,
 } from "@/lib/pricing";
 import { siteConfig } from "@/lib/site-data";
+import { VerifyNowCard } from "@/components/verify-now-card";
 
 export const metadata: Metadata = {
   title: "Request Sent",
@@ -147,6 +148,8 @@ export default async function SuccessPage({
             end of your stay if the room is left undamaged.
           </p>
         </div>
+
+        <VerifyNowCard requestId={request.id} email={request.guest_email} />
 
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
           <p className="text-sm text-yellow-800">

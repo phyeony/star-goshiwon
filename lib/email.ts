@@ -1,4 +1,5 @@
 import { siteConfig } from "./site-data";
+import { goshiwonIntro } from "./whatsapp-agent/facts";
 import {
   formatUSD,
   formatApproxKRW,
@@ -21,6 +22,25 @@ interface BookingEmailData {
   bedding_prepaid: boolean;
   notes: string;
   breakdown: PricingBreakdown;
+  /** Guest's booking verification link (lib/passport); guest email only. */
+  verify_url?: string | null;
+}
+
+// "Now or later" verification block and the goshiwon note in the guest's
+// confirmation email (owner's choices, 2026-11-26).
+function verifyBlockHtml(url: string): string {
+  return `<div style="background-color: #eef2ff; border: 1px solid #c7d2fe; border-radius: 8px; padding: 16px; margin: 20px 0;">
+      <p style="margin: 0 0 8px; font-size: 16px; font-weight: 600; color: #312e81;">Finish your booking verification</p>
+      <p style="margin: 0 0 12px; font-size: 14px; color: #3730a3;">You can do it now or later, after your questions are answered. We need it before we can approve your booking. It takes about a minute.</p>
+      <a href="${url}" style="display: inline-block; background-color: #4f46e5; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; padding: 10px 16px; border-radius: 8px;">Complete booking verification</a>
+    </div>`;
+}
+
+function goshiwonNoteHtml(): string {
+  return goshiwonIntro(siteConfig.url)
+    .split("\n\n")
+    .map((p) => `<p style="font-size: 14px; color: #374151;">${p.replace(siteConfig.url + "/guides/what-is-a-goshiwon", `<a href="${siteConfig.url}/guides/what-is-a-goshiwon" style="color: #4f46e5;">${siteConfig.url}/guides/what-is-a-goshiwon</a>`)}</p>`)
+    .join("\n");
 }
 
 interface PaymentLinkEmailData {
@@ -134,6 +154,8 @@ export function buildGuestConfirmationHtml(data: BookingEmailData) {
     <p style="font-size: 16px; margin-top: 0;">Hi ${data.guest_name},</p>
     <p style="margin-top: 16px; font-size: 16px;">Thank you for your booking request! We have received it and will review availability shortly.</p>
     <p style="font-size: 16px;">Please send us a message on our WhatsApp channel so we can help you faster with availability, payment, and any questions about your stay: <a href="${siteConfig.whatsapp}" style="color: #4f46e5;">Message us on WhatsApp</a>.</p>
+    ${data.verify_url ? verifyBlockHtml(data.verify_url) : ""}
+    ${goshiwonNoteHtml()}
 
     <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin: 20px 0;">
       <h2 style="font-size: 16px; margin: 0 0 12px; color: #374151;">Request Summary</h2>
@@ -193,6 +215,8 @@ By submitting this request and completing the PayPal payment, you reaffirm the b
 
 Please send us a message on our WhatsApp channel so we can help you faster with availability, payment, and any questions about your stay:
 ${siteConfig.whatsapp}
+${data.verify_url ? `\nFinish your booking verification (now or later, after your questions are answered; we need it before we can approve your booking):\n${data.verify_url}\n` : ""}
+${goshiwonIntro(siteConfig.url)}
 
 Best regards,
 Seoul Goshiwon by Star Goshiwon

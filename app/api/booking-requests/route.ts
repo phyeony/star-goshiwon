@@ -4,6 +4,7 @@ import { getRoomBySlug, createBookingRequest } from "@/lib/queries";
 import { calculateEstimate, roomTier } from "@/lib/pricing";
 import { sendGuestConfirmation, sendAdminNotification } from "@/lib/email";
 import { getPostHogClient } from "@/lib/posthog-server";
+import { createPassportLink } from "@/lib/passport/service";
 import { bookingReceivedDeps, scheduleBookingFollowup } from "@/lib/whatsapp/runtime";
 
 export async function POST(req: NextRequest) {
@@ -58,6 +59,17 @@ export async function POST(req: NextRequest) {
       admin_notes: "",
     });
 
+    // The guest's booking verification link, made now so the success page
+    // and the confirmation email can offer it ("now or later"). Only the
+    // hash is stored. If the passport tables aren't set up on this
+    // environment, the request still goes through without a link.
+    let verifyUrl: string | null = null;
+    try {
+      verifyUrl = await createPassportLink(bookingRequest.id, "booking_form");
+    } catch (e) {
+      console.error("Booking verification link failed:", e);
+    }
+
     const emailData = {
       guest_name: data.guest_name,
       guest_email: data.guest_email,
@@ -69,6 +81,7 @@ export async function POST(req: NextRequest) {
       bedding_prepaid: data.bedding_prepaid,
       notes: data.notes,
       breakdown: estimate,
+      verify_url: verifyUrl,
     };
 
     const posthog = getPostHogClient();
@@ -90,7 +103,8 @@ export async function POST(req: NextRequest) {
     const whatsappFollowup = data.whatsapp_opt_in && bookingReceivedDeps() !== null;
     const results = await Promise.allSettled([
       sendGuestConfirmation(emailData),
-      sendAdminNotification(emailData),
+      // The link is the guest's alone: never in the manager's copy.
+      sendAdminNotification({ ...emailData, verify_url: null }),
       posthog.shutdown(),
       whatsappFollowup ? scheduleBookingFollowup(bookingRequest.id) : Promise.resolve(),
     ]);
@@ -99,7 +113,9 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(
-      { id: bookingRequest.id, status: "success" },
+      // verifyUrl is kept by the browser for the success page only (not put
+      // in a URL, which analytics would record).
+      { id: bookingRequest.id, status: "success", verifyUrl },
       { status: 201 }
     );
   } catch (error) {

@@ -31,6 +31,8 @@ export interface EmailComposerProps {
   bare?: boolean;
   /** Called after a successful send so the parent (e.g. a modal) can close. */
   onSent?: () => void;
+  /** Approve although the verification photo isn't checked (manager's explicit choice). */
+  skipVerification?: boolean;
 }
 
 function defaultSlugFor(
@@ -53,6 +55,7 @@ export function EmailComposer({
   orientation = "stacked",
   bare = false,
   onSent,
+  skipVerification = false,
 }: EmailComposerProps) {
   const router = useRouter();
 
@@ -146,6 +149,7 @@ export function EmailComposer({
           text: current.body,
           templateSlug: selected.slug,
           templateLocale: lang,
+          ...(mode === "approve_payment" && skipVerification ? { skipVerification: true } : {}),
         }),
       });
       if (!res.ok) {

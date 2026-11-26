@@ -1,5 +1,7 @@
 "use client";
 
+import { verifyUrlKey } from "@/components/verify-now-card";
+
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import posthog from "posthog-js";
@@ -192,6 +194,13 @@ export function RequestForm({
         currency: "USD",
         value: estimate?.total,
       });
+      if (data.verifyUrl) {
+        try {
+          window.sessionStorage.setItem(verifyUrlKey(data.id), data.verifyUrl);
+        } catch {
+          // The success page falls back to the link in the email.
+        }
+      }
       router.push(`/request-to-book/success?id=${data.id}`);
     } catch {
       posthog.capture("booking_request_failed", {

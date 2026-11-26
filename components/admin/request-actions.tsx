@@ -14,6 +14,7 @@ import {
   EmailComposer,
   type EmailComposerMode,
 } from "@/components/admin/email-composer";
+import { needsVerification } from "@/lib/booking/verification-gate";
 
 const statusTransitions: BookingStatus[] = [
   "new",
@@ -33,6 +34,8 @@ export function RequestActions({
   request: BookingRequestWithRoom;
   templates: EmailTemplate[];
 }) {
+  const waitsForVerification = needsVerification(request);
+  const [skipVerification, setSkipVerification] = useState(false);
   const router = useRouter();
   const [status, setStatus] = useState(request.status);
   const [adminNotes, setAdminNotes] = useState(request.admin_notes);
@@ -191,11 +194,22 @@ export function RequestActions({
               이 요청을 승인하기 전에 예약 가능한 객실 번호를 배정하세요.
             </div>
           )}
+          {!isPaid && waitsForVerification && (
+            <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-800 space-y-2">
+              <p>
+                손님의 예약 인증(여권 사진)을 확인한 뒤 승인할 수 있어요. 위 <a href="#passport" className="font-medium underline">여권 확인</a> 카드에서 성별까지 확인하고 &quot;확인 완료&quot;를 눌러 주세요.
+              </p>
+              <label className="flex items-center gap-2 text-xs">
+                <input type="checkbox" checked={skipVerification} onChange={(e) => setSkipVerification(e.target.checked)} />
+                예외: 인증 없이 승인하기
+              </label>
+            </div>
+          )}
           {!isPaid && (
             <button
               type="button"
               onClick={() => setComposerMode("approve_payment")}
-              disabled={!canApprove}
+              disabled={!canApprove || (waitsForVerification && !skipVerification)}
               className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 shadow-sm transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
             >
               승인 및 결제 링크 전송
@@ -307,6 +321,7 @@ export function RequestActions({
             mode={composerMode}
             orientation="side"
             bare
+            skipVerification={skipVerification}
             onSent={() => setComposerMode(null)}
           />
         </AdminModal>
