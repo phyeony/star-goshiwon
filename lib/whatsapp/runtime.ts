@@ -17,7 +17,7 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createLlmClient, retryingClient, type ProviderName } from "@/lib/whatsapp-agent/llm";
 import { markRead, sendTemplate, sendText, type GraphConfig } from "./graph";
-import type { BookingReceivedDeps } from "./booking-received";
+import { BOOKING_FOLLOWUP_DELAY_SECONDS, type BookingReceivedDeps } from "./booking-received";
 import { processConversation, type ProcessDeps, type ProcessResult } from "./process";
 import { timingSafeEqual } from "./signature";
 import { chatSoFar, loadAgentContext, recordBookingReceived, supabaseStore } from "./store";
@@ -25,9 +25,8 @@ import { chatSoFar, loadAgentContext, recordBookingReceived, supabaseStore } fro
 // The webhook queues a job this long after each guest message (burst wait).
 export const QUEUE_DELAY_SECONDS = 15;
 
-export interface QueueJob {
-  conversationId: string;
-}
+// An agent run for a chat, or the booking-received check for a request.
+export type QueueJob = { conversationId: string } | { bookingFollowup: string };
 
 interface QueueBinding {
   send(body: QueueJob, options?: { delaySeconds?: number }): Promise<void>;
@@ -64,7 +63,7 @@ export function isInternalCall(authorization: string | null, token = env("WHATSA
  * Queues an agent run for a conversation. In `next dev`, or without a queue
  * binding, it returns false and the caller runs it in the background.
  */
-export async function enqueue(job: QueueJob): Promise<boolean> {
+export async function enqueue(job: QueueJob, delaySeconds = QUEUE_DELAY_SECONDS): Promise<boolean> {
   // `next dev` emulates the queue binding but has no consumer, so a job
   // sent there would never run.
   if (process.env.NODE_ENV === "development") return false;
@@ -72,7 +71,7 @@ export async function enqueue(job: QueueJob): Promise<boolean> {
     const { env: cf } = await getCloudflareContext({ async: true });
     const queue = (cf as unknown as { WHATSAPP_QUEUE?: QueueBinding }).WHATSAPP_QUEUE;
     if (!queue) return false;
-    await queue.send(job, { delaySeconds: QUEUE_DELAY_SECONDS });
+    await queue.send(job, { delaySeconds });
     return true;
   } catch {
     return false;
@@ -118,6 +117,15 @@ export function runConversation(conversationId: string): Promise<ProcessResult> 
   return processConversation(liveDeps(), conversationId);
 }
 
+/**
+ * Queues the booking-received check for BOOKING_FOLLOWUP_DELAY_SECONDS after
+ * the request. Without a queue (local dev) it is skipped: a 30-minute timer
+ * can't outlive the request.
+ */
+export async function scheduleBookingFollowup(bookingId: string): Promise<boolean> {
+  return enqueue({ bookingFollowup: bookingId }, BOOKING_FOLLOWUP_DELAY_SECONDS);
+}
+
 /** Deps for the booking-received template, or null when it isn't set up. */
 export function bookingReceivedDeps(): BookingReceivedDeps | null {
   const templateName = env("WHATSAPP_BOOKING_TEMPLATE");
@@ -128,7 +136,6 @@ export function bookingReceivedDeps(): BookingReceivedDeps | null {
     language: env("WHATSAPP_BOOKING_TEMPLATE_LANG") || "en",
     chatSoFar,
     send: (to, template) => sendTemplate(cfg, to, template),
-    sendText: (to, text) => sendText(cfg, to, text),
     record: recordBookingReceived,
   };
 }

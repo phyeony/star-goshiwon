@@ -47,7 +47,6 @@ describe("booking-received template", () => {
       language: "en",
       chatSoFar: vi.fn(async () => chat),
       send: vi.fn(async () => "wamid.T"),
-      sendText: vi.fn(async () => "wamid.X"),
       record: vi.fn(async () => {}),
     };
   }
@@ -62,7 +61,6 @@ describe("booking-received template", () => {
       language: "en",
       bodyParams: ["Alex", "Economy Room", "1 Dec 2026", "15 Dec 2026"],
     });
-    expect(deps.sendText).not.toHaveBeenCalled();
     expect(deps.record).toHaveBeenCalledWith({
       waPhone: "447700900123",
       bookingId: "b1",
@@ -83,19 +81,17 @@ describe("booking-received template", () => {
     expect((deps.record as ReturnType<typeof vi.fn>).mock.calls[0][0].asksMenOnly).toBe(false);
   });
 
-  it("sends a normal text inside the guest's 24-hour window", async () => {
-    const deps = makeDeps({ menOnlyState: "asked", lastGuestMessageAt: "2026-11-19T07:00:00Z" });
-    await sendBookingReceived(deps, input, now);
+  it("sends nothing to a guest who has written to us in the last 24 hours", async () => {
+    const deps = makeDeps({ menOnlyState: "asked", lastGuestMessageAt: "2026-11-19T07:50:00Z" });
+    expect(await sendBookingReceived(deps, input, now)).toEqual({ send: false, reason: "guest_messaged" });
     expect(deps.send).not.toHaveBeenCalled();
-    expect(deps.sendText).toHaveBeenCalledWith("447700900123", renderBookingReceived(bookingReceivedParams(input), "ask_men_only"));
-    expect(deps.record).toHaveBeenCalledWith(expect.objectContaining({ messageType: "text", waMessageId: "wamid.X" }));
+    expect(deps.record).not.toHaveBeenCalled();
   });
 
   it("sends nothing to a guest the men-only rule already ruled out", async () => {
     const deps = makeDeps({ menOnlyState: "not_eligible", lastGuestMessageAt: null });
     expect(await sendBookingReceived(deps, input, now)).toEqual({ send: false, reason: "not_eligible" });
     expect(deps.send).not.toHaveBeenCalled();
-    expect(deps.sendText).not.toHaveBeenCalled();
     expect(deps.record).not.toHaveBeenCalled();
   });
 
@@ -104,9 +100,9 @@ describe("booking-received template", () => {
     const variant = (p: ReturnType<typeof planBookingReceived>) => (p.send ? p.variant : null);
     expect(variant(planBookingReceived(chat("unasked"), now))).toBe("ask_men_only");
     expect(variant(planBookingReceived(chat("confirmed"), now))).toBe("basic");
-    // Just under 24 h is too close to the edge: template.
-    const late = { ...chat("unasked"), lastGuestMessageAt: "2026-11-18T08:05:00Z" };
-    expect(planBookingReceived(late, now)).toMatchObject({ as: "template" });
+    // Last message over 24 h ago: the template goes out.
+    const late = { ...chat("unasked"), lastGuestMessageAt: "2026-11-18T07:55:00Z" };
+    expect(planBookingReceived(late, now)).toMatchObject({ send: true, variant: "ask_men_only" });
     expect(templateNameFor("booking_received", "ask_men_only")).toBe("booking_received_ask_men_only");
     for (const text of Object.values(BOOKING_RECEIVED_TEXTS)) expect(text.match(/\{\{\d\}\}/g)).toHaveLength(4);
   });

@@ -1,6 +1,6 @@
 // Custom Worker entry (plan/whatsapp-agent.md §2.1). The website is served by
 // OpenNext's generated worker as before; this file adds:
-//   queue — WhatsApp agent jobs queued by /api/whatsapp/webhook
+//   queue — WhatsApp jobs: agent runs (webhook) and booking follow-ups (booking form)
 //   scheduled — daily passport photo clean-up (wrangler.jsonc triggers.crons)
 // It calls an internal route of this same worker, so all app code (Supabase,
 // env, the agent) runs inside Next.js exactly as it does for page requests.
@@ -28,8 +28,10 @@ export default {
 
   async queue(batch: { messages: readonly QueueMessage[] }, env: Env) {
     const call = caller(env);
-    await consumeBatch(batch.messages, (conversationId) =>
-      call("/api/whatsapp/process", { conversationId }),
+    await consumeBatch(
+      batch.messages,
+      (conversationId) => call("/api/whatsapp/process", { conversationId }),
+      (bookingId) => call("/api/whatsapp/booking-followup", { bookingId }),
     );
   },
 

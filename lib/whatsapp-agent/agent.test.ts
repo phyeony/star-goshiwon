@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { runAgentTurn, type AgentTurnInput } from "./agent";
-import { DECLINE_TEXT, MEN_ONLY_CHECK } from "./facts";
+import { outgoingText, runAgentTurn, type AgentTurnInput } from "./agent";
+import { DECLINE_TEXT, goshiwonIntro, MEN_ONLY_CHECK } from "./facts";
 import type { LlmClient, LlmRequest } from "./llm";
 import { CATEGORIES, type Category, type Understanding } from "./types";
 
@@ -76,5 +76,22 @@ describe("runAgentTurn", () => {
     const r = await runAgentTurn(base(broken));
     expect(r.decision.outcome).toBe("draft");
     expect(r.error).toBe("timeout");
+  });
+});
+
+describe("goshiwon intro", () => {
+  const base = { markRead: true, newMenOnlyState: "asked" as const, reasons: [] };
+  const intro = goshiwonIntro("https://example.com");
+
+  it("goes between the answer and the men-only check", () => {
+    expect(outgoingText({ ...base, outcome: "send", appendMenOnlyCheck: true }, "Hi!", { intro })).toBe(
+      `Hi!\n\n${intro}\n\n${MEN_ONLY_CHECK}`,
+    );
+    expect(outgoingText({ ...base, outcome: "send", appendMenOnlyCheck: false }, "Hi!")).toBe("Hi!");
+  });
+
+  it("links the website's goshiwon guide and names no ID document", () => {
+    expect(intro).toContain("https://example.com/guides/what-is-a-goshiwon");
+    expect(intro).not.toMatch(/passport|\bid\b|여권/i);
   });
 });

@@ -20,6 +20,12 @@ export const MANAGER_FACTS = [
 export const MEN_ONLY_CHECK =
   "Just to check before anything else: Star Goshiwon is a men-only residence at the moment. Is the stay for a man?";
 
+// Added by code to the first answer in a new chat (owner's wording,
+// 2026-11-26): guests often expect a hotel or hostel.
+export function goshiwonIntro(siteUrl: string): string {
+  return `A quick note: Star Goshiwon is a Korean goshiwon, which is different from a typical hotel or hostel. Rooms and bathrooms are compact, not luxurious. Please take a close look at how it works on our website: ${siteUrl}/guides/what-is-a-goshiwon\n\nOnly residents may enter the building (no visitors), and because many residents study here, it must stay quiet at all times. We hope you choose carefully!`;
+}
+
 // Sent when the guest's reply means the men-only rule rules them out.
 export const DECLINE_TEXT =
   "Thanks for letting us know, and sorry — Star Goshiwon is men-only at the moment. We're working on a separate floor for women, but it isn't open yet. We hope you find a great place in Seoul!";

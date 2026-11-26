@@ -4,8 +4,7 @@ import { getRoomBySlug, createBookingRequest } from "@/lib/queries";
 import { calculateEstimate, roomTier } from "@/lib/pricing";
 import { sendGuestConfirmation, sendAdminNotification } from "@/lib/email";
 import { getPostHogClient } from "@/lib/posthog-server";
-import { sendBookingReceived } from "@/lib/whatsapp/booking-received";
-import { bookingReceivedDeps } from "@/lib/whatsapp/runtime";
+import { bookingReceivedDeps, scheduleBookingFollowup } from "@/lib/whatsapp/runtime";
 
 export async function POST(req: NextRequest) {
   try {
@@ -86,22 +85,14 @@ export async function POST(req: NextRequest) {
       },
     });
     // Only to guests who ticked the opt-in, and only once the template is
-    // approved and configured (WHATSAPP_BOOKING_TEMPLATE).
-    const whatsappDeps = data.whatsapp_opt_in ? bookingReceivedDeps() : null;
+    // approved and configured (WHATSAPP_BOOKING_TEMPLATE). Sent 30 minutes
+    // later, and only if the guest hasn't written to us by then.
+    const whatsappFollowup = data.whatsapp_opt_in && bookingReceivedDeps() !== null;
     const results = await Promise.allSettled([
       sendGuestConfirmation(emailData),
       sendAdminNotification(emailData),
       posthog.shutdown(),
-      whatsappDeps
-        ? sendBookingReceived(whatsappDeps, {
-            bookingId: bookingRequest.id,
-            guestName: data.guest_name,
-            roomName: room.name,
-            checkIn: data.check_in_date,
-            checkOut: data.check_out_date,
-            whatsappNumber: data.whatsapp_number,
-          })
-        : Promise.resolve(),
+      whatsappFollowup ? scheduleBookingFollowup(bookingRequest.id) : Promise.resolve(),
     ]);
     for (const r of results) {
       if (r.status === "rejected") console.error("Booking notification failed:", r.reason);

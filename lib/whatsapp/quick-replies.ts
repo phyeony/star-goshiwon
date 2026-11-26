@@ -3,7 +3,8 @@
 // guest's last message (Meta's rule); outside it the buttons are disabled.
 
 import { linkInsteadMessage, verificationMessage } from "@/lib/passport/messages";
-import { MEN_ONLY_CHECK } from "@/lib/whatsapp-agent/facts";
+import { siteConfig } from "@/lib/site-data";
+import { goshiwonIntro, MEN_ONLY_CHECK } from "@/lib/whatsapp-agent/facts";
 
 export interface QuickReply {
   key: string;
@@ -39,6 +40,7 @@ export const QUICK_REPLIES: QuickReply[] = [
     sendsVerificationLink: true,
     withLink: linkInsteadMessage,
   },
+  { key: "goshiwon_intro", label: "고시원 안내", text: goshiwonIntro(siteConfig.url) },
   { key: "men_only", label: "남성 확인", text: MEN_ONLY_CHECK, asksMenOnly: true },
   {
     key: "will_reply",

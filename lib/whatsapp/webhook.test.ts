@@ -127,4 +127,19 @@ describe("queue consumer", () => {
     expect(broken.retry).toHaveBeenCalledWith({ delaySeconds: 60 });
     expect(junk.ack).toHaveBeenCalled();
   });
+
+  it("routes booking follow-ups to their own call", async () => {
+    const ok = msg({ bookingFollowup: "b1" });
+    const failing = msg({ bookingFollowup: "b2" });
+    const process = vi.fn();
+    const followups: string[] = [];
+    await consumeBatch([ok, failing], process, async (id) => {
+      followups.push(id);
+      if (id === "b2") throw new Error("Meta down");
+    });
+    expect(followups).toEqual(["b1", "b2"]);
+    expect(process).not.toHaveBeenCalled();
+    expect(ok.ack).toHaveBeenCalled();
+    expect(failing.retry).toHaveBeenCalledWith({ delaySeconds: 60 });
+  });
 });
