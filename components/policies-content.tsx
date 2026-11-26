@@ -295,10 +295,10 @@ export function PoliciesContent({ discountPct }: { discountPct: number }) {
             <strong> before</strong> arrival.
           </li>
           <li>
-            Before arrival, upload a clear photo of your{" "}
-            <strong>passport</strong> through the secure verification link we
-            send you. Checking your identity is a condition of booking
-            approval. Please don&apos;t send passport photos by WhatsApp or
+            Upload a clear photo of your <strong>passport</strong> through
+            the secure verification link: right after your booking request, or
+            later from the link in our confirmation email. Checking your
+            identity is a condition of booking approval. Please don&apos;t send passport photos by WhatsApp or
             email.
           </li>
           <li>

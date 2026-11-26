@@ -1,3 +1,4 @@
+import { needsVerification } from "@/lib/booking/verification-gate";
 import { notFound } from "next/navigation";
 import {
   getBookingRequestById,
@@ -82,6 +83,20 @@ export default async function RequestDetailPage({ params }: Props) {
         </h1>
         <BookingStatusBadge status={request.status} />
       </div>
+
+      {/* What approval needs, in one line (booking flow, 2026-11-26). */}
+      {request.payment_status !== "paid" && (
+        <ul className="mb-6 flex flex-wrap gap-2 text-sm">
+          <ReadyChip ok={Boolean(request.assigned_room_unit_id)} label="호실 배정" />
+          {!isKo && (
+            <ReadyChip
+              ok={!needsVerification(request)}
+              label={request.passport_checked_at ? "인증 확인" : passportActive ? "인증 사진 확인 필요" : "인증 대기"}
+            />
+          )}
+          <ReadyChip ok label="남성 체크 (예약 폼)" />
+        </ul>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Details */}
@@ -384,5 +399,17 @@ export default async function RequestDetailPage({ params }: Props) {
         </div>
       </div>
     </div>
+  );
+}
+
+function ReadyChip({ ok, label }: { ok: boolean; label: string }) {
+  return (
+    <li
+      className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 font-medium ${
+        ok ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-amber-200 bg-amber-50 text-amber-800"
+      }`}
+    >
+      {ok ? "✓" : "○"} {label}
+    </li>
   );
 }

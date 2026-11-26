@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { sendEmail, wrapEmailHtml, textToEmailHtml } from "@/lib/email";
-import { createEmailSend } from "@/lib/queries";
+import { createEmailSend, getBookingRequestById } from "@/lib/queries";
+import { needsVerification } from "@/lib/booking/verification-gate";
 import { approveAndCreatePaymentOrder } from "@/lib/payments";
 import { formatPaymentDeadline, substitute } from "@/lib/admin-email-templates";
 import { replacePaymentReviewUrls } from "@/lib/payment-url-utils";
@@ -15,6 +16,8 @@ const bodySchema = z.object({
   templateSlug: z.string().trim().min(1).max(64).optional(),
   templateLocale: z.enum(["en", "ko"]).optional(),
   regenerate: z.boolean().optional(),
+  // The manager approves without a checked verification photo, on purpose.
+  skipVerification: z.boolean().optional(),
 });
 
 interface Context {
@@ -37,6 +40,12 @@ export async function POST(req: NextRequest, ctx: Context) {
       { error: "invalid_body", details: (err as Error).message },
       { status: 400 }
     );
+  }
+
+  const current = await getBookingRequestById(id);
+  if (!current) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  if (needsVerification(current) && parsed.skipVerification !== true) {
+    return NextResponse.json({ error: "verification_required" }, { status: 409 });
   }
 
   let approveResult;

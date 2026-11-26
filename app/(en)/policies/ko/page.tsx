@@ -375,8 +375,8 @@ export default async function PoliciesKoPage() {
               <strong>도착 전에</strong> 완료되어야 합니다.
             </li>
             <li>
-              도착 전에 보내 드리는 보안 인증 링크로 <strong>여권</strong> 사진면의
-              선명한 사진을 올려 주세요. 신원 확인은 예약 승인의 조건입니다.
+              예약 요청 직후, 또는 확인 이메일의 보안 인증 링크로 나중에{" "}
+              <strong>여권</strong> 사진면의 선명한 사진을 올려 주세요. 신원 확인은 예약 승인의 조건입니다.
               여권 사진을 WhatsApp이나 이메일로 보내지 마세요.
             </li>
             <li>
